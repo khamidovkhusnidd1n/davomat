@@ -1,0 +1,47 @@
+name: Build Flutter APK
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.0'
+          channel: 'stable'
+          cache: true
+
+      - name: Generate Flutter Platform Folders (Android/iOS)
+        working-directory: ./teacher_app
+        run: flutter create .
+
+      - name: Get Flutter Dependencies
+        working-directory: ./teacher_app
+        run: flutter pub get
+
+      - name: Build APK
+        working-directory: ./teacher_app
+        run: flutter build apk --release
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-release.apk
+          path: teacher_app/build/app/outputs/flutter-apk/app-release.apk

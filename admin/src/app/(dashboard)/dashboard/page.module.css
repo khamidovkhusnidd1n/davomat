@@ -1,0 +1,159 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.statCard {
+  display: flex;
+  align-items: center;
+  padding: 24px;
+  gap: 20px;
+}
+
+.statIconWrapper {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.statInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.statTitle {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.statValue {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+  margin-bottom: 6px;
+}
+
+.statTrend {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.statTrend[data-trend="up"] { color: var(--success); }
+.statTrend[data-trend="down"] { color: var(--error); }
+.statTrend[data-trend="neutral"] { color: var(--text-muted); }
+
+.mainGrid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+}
+
+.chartsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.chartCard {
+  padding: 24px;
+  height: 350px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+}
+
+.chartWrapper {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+}
+
+.activityCard {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.activityList {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-bottom: 24px;
+  flex: 1;
+}
+
+.activityItem {
+  display: flex;
+  gap: 16px;
+  position: relative;
+}
+
+.activityItem:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  top: 24px;
+  bottom: -24px;
+  left: 5px;
+  width: 2px;
+  background-color: var(--border);
+}
+
+.activityDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  margin-top: 6px;
+  border: 3px solid var(--bg-card);
+  box-shadow: 0 0 0 1px var(--primary);
+  z-index: 1;
+}
+
+.activityContent h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.activityContent p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.activityTime {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.viewAllBtn {
+  width: 100%;
+  justify-content: center;
+}
+
+@media (max-width: 1024px) {
+  .mainGrid {
+    grid-template-columns: 1fr;
+  }
+}

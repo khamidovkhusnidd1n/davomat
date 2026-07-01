@@ -1,0 +1,35 @@
+.toggle {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: var(--text-primary);
+}
+
+.toggle:hover {
+  background: var(--border);
+  transform: scale(1.05);
+}
+
+.iconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark {
+  transform: rotate(360deg);
+  color: var(--primary);
+}
+
+.light {
+  transform: rotate(0deg);
+  color: var(--warning);
+}

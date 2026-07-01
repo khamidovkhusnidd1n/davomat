@@ -32,6 +32,11 @@ jobs:
         working-directory: ./teacher_app
         run: flutter create .
 
+      - name: Inject Internet Permission
+        working-directory: ./teacher_app
+        run: |
+          sed -i 's/<application/<uses-permission android:name="android.permission.INTERNET"\/>\n    <application/' android/app/src/main/AndroidManifest.xml
+
       - name: Get Flutter Dependencies
         working-directory: ./teacher_app
         run: flutter pub get

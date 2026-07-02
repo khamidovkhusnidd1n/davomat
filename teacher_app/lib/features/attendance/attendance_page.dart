@@ -177,7 +177,7 @@ class _AttendancePageState extends State<AttendancePage> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          "Eslatma: Davomatni dars sanasidan boshlab 24 soat ichida o'zgartirish mumkin.",
+                          "Eslatma: O'z-o'zingizga davomat belgilashingiz taqiqlangan.",
                           style: TextStyle(
                             fontSize: 12,
                             color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -193,8 +193,12 @@ class _AttendancePageState extends State<AttendancePage> {
                     itemBuilder: (context, index) {
                       final student = _students[index];
                       final id = student['id'].toString();
+                      final studentUserId = student['user_id']?.toString();
                       final user = student['users'];
                       final fullName = user != null ? user['full_name'] : 'Noma\'lum';
+                      
+                      final currentUserId = supabase.auth.currentUser?.id;
+                      final isSelf = currentUserId != null && studentUserId == currentUserId;
                       
                       return Column(
                         children: [
@@ -211,7 +215,10 @@ class _AttendancePageState extends State<AttendancePage> {
                                   icon: Icons.check,
                                   color: Colors.green,
                                   isSelected: _attendanceMap[id] == 'present',
-                                  onTap: () => setState(() => _attendanceMap[id] = 'present'),
+                                  isDisabled: isSelf,
+                                  onTap: () {
+                                    if (!isSelf) setState(() => _attendanceMap[id] = 'present');
+                                  },
                                 ),
                                 const SizedBox(width: 8),
                                 _StatusChip(
@@ -219,7 +226,10 @@ class _AttendancePageState extends State<AttendancePage> {
                                   icon: Icons.close,
                                   color: Colors.red,
                                   isSelected: _attendanceMap[id] == 'absent',
-                                  onTap: () => setState(() => _attendanceMap[id] = 'absent'),
+                                  isDisabled: isSelf,
+                                  onTap: () {
+                                    if (!isSelf) setState(() => _attendanceMap[id] = 'absent');
+                                  },
                                 ),
                                 const SizedBox(width: 8),
                                 _StatusChip(
@@ -227,7 +237,10 @@ class _AttendancePageState extends State<AttendancePage> {
                                   icon: Icons.access_time,
                                   color: Colors.orange,
                                   isSelected: _attendanceMap[id] == 'late',
-                                  onTap: () => setState(() => _attendanceMap[id] = 'late'),
+                                  isDisabled: isSelf,
+                                  onTap: () {
+                                    if (!isSelf) setState(() => _attendanceMap[id] = 'late');
+                                  },
                                 ),
                               ],
                             ),
@@ -254,6 +267,7 @@ class _StatusChip extends StatelessWidget {
   final IconData icon;
   final Color color;
   final bool isSelected;
+  final bool isDisabled;
   final VoidCallback onTap;
 
   const _StatusChip({
@@ -261,20 +275,23 @@ class _StatusChip extends StatelessWidget {
     required this.icon,
     required this.color,
     required this.isSelected,
+    this.isDisabled = false,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: onTap,
+      onTap: isDisabled ? null : onTap,
       borderRadius: BorderRadius.circular(20),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.15) : Colors.transparent,
+          color: isSelected ? (isDisabled ? Colors.grey.withOpacity(0.3) : color.withOpacity(0.15)) : Colors.transparent,
           border: Border.all(
-            color: isSelected ? color : Colors.grey.withOpacity(0.3),
+            color: isDisabled 
+              ? Colors.grey.withOpacity(0.3) 
+              : (isSelected ? color : Colors.grey.withOpacity(0.3)),
             width: isSelected ? 1.5 : 1,
           ),
           borderRadius: BorderRadius.circular(20),
@@ -282,14 +299,14 @@ class _StatusChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 14, color: isSelected ? color : Colors.grey),
+            Icon(icon, size: 14, color: isDisabled ? Colors.grey : (isSelected ? color : Colors.grey)),
             const SizedBox(width: 4),
             Text(
               label,
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                color: isSelected ? color : Colors.grey,
+                color: isDisabled ? Colors.grey : (isSelected ? color : Colors.grey),
               ),
             ),
           ],

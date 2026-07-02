@@ -16,11 +16,38 @@ class _HomePageState extends State<HomePage> {
   bool _isLoading = true;
   String _teacherName = '';
   List<dynamic> _todaySchedules = [];
+  DateTime _selectedDate = DateTime.now();
 
   @override
   void initState() {
     super.initState();
     _loadData();
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime.now().subtract(const Duration(days: 14)), // Oxirgi 14 kun
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+        _isLoading = true;
+      });
+      _loadData();
+    }
   }
 
   Future<void> _loadData() async {
@@ -49,7 +76,7 @@ class _HomePageState extends State<HomePage> {
       }
 
       final groupIds = groupsRes.map((g) => g['id'] as String).toList();
-      final currentDayOfWeek = DateTime.now().weekday; // 1=Dushanba, 7=Yakshanba
+      final currentDayOfWeek = _selectedDate.weekday; // 1=Dushanba, 7=Yakshanba
 
       // 3. Ushbu guruhlarning BUGUNGI jadvali (schedules)
       final schedulesRes = await supabase
@@ -85,7 +112,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _openAttendance(Map<dynamic, dynamic> schedule) async {
     // 1. Dars (lesson) bor-yo'qligini tekshiramiz
-    final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final todayStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
     
     // UI bloklanmasligi uchun loading ko'rsatish mumkin, 
     // lekin hozircha to'g'ridan-to'g'ri so'rov jo'natamiz
@@ -159,7 +186,8 @@ class _HomePageState extends State<HomePage> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final now = DateTime.now();
-    final dateStr = DateFormat('d-MMMM, EEEE', 'uz').format(now);
+    final dateStr = DateFormat('d-MMMM, EEEE', 'uz').format(_selectedDate);
+    final isToday = _selectedDate.year == now.year && _selectedDate.month == now.month && _selectedDate.day == now.day;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF3F4F6), // Yengil kulrang fon
@@ -217,23 +245,75 @@ class _HomePageState extends State<HomePage> {
                           dateStr,
                           style: GoogleFonts.inter(
                             color: Colors.white70,
-                            fontSize: 14,
+                            fontSize: 16,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Text(
-                          'Salom,\n$_teacherName!',
-                          style: GoogleFonts.outfit(
-                            color: Colors.white,
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            height: 1.2,
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Salom,\n$_teacherName!',
+                              style: GoogleFonts.outfit(
+                                color: Colors.white,
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                height: 1.2,
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: () => _selectDate(context),
+                              icon: const Icon(Icons.calendar_month_rounded, color: Colors.white, size: 32),
+                              tooltip: 'Boshqa sanani tanlash',
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ),
+                  if (!isToday) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.orange.shade200),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.history_rounded, color: Colors.orange.shade700, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Diqqat: Siz o\'tgan kun jadvalini ko\'ryapsiz.',
+                              style: GoogleFonts.inter(
+                                color: Colors.orange.shade900,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              setState(() {
+                                _selectedDate = DateTime.now();
+                                _isLoading = true;
+                              });
+                              _loadData();
+                            },
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              minimumSize: const Size(50, 30),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: const Text('Bugun'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 30),
                   
                   // Bugungi darslar yozuvi
@@ -242,7 +322,7 @@ class _HomePageState extends State<HomePage> {
                       const Icon(Icons.calendar_today_rounded, size: 20, color: Colors.black54),
                       const SizedBox(width: 8),
                       Text(
-                        'Bugungi jadvalingiz',
+                        isToday ? 'Bugungi jadvalingiz' : 'Shu kundagi jadvalingiz',
                         style: GoogleFonts.inter(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
@@ -268,7 +348,7 @@ class _HomePageState extends State<HomePage> {
                           Icon(Icons.free_breakfast_rounded, size: 64, color: Colors.grey.shade300),
                           const SizedBox(height: 16),
                           Text(
-                            'Bugun darsingiz yo\'q',
+                            isToday ? 'Bugun darsingiz yo\'q' : 'Bu kunda darsingiz yo\'q',
                             style: GoogleFonts.inter(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,

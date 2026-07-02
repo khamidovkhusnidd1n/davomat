@@ -9,6 +9,7 @@ export default function TutorModal({ isOpen, onClose, tutor, organizationId, onS
     full_name: '',
     phone: '',
     email: '',
+    password: '',
   });
   const [loading, setLoading] = useState(false);
 
@@ -20,9 +21,10 @@ export default function TutorModal({ isOpen, onClose, tutor, organizationId, onS
           full_name: tutor.full_name || '',
           phone: tutor.phone || '',
           email: tutor.email || '',
+          password: '',
         });
       } else {
-        setFormData({ full_name: '', phone: '', email: '' });
+        setFormData({ full_name: '', phone: '', email: '', password: '' });
       }
     }
   }, [isOpen, tutor]);
@@ -100,12 +102,24 @@ export default function TutorModal({ isOpen, onClose, tutor, organizationId, onS
           <div className="form-group">
             <label>Email</label>
             <input 
-              type="email"
               className="input" 
               value={formData.email}
               onChange={e => setFormData({...formData, email: e.target.value})}
             />
           </div>
+        </div>
+
+        <div className="form-group">
+          <label>{isEdit ? 'Yangi parol (bo\'sh qoldirsa o\'zgarmaydi)' : 'Parol *'}</label>
+          <input 
+            type="password"
+            className="input" 
+            value={formData.password}
+            onChange={e => setFormData({...formData, password: e.target.value})}
+            placeholder={isEdit ? '••••••••' : 'Kamida 6 belgi'}
+            required={!isEdit}
+            minLength={6}
+          />
         </div>
       </form>
     </Modal>

@@ -11,6 +11,7 @@ export default function StudentModal({ isOpen, onClose, student, groups, organiz
     email: '',
     group_id: '',
     isMonitor: false,
+    password: '',
   });
   const [loading, setLoading] = useState(false);
 
@@ -24,9 +25,10 @@ export default function StudentModal({ isOpen, onClose, student, groups, organiz
           email: student.users?.email || '',
           group_id: student.groups?.id || '',
           isMonitor: student.users?.role === 'monitor',
+          password: '',
         });
       } else {
-        setFormData({ full_name: '', phone: '', email: '', group_id: '', isMonitor: false });
+        setFormData({ full_name: '', phone: '', email: '', group_id: '', isMonitor: false, password: '' });
       }
     }
   }, [isOpen, student]);
@@ -105,12 +107,24 @@ export default function StudentModal({ isOpen, onClose, student, groups, organiz
           <div className="form-group">
             <label>Email</label>
             <input 
-              type="email"
               className="input" 
               value={formData.email}
               onChange={e => setFormData({...formData, email: e.target.value})}
             />
           </div>
+        </div>
+
+        <div className="form-group">
+          <label>{isEdit ? 'Yangi parol (bo\'sh qoldirsa o\'zgarmaydi)' : 'Parol *'}</label>
+          <input 
+            type="password"
+            className="input" 
+            value={formData.password}
+            onChange={e => setFormData({...formData, password: e.target.value})}
+            placeholder={isEdit ? '••••••••' : 'Kamida 6 belgi'}
+            required={!isEdit}
+            minLength={6}
+          />
         </div>
 
         <div className="form-group">

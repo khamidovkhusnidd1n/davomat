@@ -7,7 +7,7 @@ const supabaseAdmin = createClient(
 
 export async function POST(request) {
   try {
-    const { full_name, phone, email, role, organization_id, group_id } = await request.json();
+    const { full_name, phone, email, role, organization_id, group_id, password } = await request.json();
 
     if (!full_name || !role || !organization_id) {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
@@ -16,11 +16,11 @@ export async function POST(request) {
     // Login formatda auth email yaratish
     const login = full_name.trim().toLowerCase().replace(/\s+/g, '.').replace(/[^a-z0-9.]/g, '');
     const authEmail = email?.trim() || `${login || Date.now()}@app.local`;
-    const tempPassword = Math.random().toString(36).slice(-10) + 'Aa1!';
+    const userPassword = password?.trim() || (Math.random().toString(36).slice(-10) + 'Aa1!');
 
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: authEmail,
-      password: tempPassword,
+      password: userPassword,
       email_confirm: true,
     });
 
@@ -57,7 +57,7 @@ export async function POST(request) {
       }
     }
 
-    return Response.json({ success: true, userId, password: tempPassword });
+    return Response.json({ success: true, userId, password: userPassword });
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 });
   }
@@ -65,7 +65,7 @@ export async function POST(request) {
 
 export async function PUT(request) {
   try {
-    const { id, full_name, phone, email, group_id, role } = await request.json();
+    const { id, full_name, phone, email, group_id, role, password } = await request.json();
 
     if (!id) return Response.json({ error: 'Missing id' }, { status: 400 });
 
@@ -81,7 +81,13 @@ export async function PUT(request) {
       if (studentError) throw studentError;
     }
 
-    // Optionally update auth user email if it changed, but let's keep it simple for MVP
+    // Parol o'zgartirish
+    if (password && password.trim().length >= 6) {
+      const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(id, {
+        password: password.trim(),
+      });
+      if (authError) throw authError;
+    }
 
     return Response.json({ success: true });
   } catch (err) {

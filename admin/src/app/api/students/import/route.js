@@ -25,8 +25,9 @@ export async function POST(request) {
       }
 
       // 1) auth.users yaratish (email yoki phone orqali)
-      const authEmail = email?.trim() || `${phone?.replace(/\s+/g, '') || Date.now()}@davomad.app`;
-      const tempPassword = Math.random().toString(36).slice(-10) + 'Aa1!';
+      const uniqueSuffix = Math.floor(Math.random() * 10000);
+      const authEmail = email?.trim() || `st_${Date.now()}_${uniqueSuffix}@app.local`;
+      const tempPassword = '123456'; // Default parol
 
       const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
         email: authEmail,

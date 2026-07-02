@@ -5,7 +5,7 @@ import styles from '../students/StudentModal.module.css'; // Reusing CSS
 
 export default function GroupModal({ isOpen, onClose, group, tutors, monitors, organizationId, onSuccess }) {
   const isEdit = !!group;
-  
+  const [formData, setFormData] = useState({
     name: '',
     course_name: '',
     tutor_id: '',

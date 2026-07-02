@@ -110,19 +110,19 @@ export default function StudentModal({ isOpen, onClose, student, groups, organiz
               className="input" 
               value={formData.email}
               onChange={e => setFormData({...formData, email: e.target.value})}
-              placeholder="Masalan: jasur"
+              placeholder="Bo'sh qolsa avtomatik yaratiladi"
             />
           </div>
         </div>
 
         <div className="form-group">
-          <label>{isEdit ? 'Yangi parol (bo\'sh qoldirsa o\'zgarmaydi)' : 'Parol (ixtiyoriy)'}</label>
+          <label>{isEdit ? 'Yangi parol (bo\'sh qoldirsa o\'zgarmaydi)' : 'Parol (bo\'sh qoldirsa standart 123456)'}</label>
           <input 
             type="password"
             className="input" 
             value={formData.password}
             onChange={e => setFormData({...formData, password: e.target.value})}
-            placeholder={isEdit ? '••••••••' : 'Standart parol: 123456'}
+            placeholder={isEdit ? '••••••••' : '123456'}
             required={false}
             minLength={6}
           />

@@ -105,11 +105,12 @@ export default function StudentModal({ isOpen, onClose, student, groups, organiz
             />
           </div>
           <div className="form-group">
-            <label>Email</label>
+            <label>Login (yoki email)</label>
             <input 
               className="input" 
               value={formData.email}
               onChange={e => setFormData({...formData, email: e.target.value})}
+              placeholder="Masalan: jasur"
             />
           </div>
         </div>

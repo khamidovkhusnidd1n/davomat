@@ -100,11 +100,12 @@ export default function TutorModal({ isOpen, onClose, tutor, organizationId, onS
             />
           </div>
           <div className="form-group">
-            <label>Email</label>
+            <label>Login (yoki email)</label>
             <input 
               className="input" 
               value={formData.email}
               onChange={e => setFormData({...formData, email: e.target.value})}
+              placeholder="Masalan: tutor1"
             />
           </div>
         </div>

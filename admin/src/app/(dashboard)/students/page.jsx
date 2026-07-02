@@ -105,6 +105,7 @@ export default function StudentsPage() {
               <thead>
                 <tr>
                   <th>F.I.Sh</th>
+                  <th>Login</th>
                   <th>Guruh</th>
                   <th>Telefon</th>
                   <th>Status</th>
@@ -121,6 +122,7 @@ export default function StudentsPage() {
                   filteredStudents.map((student) => (
                     <tr key={student.id}>
                       <td>{student.users?.full_name || 'Noma\'lum'}</td>
+                      <td>{student.users?.email || '-'}</td>
                       <td>{student.groups?.name || 'Guruhsiz'}</td>
                       <td>{student.users?.phone || '-'}</td>
                       <td>

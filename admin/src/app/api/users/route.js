@@ -14,8 +14,19 @@ export async function POST(request) {
     }
 
     // Login formatda auth email yaratish
-    const login = full_name.trim().toLowerCase().replace(/\s+/g, '.').replace(/[^a-z0-9.]/g, '');
-    const authEmail = email?.trim() || `${login || Date.now()}@app.local`;
+    let finalLogin = email?.trim();
+    let authEmail;
+    
+    if (finalLogin && finalLogin.includes('@')) {
+      authEmail = finalLogin;
+    } else if (finalLogin) {
+      authEmail = `${finalLogin}@app.local`;
+    } else {
+      finalLogin = full_name.trim().toLowerCase().replace(/\s+/g, '.').replace(/[^a-z0-9.]/g, '');
+      if (!finalLogin) finalLogin = Date.now().toString();
+      authEmail = `${finalLogin}@app.local`;
+    }
+
     const userPassword = password?.trim() || (Math.random().toString(36).slice(-10) + 'Aa1!');
 
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
@@ -33,7 +44,7 @@ export async function POST(request) {
       id: userId,
       organization_id,
       full_name: full_name.trim(),
-      email: email?.trim() || null,
+      email: finalLogin, // Generated yoki kiritilgan loginni saqlaymiz
       phone: phone?.trim() || null,
       role,
     });
@@ -69,8 +80,13 @@ export async function PUT(request) {
 
     if (!id) return Response.json({ error: 'Missing id' }, { status: 400 });
 
+    let finalLogin = email?.trim();
+    if (finalLogin && !finalLogin.includes('@')) {
+      finalLogin = finalLogin; // bu public.users uchun
+    }
+    
     const { error: userError } = await supabaseAdmin.from('users').update({
-      full_name, phone, email
+      full_name, phone, email: finalLogin
     }).eq('id', id);
 
     if (userError) throw userError;

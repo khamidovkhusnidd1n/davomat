@@ -100,7 +100,7 @@ export default function TutorsPage() {
                   <th>F.I.Sh</th>
                   <th>Guruhlari</th>
                   <th>Telefon</th>
-                  <th>Email</th>
+                  <th>Login</th>
                   <th>Qo'shilgan sana</th>
                   <th>Amallar</th>
                 </tr>

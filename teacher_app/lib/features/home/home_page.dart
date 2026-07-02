@@ -44,7 +44,7 @@ class _HomePageState extends State<HomePage> {
       final groupsRes = await supabase
           .from('groups')
           .select('id, name, course_name, lessons(id, title, lesson_date)')
-          .eq('monitor_id', user.id)
+          .or('tutor_id.eq.${user.id},monitor_id.eq.${user.id}')
           .eq('lessons.lesson_date', todayStr);
 
       _todayLessons = [];

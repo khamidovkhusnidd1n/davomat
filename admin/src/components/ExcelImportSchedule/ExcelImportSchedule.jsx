@@ -50,21 +50,77 @@ export default function ExcelImportSchedule({ isOpen, onClose, groups, organizat
       const wb = XLSX.read(e.target.result, { type: 'binary', cellDates: true, dateNF: 'hh:mm' });
       const ws = wb.Sheets[wb.SheetNames[0]];
       
-      const json = XLSX.utils.sheet_to_json(ws, { defval: '', raw: false });
+      // 1-usul: Smart Parser (Inson o'qiydigan murakkab jadvallar uchun)
+      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: null });
+      
+      const smartResult = [];
+      const DAYS = {
+        'душанба': 1, 'dushanba': 1, '1': 1,
+        'сешанба': 2, 'seshanba': 2, '2': 2,
+        'чоршанба': 3, 'chorshanba': 3, '3': 3,
+        'пайшанба': 4, 'payshanba': 4, '4': 4,
+        'жума': 5, 'juma': 5, '5': 5,
+        'шанба': 6, 'shanba': 6, '6': 6,
+        'якшанба': 7, 'yakshanba': 7, '7': 7,
+      };
 
-      const normalized = json.map(row => {
-        const obj = {};
-        for (const [k, v] of Object.entries(row)) {
-          // 'Hafta kuni' => 'hafta_kuni'
-          const cleanKey = k.toLowerCase().trim().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-          obj[cleanKey] = String(v).trim();
+      let currentDay = null;
+      const timeRegex = /^([01]?\d|2[0-3])[:-]([0-5]\d)\.?$/;
+
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        if (!Array.isArray(row)) continue;
+
+        if (typeof row[0] === 'string' && row[0].trim()) {
+          const dayStr = row[0].toLowerCase().trim();
+          if (DAYS[dayStr]) currentDay = DAYS[dayStr];
         }
-        return obj;
-      }).filter(row => row.hafta_kuni || row.boshlanish_vaqti || row.tugash_vaqti); // Bitta bo'lsa ham qoldiramiz
+
+        let startTime = null;
+        let endTime = null;
+
+        for (let j = 0; j < row.length; j++) {
+          if (typeof row[j] === 'string') {
+            const str = row[j].trim();
+            const match = str.match(timeRegex);
+            if (match) {
+              const formatted = `${match[1].padStart(2, '0')}:${match[2]}`;
+              if (!startTime) {
+                startTime = formatted;
+              } else if (!endTime) {
+                endTime = formatted;
+                break;
+              }
+            }
+          }
+        }
+
+        if (currentDay && startTime && endTime) {
+          smartResult.push({
+            hafta_kuni: currentDay,
+            boshlanish_vaqti: startTime,
+            tugash_vaqti: endTime
+          });
+        }
+      }
+
+      let normalized = smartResult;
+
+      // Agar Smart Parser topa olmasa, 2-usul: Oddiy shablon parser
+      if (normalized.length === 0) {
+        const json = XLSX.utils.sheet_to_json(ws, { defval: '', raw: false });
+        normalized = json.map(row => {
+          const obj = {};
+          for (const [k, v] of Object.entries(row)) {
+            const cleanKey = k.toLowerCase().trim().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+            obj[cleanKey] = String(v).trim();
+          }
+          return obj;
+        }).filter(row => row.hafta_kuni || row.boshlanish_vaqti || row.tugash_vaqti);
+      }
 
       if (normalized.length === 0) {
-        const sampleKeys = json.length > 0 ? Object.keys(json[0]).join(', ') : 'Fayl bo\'sh';
-        alert(`Kerakli ustunlar topilmadi. Sizdagi ustunlar: ${sampleKeys}\n\nIltimos, Shablonni ko'chirib olib, unga to'ldiring!`);
+        alert("Fayl ichidan hech qanday dars vaqti topilmadi.\nIltimos, shablonni ko'chirib, to'ldirib yuklang.");
         return;
       }
 

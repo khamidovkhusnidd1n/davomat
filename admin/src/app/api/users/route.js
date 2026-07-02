@@ -27,7 +27,7 @@ export async function POST(request) {
       authEmail = `${finalLogin}@app.local`;
     }
 
-    const userPassword = password?.trim() || (Math.random().toString(36).slice(-10) + 'Aa1!');
+    const userPassword = password?.trim() || '123456';
 
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: authEmail,

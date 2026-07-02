@@ -111,14 +111,14 @@ export default function TutorModal({ isOpen, onClose, tutor, organizationId, onS
         </div>
 
         <div className="form-group">
-          <label>{isEdit ? 'Yangi parol (bo\'sh qoldirsa o\'zgarmaydi)' : 'Parol *'}</label>
+          <label>{isEdit ? 'Yangi parol (bo\'sh qoldirsa o\'zgarmaydi)' : 'Parol (ixtiyoriy)'}</label>
           <input 
             type="password"
             className="input" 
             value={formData.password}
             onChange={e => setFormData({...formData, password: e.target.value})}
-            placeholder={isEdit ? '••••••••' : 'Kamida 6 belgi'}
-            required={!isEdit}
+            placeholder={isEdit ? '••••••••' : 'Standart parol: 123456'}
+            required={false}
             minLength={6}
           />
         </div>

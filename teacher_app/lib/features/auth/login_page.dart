@@ -84,7 +84,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  "O'qituvchilar uchun davomat tizimi",
+                  "Sinf sardorlari uchun davomat tizimi",
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: colorScheme.onSurfaceVariant,
@@ -148,7 +148,7 @@ class _LoginPageState extends State<LoginPage> {
                 
                 const SizedBox(height: 32),
                 const Text(
-                  'Demo login: teacher1@itacademy.uz\nParol: Teacher123!',
+                  'Demo login: student01@itacademy.uz\nParol: Student123!',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: Colors.grey),
                 ),

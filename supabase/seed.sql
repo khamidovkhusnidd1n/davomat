@@ -45,7 +45,7 @@
 -- ============================================================================
 INSERT INTO public.organizations (id, name, phone, address) VALUES
     ('11111111-1111-1111-1111-111111111111',
-     'IT Academy Toshkent',
+     'O''zBA huzuridagi markaz',
      '+998 71 200 00 01',
      'Toshkent sh., Chilonzor tumani, 7-mavze, 15-uy');
 
@@ -120,25 +120,25 @@ INSERT INTO public.users (id, organization_id, full_name, email, phone, role) VA
      '+998 90 100 00 01',
      'admin'),
 
-    -- Teacher 1
+    -- Tutor 1
     ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb01',
      '11111111-1111-1111-1111-111111111111',
      'Raxmatullayev Sardor Anvarovich',
      'teacher1@itacademy.uz',
      '+998 90 200 00 01',
-     'teacher'),
+     'tutor'),
 
-    -- Teacher 2
+    -- Tutor 2
     ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb02',
      '11111111-1111-1111-1111-111111111111',
      'Tursunova Nilufar Shavkatovna',
      'teacher2@itacademy.uz',
      '+998 90 200 00 02',
-     'teacher'),
+     'tutor'),
 
-    -- Students 01-10
+    -- Students 01-10 (01 and 06 are monitors)
     ('dddddddd-dddd-dddd-dddd-dddddddddd01', '11111111-1111-1111-1111-111111111111',
-     'Abdullayev Bobur Kamolovich', 'student01@itacademy.uz', '+998 90 300 00 01', 'student'),
+     'Abdullayev Bobur Kamolovich', 'student01@itacademy.uz', '+998 90 300 00 01', 'monitor'),
     ('dddddddd-dddd-dddd-dddd-dddddddddd02', '11111111-1111-1111-1111-111111111111',
      'Mahmudova Dildora Rustamovna', 'student02@itacademy.uz', '+998 90 300 00 02', 'student'),
     ('dddddddd-dddd-dddd-dddd-dddddddddd03', '11111111-1111-1111-1111-111111111111',
@@ -148,7 +148,7 @@ INSERT INTO public.users (id, organization_id, full_name, email, phone, role) VA
     ('dddddddd-dddd-dddd-dddd-dddddddddd05', '11111111-1111-1111-1111-111111111111',
      'Normatov Javohir Abdurashidovich', 'student05@itacademy.uz', '+998 90 300 00 05', 'student'),
     ('dddddddd-dddd-dddd-dddd-dddddddddd06', '11111111-1111-1111-1111-111111111111',
-     'Qobilov Otabek Muzaffarovich', 'student06@itacademy.uz', '+998 90 300 00 06', 'student'),
+     'Qobilov Otabek Muzaffarovich', 'student06@itacademy.uz', '+998 90 300 00 06', 'monitor'),
     ('dddddddd-dddd-dddd-dddd-dddddddddd07', '11111111-1111-1111-1111-111111111111',
      'Saidova Zulfiya Bakhodirovna', 'student07@itacademy.uz', '+998 90 300 00 07', 'student'),
     ('dddddddd-dddd-dddd-dddd-dddddddddd08', '11111111-1111-1111-1111-111111111111',
@@ -162,16 +162,18 @@ INSERT INTO public.users (id, organization_id, full_name, email, phone, role) VA
 -- ============================================================================
 -- 4) GURUHLAR — Groups
 -- ============================================================================
-INSERT INTO public.groups (id, organization_id, teacher_id, name, course_name) VALUES
+INSERT INTO public.groups (id, organization_id, tutor_id, monitor_id, name, course_name) VALUES
     ('cccccccc-cccc-cccc-cccc-cccccccccc01',
      '11111111-1111-1111-1111-111111111111',
-     'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb01',
+     'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb01', -- Tutor 1
+     'dddddddd-dddd-dddd-dddd-dddddddddd01', -- Monitor 1 (student 01)
      'PY-101',
      'Python Backend'),
 
     ('cccccccc-cccc-cccc-cccc-cccccccccc02',
      '11111111-1111-1111-1111-111111111111',
-     'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb02',
+     'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb02', -- Tutor 2
+     'dddddddd-dddd-dddd-dddd-dddddddddd06', -- Monitor 2 (student 06)
      'FR-201',
      'Frontend React');
 

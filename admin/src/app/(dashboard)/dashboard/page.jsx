@@ -1,8 +1,12 @@
 'use client';
+import { useState, useEffect } from 'react';
 import { Users, GraduationCap, BookOpen, CalendarClock, TrendingUp, UserMinus } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { supabase } from '@/lib/supabase';
 import styles from './page.module.css';
 
+// Using the same mock charts data for now since generating historical chart data requires complex SQL 
+// and we want to focus on the top stats cards and real recent activity.
 const weekData = [
   { name: 'Dush', foiz: 95 },
   { name: 'Sesh', foiz: 92 },
@@ -19,17 +23,80 @@ const monthData = [
   { name: '4-hafta', foiz: 95 },
 ];
 
-const activities = [
-  { id: 1, title: 'Yangi o\'quvchi qo\'shildi', desc: 'Ali Valiyev "Frontend 101" guruhiga qo\'shildi', time: '10 daqiqa oldin', type: 'student' },
-  { id: 2, title: 'Davomat belgilandi', desc: 'Backend-02 guruhi uchun davomat kiritildi', time: '1 soat oldin', type: 'attendance' },
-  { id: 3, title: 'Yangi guruh ochildi', desc: 'UI/UX Design guruhi yaratildi', time: '3 soat oldin', type: 'group' },
-  { id: 4, title: 'O\'qituvchi tayinlandi', desc: 'Hasanov Javlon yangi guruhga biriktirildi', time: 'Kecha, 15:30', type: 'teacher' },
-];
-
 export default function Dashboard() {
+  const [stats, setStats] = useState({
+    students: 0,
+    teachers: 0,
+    groups: 0,
+    lessonsToday: 0,
+    attendanceRate: 0,
+    absentToday: 0
+  });
+  const [activities, setActivities] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        const today = new Date().toISOString().split('T')[0];
+
+        // Fetch students count
+        const { count: studentCount } = await supabase.from('students').select('*', { count: 'exact', head: true });
+        
+        // Fetch teachers count
+        const { count: teacherCount } = await supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'teacher');
+        
+        // Fetch groups count
+        const { count: groupCount } = await supabase.from('groups').select('*', { count: 'exact', head: true });
+        
+        // Fetch today's lessons count
+        const { count: lessonsCount } = await supabase.from('lessons').select('*', { count: 'exact', head: true }).eq('lesson_date', today);
+
+        // Fetch attendance for today
+        const { data: attendanceData } = await supabase.from('attendance')
+          .select('status, lessons!inner(lesson_date)')
+          .eq('lessons.lesson_date', today);
+
+        let absent = 0;
+        let present = 0;
+        let late = 0;
+        if (attendanceData) {
+          attendanceData.forEach(record => {
+            if (record.status === 'absent') absent++;
+            else if (record.status === 'present') present++;
+            else if (record.status === 'late') late++;
+          });
+        }
+        
+        const totalAttendance = present + absent + late;
+        const rate = totalAttendance > 0 ? ((present + late) / totalAttendance * 100).toFixed(1) : 0;
+
+        setStats({
+          students: studentCount || 0,
+          teachers: teacherCount || 0,
+          groups: groupCount || 0,
+          lessonsToday: lessonsCount || 0,
+          attendanceRate: rate,
+          absentToday: absent
+        });
+
+        // Set some dummy recent activity
+        setActivities([
+          { id: 1, title: 'Tizim ishga tushdi', desc: 'Davomat statistikasi real vaqtda yangilanmoqda', time: 'Hozir', type: 'system' }
+        ]);
+
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchStats();
+  }, []);
+
   return (
     <div className={styles.container}>
-      
       {/* STATS CARDS */}
       <div className={styles.statsGrid}>
         <div className={`card ${styles.statCard}`}>
@@ -38,8 +105,8 @@ export default function Dashboard() {
           </div>
           <div className={styles.statInfo}>
             <p className={styles.statTitle}>Jami O'quvchilar</p>
-            <h3 className={styles.statValue}>1,250</h3>
-            <span className={styles.statTrend} data-trend="up">+12% joriy oyda</span>
+            <h3 className={styles.statValue}>{loading ? '...' : stats.students}</h3>
+            <span className={styles.statTrend} data-trend="neutral">Faol o'quvchilar</span>
           </div>
         </div>
 
@@ -49,8 +116,8 @@ export default function Dashboard() {
           </div>
           <div className={styles.statInfo}>
             <p className={styles.statTitle}>Jami O'qituvchilar</p>
-            <h3 className={styles.statValue}>45</h3>
-            <span className={styles.statTrend} data-trend="neutral">O'zgarmagan</span>
+            <h3 className={styles.statValue}>{loading ? '...' : stats.teachers}</h3>
+            <span className={styles.statTrend} data-trend="neutral">Faol o'qituvchilar</span>
           </div>
         </div>
 
@@ -60,8 +127,8 @@ export default function Dashboard() {
           </div>
           <div className={styles.statInfo}>
             <p className={styles.statTitle}>Jami Guruhlar</p>
-            <h3 className={styles.statValue}>82</h3>
-            <span className={styles.statTrend} data-trend="up">+3 ta yangi</span>
+            <h3 className={styles.statValue}>{loading ? '...' : stats.groups}</h3>
+            <span className={styles.statTrend} data-trend="neutral">Faol guruhlar</span>
           </div>
         </div>
 
@@ -71,8 +138,8 @@ export default function Dashboard() {
           </div>
           <div className={styles.statInfo}>
             <p className={styles.statTitle}>Bugungi Darslar</p>
-            <h3 className={styles.statValue}>24</h3>
-            <span className={styles.statTrend} data-trend="neutral">Hozir: 8 ta faol</span>
+            <h3 className={styles.statValue}>{loading ? '...' : stats.lessonsToday}</h3>
+            <span className={styles.statTrend} data-trend="neutral">Rejalashtirilgan</span>
           </div>
         </div>
 
@@ -82,8 +149,8 @@ export default function Dashboard() {
           </div>
           <div className={styles.statInfo}>
             <p className={styles.statTitle}>Davomat Foizi</p>
-            <h3 className={styles.statValue}>94.5%</h3>
-            <span className={styles.statTrend} data-trend="up">+2.1% o'sish</span>
+            <h3 className={styles.statValue}>{loading ? '...' : `${stats.attendanceRate}%`}</h3>
+            <span className={styles.statTrend} data-trend="neutral">Bugungi ko'rsatkich</span>
           </div>
         </div>
 
@@ -93,7 +160,7 @@ export default function Dashboard() {
           </div>
           <div className={styles.statInfo}>
             <p className={styles.statTitle}>Kelmaganlar</p>
-            <h3 className={styles.statValue}>18</h3>
+            <h3 className={styles.statValue}>{loading ? '...' : stats.absentToday}</h3>
             <span className={styles.statTrend} data-trend="down">Bugungi kunda</span>
           </div>
         </div>

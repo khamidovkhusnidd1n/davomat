@@ -1,11 +1,43 @@
 'use client';
 import Sidebar from '@/components/Sidebar';
 import ThemeToggle from '@/components/ThemeToggle';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
 import styles from './layout.module.css';
 
 export default function DashboardLayout({ children }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      // Check demo bypass first for MVP testing without DB
+      const isDemo = typeof window !== 'undefined' && localStorage.getItem('demo_login');
+      if (isDemo) {
+        setLoading(false);
+        return;
+      }
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push('/login');
+      } else {
+        setLoading(false);
+      }
+    };
+    
+    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') {
+        router.push('/login');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [router]);
   
   // Format pathname for header title
   const getPageTitle = () => {
@@ -24,6 +56,10 @@ export default function DashboardLayout({ children }) {
       default: return 'DAVOMAD';
     }
   };
+
+  if (loading) {
+    return <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center' }}>Yuklanmoqda...</div>;
+  }
 
   return (
     <div className={styles.layout}>

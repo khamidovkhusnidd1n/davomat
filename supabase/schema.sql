@@ -38,8 +38,8 @@ CREATE TABLE public.users (
     role            TEXT NOT NULL DEFAULT 'student',
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
 
-    -- Role faqat 3 ta qiymat qabul qiladi
-    CONSTRAINT users_role_check CHECK (role IN ('admin', 'teacher', 'student'))
+    -- Role 5 ta qiymat qabul qiladi
+    CONSTRAINT users_role_check CHECK (role IN ('admin', 'teacher', 'student', 'tutor', 'monitor'))
 );
 
 -- Tez qidirish uchun indekslar
@@ -59,7 +59,9 @@ COMMENT ON COLUMN public.users.role IS 'Foydalanuvchi roli: admin | teacher | st
 CREATE TABLE public.groups (
     id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     organization_id UUID NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
-    teacher_id      UUID UNIQUE REFERENCES public.users(id) ON DELETE SET NULL,
+    teacher_id      UUID REFERENCES public.users(id) ON DELETE SET NULL, -- optional/legacy
+    tutor_id        UUID REFERENCES public.users(id) ON DELETE SET NULL, -- Guruh rahbari (web)
+    monitor_id      UUID REFERENCES public.users(id) ON DELETE SET NULL, -- Sinf sardori (app)
     name            TEXT NOT NULL,
     course_name     TEXT NOT NULL,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now()

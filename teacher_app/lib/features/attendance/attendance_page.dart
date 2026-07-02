@@ -3,7 +3,7 @@ import '../../main.dart'; // import supabase
 import 'package:intl/intl.dart';
 
 class AttendancePage extends StatefulWidget {
-  final int lessonId;
+  final String lessonId;
   final String groupName;
   final String lessonTitle;
 
@@ -201,7 +201,7 @@ class _AttendancePageState extends State<AttendancePage> {
                           ListTile(
                             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                             leading: CircleAvatar(
-                              child: Text(fullName.substring(0, 1).toUpperCase()),
+                              child: Text(fullName.isNotEmpty ? fullName[0].toUpperCase() : '?'),
                             ),
                             title: Text(fullName, style: const TextStyle(fontWeight: FontWeight.bold)),
                             subtitle: Row(

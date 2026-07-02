@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 import { 
   LayoutDashboard, 
   GraduationCap, 
@@ -19,7 +20,7 @@ import styles from './Sidebar.module.css';
 const menuItems = [
   { name: 'Bosh sahifa', path: '/dashboard', icon: LayoutDashboard },
   { name: "O'quvchilar", path: '/students', icon: GraduationCap },
-  { name: "O'qituvchilar", path: '/teachers', icon: Users },
+  { name: "Tutorlar", path: '/tutors', icon: Users },
   { name: 'Guruhlar', path: '/groups', icon: BookOpen },
   { name: 'Jadval', path: '/schedules', icon: CalendarDays },
   { name: 'Darslar', path: '/lessons', icon: CalendarClock },
@@ -34,6 +35,12 @@ const bottomItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    if (typeof window !== 'undefined') localStorage.removeItem('demo_login');
+    router.push('/login');
+  };
 
   return (
     <aside className={styles.sidebar}>
@@ -92,7 +99,7 @@ export default function Sidebar() {
             <span className={styles.userRole}>Boshqaruvchi</span>
           </div>
         </div>
-        <button className={styles.logoutBtn} title="Tizimdan chiqish">
+        <button className={styles.logoutBtn} title="Tizimdan chiqish" onClick={handleLogout}>
           <LogOut size={18} />
         </button>
       </div>

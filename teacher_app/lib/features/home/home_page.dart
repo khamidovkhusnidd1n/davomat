@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../main.dart'; // import supabase
 import 'package:intl/intl.dart';
 import '../attendance/attendance_page.dart';
+import '../auth/login_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -36,14 +37,14 @@ class _HomePageState extends State<HomePage> {
           .eq('id', user.id)
           .single();
           
-      _teacherName = userRes['full_name'] ?? 'O\'qituvchi';
+      _teacherName = userRes['full_name'] ?? 'Sinf sardori';
 
       // 2. O'qituvchining guruhlari va bugungi darslari
       // MVP uchun osonlashtirilgan query (Guruhni topib, uning bugungi darslarini olamiz)
       final groupsRes = await supabase
           .from('groups')
           .select('id, name, course_name, lessons(id, title, lesson_date)')
-          .eq('teacher_id', user.id)
+          .eq('monitor_id', user.id)
           .eq('lessons.lesson_date', todayStr);
 
       _todayLessons = [];
@@ -74,7 +75,10 @@ class _HomePageState extends State<HomePage> {
   Future<void> _signOut() async {
     await supabase.auth.signOut();
     if (mounted) {
-      Navigator.of(context).pushReplacementNamed('/');
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginPage()),
+        (route) => false,
+      );
     }
   }
 

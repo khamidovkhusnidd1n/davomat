@@ -11,7 +11,7 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _emailController = TextEditingController();
+  final _loginController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
@@ -23,8 +23,12 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
+      // Login ni email formatga o'girish (Supabase auth email talab qiladi)
+      final login = _loginController.text.trim();
+      final email = login.contains('@') ? login : '$login@app.local';
+
       final response = await supabase.auth.signInWithPassword(
-        email: _emailController.text.trim(),
+        email: email,
         password: _passwordController.text.trim(),
       );
       
@@ -35,7 +39,7 @@ class _LoginPageState extends State<LoginPage> {
       }
     } on AuthException catch (error) {
       setState(() {
-        _errorMessage = error.message;
+        _errorMessage = "Login yoki parol noto'g'ri";
       });
     } catch (error) {
       setState(() {
@@ -52,7 +56,7 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _loginController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -108,13 +112,13 @@ class _LoginPageState extends State<LoginPage> {
                   ),
 
                 TextField(
-                  controller: _emailController,
+                  controller: _loginController,
                   decoration: const InputDecoration(
-                    labelText: 'Email',
-                    prefixIcon: Icon(Icons.email_outlined),
+                    labelText: 'Login',
+                    prefixIcon: Icon(Icons.person_outline),
                     border: OutlineInputBorder(),
                   ),
-                  keyboardType: TextInputType.emailAddress,
+                  keyboardType: TextInputType.text,
                   textInputAction: TextInputAction.next,
                 ),
                 const SizedBox(height: 16),
@@ -144,13 +148,6 @@ class _LoginPageState extends State<LoginPage> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Text('Tizimga kirish', style: TextStyle(fontSize: 16)),
-                ),
-                
-                const SizedBox(height: 32),
-                const Text(
-                  'Demo login: student01@itacademy.uz\nParol: Student123!',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey),
                 ),
               ],
             ),

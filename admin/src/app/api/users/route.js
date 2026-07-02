@@ -13,8 +13,9 @@ export async function POST(request) {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // 1) Create auth user
-    const authEmail = email?.trim() || `${phone?.replace(/\s+/g, '') || Date.now()}@davomad.app`;
+    // Login formatda auth email yaratish
+    const login = full_name.trim().toLowerCase().replace(/\s+/g, '.').replace(/[^a-z0-9.]/g, '');
+    const authEmail = email?.trim() || `${login || Date.now()}@app.local`;
     const tempPassword = Math.random().toString(36).slice(-10) + 'Aa1!';
 
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({

@@ -90,11 +90,9 @@ export default function GroupsPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        {userRole === 'admin' && (
-          <button className="btn btn-primary" onClick={() => { setEditingGroup(null); setShowModal(true); }}>
-            <Plus size={18} /> Yangi Guruh
-          </button>
-        )}
+        <button className="btn btn-primary" onClick={() => { setEditingGroup(null); setShowModal(true); }}>
+          <Plus size={18} /> Yangi Guruh
+        </button>
       </div>
 
       <div className={`card ${styles.tableCard}`}>
@@ -133,18 +131,14 @@ export default function GroupsPage() {
                       </td>
                       <td>{new Date(group.created_at).toLocaleDateString('uz-UZ')}</td>
                       <td>
-                        {userRole === 'admin' ? (
-                          <div className={styles.actions}>
-                            <button className={styles.actionBtn} onClick={() => { setEditingGroup(group); setShowModal(true); }}>
-                              <Edit2 size={16} />
-                            </button>
-                            <button className={`${styles.actionBtn} ${styles.danger}`} onClick={() => handleDelete(group.id)}>
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        ) : (
-                          <span style={{ color: '#888' }}>Ruxsat yo'q</span>
-                        )}
+                        <div className={styles.actions}>
+                          <button className={styles.actionBtn} onClick={() => { setEditingGroup(group); setShowModal(true); }}>
+                            <Edit2 size={16} />
+                          </button>
+                          <button className={`${styles.actionBtn} ${styles.danger}`} onClick={() => handleDelete(group.id)}>
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))

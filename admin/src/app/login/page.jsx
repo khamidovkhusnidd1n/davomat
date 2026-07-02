@@ -1,14 +1,14 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock, Loader2 } from 'lucide-react';
+import { User, Lock, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import styles from './page.module.css';
 import ThemeToggle from '@/components/ThemeToggle';
 
 export default function Login() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
+  const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -19,6 +19,9 @@ export default function Login() {
     setError(null);
 
     try {
+      // Login ni email formatga o'girish (Supabase auth email talab qiladi)
+      const email = login.includes('@') ? login : `${login}@app.local`;
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -26,11 +29,10 @@ export default function Login() {
 
       if (error) throw error;
       
-      // Clear demo flag if real login succeeds
       if (typeof window !== 'undefined') localStorage.removeItem('demo_login');
       router.push('/dashboard');
     } catch (err) {
-      setError("Email yoki parol noto'g'ri. (Yoki Supabase bazasi bo'sh, iltimos seed.sql ni ishlating)");
+      setError("Login yoki parol noto'g'ri");
     } finally {
       setLoading(false);
     }
@@ -65,17 +67,17 @@ export default function Login() {
 
           <form onSubmit={handleLogin} className={styles.form}>
             <div className="form-group">
-              <label htmlFor="email">Email manzil</label>
+              <label htmlFor="login">Login</label>
               <div className={styles.inputWrapper}>
-                <Mail className={styles.inputIcon} size={18} />
+                <User className={styles.inputIcon} size={18} />
                 <input
-                  id="email"
-                  type="email"
+                  id="login"
+                  type="text"
                   className="input"
                   style={{ paddingLeft: '40px' }}
-                  placeholder="admin@itacademy.uz"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="admin"
+                  value={login}
+                  onChange={(e) => setLogin(e.target.value)}
                   required
                 />
               </div>
@@ -112,9 +114,9 @@ export default function Login() {
           </form>
           
           <div className={styles.demoInfo}>
-            <p><strong>Demo akkaunt:</strong></p>
-            <p>Email: admin@itacademy.uz</p>
-            <p>Parol: Admin123!</p>
+            <p><strong>Admin kirish:</strong></p>
+            <p>Login: admin</p>
+            <p>Parol: Admin123</p>
           </div>
         </div>
       </div>

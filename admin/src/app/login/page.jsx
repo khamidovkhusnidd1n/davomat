@@ -30,14 +30,7 @@ export default function Login() {
       if (typeof window !== 'undefined') localStorage.removeItem('demo_login');
       router.push('/dashboard');
     } catch (err) {
-      // Agar Supabase bazasi hali to'ldirilmagan bo'lsa (seed.sql run qilinmagan bo'lsa),
-      // va foydalanuvchi demo logindan foydalansa, tizimga kiritamiz.
-      if (email === 'admin@itacademy.uz' && password === 'Admin123!') {
-        if (typeof window !== 'undefined') localStorage.setItem('demo_login', 'true');
-        router.push('/dashboard');
-        return;
-      }
-      setError("Email yoki parol noto'g'ri. (Yoki Supabase bazasi bo'sh)");
+      setError("Email yoki parol noto'g'ri. (Yoki Supabase bazasi bo'sh, iltimos seed.sql ni ishlating)");
     } finally {
       setLoading(false);
     }

@@ -42,6 +42,8 @@ export default function GroupModal({ isOpen, onClose, group, tutors, monitors, o
         organization_id: organizationId,
       };
 
+      console.log("Supabase Insert Payload:", payload);
+
       let error;
       if (isEdit) {
         const { error: err } = await supabase.from('groups').update(payload).eq('id', formData.id);

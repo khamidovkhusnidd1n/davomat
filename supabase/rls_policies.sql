@@ -217,11 +217,11 @@ CREATE POLICY "read_students"
                     WHERE g.id = students.group_id
                       AND g.organization_id = public.get_my_organization_id()
                 )
-            WHEN public.get_my_role() = 'teacher' THEN
+            WHEN public.get_my_role() IN ('teacher', 'tutor', 'monitor') THEN
                 EXISTS (
                     SELECT 1 FROM public.groups g
                     WHERE g.id = students.group_id
-                      AND g.teacher_id = auth.uid()
+                      AND (g.teacher_id = auth.uid() OR g.tutor_id = auth.uid() OR g.monitor_id = auth.uid())
                 )
             ELSE false
         END
@@ -292,11 +292,11 @@ CREATE POLICY "read_lessons"
                     WHERE g.id = lessons.group_id
                       AND g.organization_id = public.get_my_organization_id()
                 )
-            WHEN public.get_my_role() = 'teacher' THEN
+            WHEN public.get_my_role() IN ('teacher', 'tutor', 'monitor') THEN
                 EXISTS (
                     SELECT 1 FROM public.groups g
                     WHERE g.id = lessons.group_id
-                      AND g.teacher_id = auth.uid()
+                      AND (g.teacher_id = auth.uid() OR g.tutor_id = auth.uid() OR g.monitor_id = auth.uid())
                 )
             ELSE false
         END
@@ -368,12 +368,12 @@ CREATE POLICY "read_attendance"
                     WHERE l.id = attendance.lesson_id
                       AND g.organization_id = public.get_my_organization_id()
                 )
-            WHEN public.get_my_role() = 'teacher' THEN
+            WHEN public.get_my_role() IN ('teacher', 'tutor', 'monitor') THEN
                 EXISTS (
                     SELECT 1 FROM public.lessons l
                     JOIN public.groups g ON g.id = l.group_id
                     WHERE l.id = attendance.lesson_id
-                      AND g.teacher_id = auth.uid()
+                      AND (g.teacher_id = auth.uid() OR g.tutor_id = auth.uid() OR g.monitor_id = auth.uid())
                 )
             ELSE false
         END
@@ -393,17 +393,17 @@ CREATE POLICY "admin_insert_attendance"
         )
     );
 
--- Teacher: davomat belgilash (faqat shu kungi dars)
+-- Teacher/Tutor/Monitor: davomat belgilash (faqat shu kungi dars)
 CREATE POLICY "teacher_insert_attendance"
     ON public.attendance FOR INSERT
     TO authenticated
     WITH CHECK (
-        public.get_my_role() = 'teacher'
+        public.get_my_role() IN ('teacher', 'tutor', 'monitor')
         AND EXISTS (
             SELECT 1 FROM public.lessons l
             JOIN public.groups g ON g.id = l.group_id
             WHERE l.id = attendance.lesson_id
-              AND g.teacher_id = auth.uid()
+              AND (g.teacher_id = auth.uid() OR g.tutor_id = auth.uid() OR g.monitor_id = auth.uid())
               AND l.lesson_date = CURRENT_DATE
         )
     );
@@ -431,28 +431,28 @@ CREATE POLICY "admin_update_attendance"
         )
     );
 
--- Teacher: davomatni tahrirlash (24 soat ichida, faqat o'z guruhida)
+-- Teacher/Tutor/Monitor: davomatni tahrirlash (24 soat ichida, faqat o'z guruhida)
 CREATE POLICY "teacher_update_attendance"
     ON public.attendance FOR UPDATE
     TO authenticated
     USING (
-        public.get_my_role() = 'teacher'
+        public.get_my_role() IN ('teacher', 'tutor', 'monitor')
         AND EXISTS (
             SELECT 1 FROM public.lessons l
             JOIN public.groups g ON g.id = l.group_id
             WHERE l.id = attendance.lesson_id
-              AND g.teacher_id = auth.uid()
+              AND (g.teacher_id = auth.uid() OR g.tutor_id = auth.uid() OR g.monitor_id = auth.uid())
               -- 24 soat ichida tahrirlash mumkin
               AND l.lesson_date >= CURRENT_DATE - INTERVAL '1 day'
         )
     )
     WITH CHECK (
-        public.get_my_role() = 'teacher'
+        public.get_my_role() IN ('teacher', 'tutor', 'monitor')
         AND EXISTS (
             SELECT 1 FROM public.lessons l
             JOIN public.groups g ON g.id = l.group_id
             WHERE l.id = attendance.lesson_id
-              AND g.teacher_id = auth.uid()
+              AND (g.teacher_id = auth.uid() OR g.tutor_id = auth.uid() OR g.monitor_id = auth.uid())
               AND l.lesson_date >= CURRENT_DATE - INTERVAL '1 day'
         )
     );

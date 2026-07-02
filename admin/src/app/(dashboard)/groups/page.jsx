@@ -14,6 +14,7 @@ export default function GroupsPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingGroup, setEditingGroup] = useState(null);
   const [organizationId, setOrganizationId] = useState(null);
+  const [userRole, setUserRole] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -24,8 +25,11 @@ export default function GroupsPage() {
       setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data: userData } = await supabase.from('users').select('organization_id').eq('id', user.id).single();
-        if (userData) setOrganizationId(userData.organization_id);
+        const { data: userData } = await supabase.from('users').select('organization_id, role').eq('id', user.id).single();
+        if (userData) {
+          setOrganizationId(userData.organization_id);
+          setUserRole(userData.role);
+        }
       }
       
       const [groupsRes, tutorsRes, monitorsRes] = await Promise.all([
@@ -86,9 +90,11 @@ export default function GroupsPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <button className="btn btn-primary" onClick={() => { setEditingGroup(null); setShowModal(true); }}>
-          <Plus size={18} /> Yangi Guruh
-        </button>
+        {userRole === 'admin' && (
+          <button className="btn btn-primary" onClick={() => { setEditingGroup(null); setShowModal(true); }}>
+            <Plus size={18} /> Yangi Guruh
+          </button>
+        )}
       </div>
 
       <div className={`card ${styles.tableCard}`}>
@@ -127,14 +133,18 @@ export default function GroupsPage() {
                       </td>
                       <td>{new Date(group.created_at).toLocaleDateString('uz-UZ')}</td>
                       <td>
-                        <div className={styles.actions}>
-                          <button className={styles.actionBtn} onClick={() => { setEditingGroup(group); setShowModal(true); }}>
-                            <Edit2 size={16} />
-                          </button>
-                          <button className={`${styles.actionBtn} ${styles.danger}`} onClick={() => handleDelete(group.id)}>
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
+                        {userRole === 'admin' ? (
+                          <div className={styles.actions}>
+                            <button className={styles.actionBtn} onClick={() => { setEditingGroup(group); setShowModal(true); }}>
+                              <Edit2 size={16} />
+                            </button>
+                            <button className={`${styles.actionBtn} ${styles.danger}`} onClick={() => handleDelete(group.id)}>
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        ) : (
+                          <span style={{ color: '#888' }}>Ruxsat yo'q</span>
+                        )}
                       </td>
                     </tr>
                   ))

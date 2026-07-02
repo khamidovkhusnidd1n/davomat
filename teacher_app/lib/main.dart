@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 import 'features/auth/login_page.dart';
 import 'features/home/home_page.dart';
@@ -19,6 +20,9 @@ void main() async {
   // Initialize Hive for offline caching
   await Hive.initFlutter();
   await Hive.openBox('davomad_cache');
+
+  // Initialize Intl data for Uzbek formatting
+  await initializeDateFormatting('uz', null);
 
   runApp(
     const ProviderScope(

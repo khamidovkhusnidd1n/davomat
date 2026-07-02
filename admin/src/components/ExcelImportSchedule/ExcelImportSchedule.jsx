@@ -55,13 +55,16 @@ export default function ExcelImportSchedule({ isOpen, onClose, groups, organizat
       const normalized = json.map(row => {
         const obj = {};
         for (const [k, v] of Object.entries(row)) {
-          obj[k.toLowerCase().trim().replace(/\s+/g, '_')] = String(v).trim();
+          // 'Hafta kuni' => 'hafta_kuni'
+          const cleanKey = k.toLowerCase().trim().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+          obj[cleanKey] = String(v).trim();
         }
         return obj;
-      }).filter(row => row.hafta_kuni && row.boshlanish_vaqti && row.tugash_vaqti);
+      }).filter(row => row.hafta_kuni || row.boshlanish_vaqti || row.tugash_vaqti); // Bitta bo'lsa ham qoldiramiz
 
       if (normalized.length === 0) {
-        alert('Fayl bo\'sh yoki kerakli ustunlar (hafta_kuni, boshlanish_vaqti, tugash_vaqti) topilmadi.');
+        const sampleKeys = json.length > 0 ? Object.keys(json[0]).join(', ') : 'Fayl bo\'sh';
+        alert(`Kerakli ustunlar topilmadi. Sizdagi ustunlar: ${sampleKeys}\n\nIltimos, Shablonni ko'chirib olib, unga to'ldiring!`);
         return;
       }
 

@@ -50,19 +50,41 @@ export default function ExcelImport({ isOpen, onClose, groups, organizationId, o
     reader.onload = (e) => {
       const wb = XLSX.read(e.target.result, { type: 'binary' });
       const ws = wb.Sheets[wb.SheetNames[0]];
+      // 1-usul: Standard parser
       const json = XLSX.utils.sheet_to_json(ws, { defval: '' });
-
-      // Ustun nomlarni normalize qil (lowercase, trim)
-      const normalized = json.map(row => {
+      let normalized = json.map(row => {
         const obj = {};
         for (const [k, v] of Object.entries(row)) {
-          obj[k.toLowerCase().trim().replace(/\s+/g, '_')] = String(v).trim();
+          const cleanKey = k.toLowerCase().trim().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+          obj[cleanKey] = String(v).trim();
         }
         return obj;
       }).filter(row => row.full_name); // bo'sh ismlarni o'chir
 
+      // 2-usul: Smart Parser (Agar shablon bo'lmasa, shunchaki ismlar ro'yxati bo'lsa)
       if (normalized.length === 0) {
-        alert('Fayl bo\'sh yoki "full_name" ustuni topilmadi');
+        const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: null });
+        const smartResult = [];
+        
+        for (let i = 0; i < rows.length; i++) {
+          const row = rows[i];
+          if (!Array.isArray(row) || row.length === 0) continue;
+          
+          // Agar birinchi ustun matn bo'lsa va ismga o'xshasa (kamida 3 ta harf)
+          const firstCol = String(row[0] || '').trim();
+          if (firstCol.length > 3 && isNaN(Number(firstCol))) {
+            smartResult.push({
+              full_name: firstCol,
+              phone: String(row[1] || '').trim(),
+              email: String(row[2] || '').trim(),
+            });
+          }
+        }
+        normalized = smartResult;
+      }
+
+      if (normalized.length === 0) {
+        alert('Fayl ichidan bironta ham o\'quvchi ismi topilmadi.\nIltimos, shablonni ko\'chirib olib, ustunlarni to\'g\'rilab ko\'ring.');
         return;
       }
 

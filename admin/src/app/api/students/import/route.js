@@ -25,8 +25,12 @@ export async function POST(request) {
       }
 
       // 1) auth.users yaratish (email yoki phone orqali)
+      const words = full_name.toLowerCase().trim().split(/\s+/);
+      const loginBase = (words[0] + (words[1] ? '_' + words[1] : '')).replace(/[^a-z0-9_]/g, '');
       const uniqueSuffix = Math.floor(Math.random() * 10000);
-      const authEmail = email?.trim() || `st_${Date.now()}_${uniqueSuffix}@app.local`;
+      
+      const finalLogin = email?.trim() || `${loginBase}_${uniqueSuffix}`;
+      const authEmail = finalLogin.includes('@') ? finalLogin : `${finalLogin}@app.local`;
       const tempPassword = '123456'; // Default parol
 
       const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
@@ -47,7 +51,7 @@ export async function POST(request) {
         id: userId,
         organization_id: organizationId,
         full_name: full_name.trim(),
-        email: email?.trim() || null,
+        email: finalLogin, // Generated loginni ko'rinishi uchun public.users ga saqlaymiz
         phone: phone?.trim() || null,
         role: 'student',
       });

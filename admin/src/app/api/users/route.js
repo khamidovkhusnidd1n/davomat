@@ -16,14 +16,17 @@ export async function POST(request) {
     // Login formatda auth email yaratish
     let finalLogin = email?.trim();
     let authEmail;
-    
+
     if (finalLogin && finalLogin.includes('@')) {
       authEmail = finalLogin;
     } else if (finalLogin) {
       authEmail = `${finalLogin}@app.local`;
     } else {
-      finalLogin = full_name.trim().toLowerCase().replace(/\s+/g, '.').replace(/[^a-z0-9.]/g, '');
-      if (!finalLogin) finalLogin = Date.now().toString();
+      // Generate friendly login from full_name
+      const words = full_name.toLowerCase().trim().split(/\s+/);
+      const loginBase = (words[0] + (words[1] ? '_' + words[1] : '')).replace(/[^a-z0-9_]/g, '');
+      const uniqueSuffix = Math.floor(Math.random() * 1000);
+      finalLogin = `${loginBase}_${uniqueSuffix}`;
       authEmail = `${finalLogin}@app.local`;
     }
 

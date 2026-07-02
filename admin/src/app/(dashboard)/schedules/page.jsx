@@ -1,8 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Search, Plus, Trash2, Edit2, Clock } from 'lucide-react';
+import { Search, Plus, Trash2, Edit2, Clock, FileSpreadsheet } from 'lucide-react';
 import ScheduleModal from './ScheduleModal';
+import ExcelImportSchedule from '@/components/ExcelImportSchedule/ExcelImportSchedule';
 import styles from './page.module.css';
 
 const DAYS = {
@@ -21,7 +22,11 @@ export default function SchedulesPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState(null);
+  
+  // Fake organizationId hozircha
+  const organizationId = '11111111-1111-1111-1111-111111111111';
 
   useEffect(() => {
     fetchData();
@@ -86,9 +91,14 @@ export default function SchedulesPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <button className="btn btn-primary" onClick={() => { setEditingSchedule(null); setShowModal(true); }}>
-          <Plus size={18} /> Yangi Dars Vaqti
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button className="btn btn-secondary" onClick={() => setShowImport(true)}>
+            <FileSpreadsheet size={18} /> Excel Import
+          </button>
+          <button className="btn btn-primary" onClick={() => { setEditingSchedule(null); setShowModal(true); }}>
+            <Plus size={18} /> Yangi Dars Vaqti
+          </button>
+        </div>
       </div>
 
       <div className={`card ${styles.tableCard}`}>
@@ -160,6 +170,14 @@ export default function SchedulesPage() {
         onClose={() => setShowModal(false)}
         schedule={editingSchedule}
         groups={groups}
+        onSuccess={fetchData}
+      />
+
+      <ExcelImportSchedule
+        isOpen={showImport}
+        onClose={() => setShowImport(false)}
+        groups={groups}
+        organizationId={organizationId}
         onSuccess={fetchData}
       />
     </div>

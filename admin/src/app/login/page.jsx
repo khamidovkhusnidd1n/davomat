@@ -53,7 +53,7 @@ export default function Login() {
         <div className={`card ${styles.loginCard}`}>
           <div className={styles.logo}>
             <div className={styles.logoIcon}>D</div>
-            <h1 className={styles.logoText}>DAVOMAD</h1>
+            <h1 className={styles.logoText}>DAVOMAT</h1>
           </div>
           
           <h2 className={styles.title}>Tizimga kirish</h2>
@@ -112,12 +112,6 @@ export default function Login() {
               )}
             </button>
           </form>
-          
-          <div className={styles.demoInfo}>
-            <p><strong>Admin kirish:</strong></p>
-            <p>Login: admin</p>
-            <p>Parol: Admin123</p>
-          </div>
         </div>
       </div>
     </div>

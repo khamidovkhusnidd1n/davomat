@@ -53,7 +53,7 @@ export default function DashboardLayout({ children }) {
       case 'reports': return 'Hisobotlar';
       case 'settings': return 'Sozlamalar';
       case 'profile': return 'Profil';
-      default: return 'DAVOMAD';
+      default: return 'DAVOMAT';
     }
   };
 

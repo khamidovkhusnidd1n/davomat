@@ -39,7 +39,7 @@ class DavomadApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'DAVOMAD - Teacher',
+      title: 'DAVOMAT - Teacher',
       debugShowCheckedModeBanner: false,
       theme: _buildTheme(Brightness.light),
       darkTheme: _buildTheme(Brightness.dark),
@@ -104,7 +104,7 @@ class _SplashPageState extends State<SplashPage> {
             Icon(Icons.check_circle_outline, size: 64, color: Color(0xFF6366F1)),
             SizedBox(height: 16),
             Text(
-              'DAVOMAD',
+              'DAVOMAT',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,

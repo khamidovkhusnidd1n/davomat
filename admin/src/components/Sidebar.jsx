@@ -46,7 +46,7 @@ export default function Sidebar() {
     <aside className={styles.sidebar}>
       <div className={styles.logo}>
         <div className={styles.logoIcon}>D</div>
-        <span className={styles.logoText}>DAVOMAD</span>
+        <span className={styles.logoText}>DAVOMAT</span>
       </div>
 
       <div className={styles.menuWrapper}>

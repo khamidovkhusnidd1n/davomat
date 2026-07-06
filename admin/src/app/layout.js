@@ -4,7 +4,7 @@ import { Inter } from 'next/font/google';
 const inter = Inter({ subsets: ['latin', 'cyrillic'] });
 
 export const metadata = {
-  title: 'DAVOMAD - Admin Panel',
+  title: 'DAVOMAT - Admin Panel',
   description: "O'quv markazlari uchun davomat tizimi",
 };
 

@@ -4,6 +4,7 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { BarChart3, AlertTriangle, FileSpreadsheet, Download, FileText } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 import styles from './page.module.css';
 
 export default function ReportsPage() {
@@ -22,10 +23,50 @@ export default function ReportsPage() {
   async function fetchData() {
     setLoading(true);
     try {
-      const res = await fetch(`/api/reports?month=${selectedMonth}`);
-      if (!res.ok) throw new Error('API xatosi');
-      const json = await res.json();
-      setData(json);
+      // Fetch groups
+      const { data: groups, error: gErr } = await supabase
+        .from('groups')
+        .select('id, name, course_name');
+      if (gErr) throw gErr;
+
+      // Fetch students
+      const { data: students, error: sErr } = await supabase
+        .from('students')
+        .select(`
+          id, 
+          group_id, 
+          users ( full_name, phone )
+        `);
+      if (sErr) throw sErr;
+
+      // Fetch lessons
+      let lessonsQuery = supabase.from('lessons').select('id, group_id, lesson_date, title').order('lesson_date', { ascending: true });
+      if (selectedMonth) {
+        const startDate = `${selectedMonth}-01`;
+        const endDate = `${selectedMonth}-31`; 
+        lessonsQuery = lessonsQuery.gte('lesson_date', startDate).lte('lesson_date', endDate);
+      }
+      const { data: lessons, error: lErr } = await lessonsQuery;
+      if (lErr) throw lErr;
+
+      const lessonIds = lessons ? lessons.map(l => l.id) : [];
+      let attendance = [];
+      
+      if (lessonIds.length > 0) {
+        const { data: attData, error: aErr } = await supabase
+          .from('attendance')
+          .select('id, lesson_id, student_id, status')
+          .in('lesson_id', lessonIds);
+        if (aErr) throw aErr;
+        attendance = attData || [];
+      }
+
+      setData({
+        groups: groups || [],
+        students: students || [],
+        lessons: lessons || [],
+        attendance: attendance
+      });
     } catch (err) {
       console.error(err);
       alert('Ma\'lumotlarni yuklashda xato');
@@ -158,6 +199,17 @@ export default function ReportsPage() {
       // Create valid sheet name (max 31 chars)
       const validName = sheetName.substring(0, 31).replace(/[\\/?*\[\]]/g, '');
       const ws = XLSX.utils.json_to_sheet(rows);
+      
+      // Ustunlar kengligini o'rnatish
+      const cols = [{ wch: 25 }]; // O'quvchi F.I.O ustuni
+      if (rows.length > 0) {
+        const numDates = Object.keys(rows[0]).length - 1;
+        for (let i = 0; i < numDates; i++) {
+          cols.push({ wch: 12 }); // Sana ustunlari
+        }
+      }
+      ws['!cols'] = cols;
+
       XLSX.utils.book_append_sheet(wb, ws, validName || 'Sheet');
     }
 

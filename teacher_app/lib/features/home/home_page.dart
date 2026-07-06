@@ -215,7 +215,7 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.black87,
         title: Text(
-          'DAVOMAD',
+          'DAVOMAT',
           style: GoogleFonts.outfit(
             fontWeight: FontWeight.w800,
             letterSpacing: 1,

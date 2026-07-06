@@ -79,7 +79,7 @@ class _LoginPageState extends State<LoginPage> {
                 Icon(Icons.check_circle_outline, size: 64, color: colorScheme.primary),
                 const SizedBox(height: 16),
                 Text(
-                  'DAVOMAD',
+                  'DAVOMAT',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.headlineLarge?.copyWith(
                     fontWeight: FontWeight.bold,

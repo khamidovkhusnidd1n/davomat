@@ -1,16 +1,162 @@
 .container {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
 }
-.contentCard {
-  padding: 32px;
-  text-align: center;
+
+.header {
+  margin-bottom: 24px;
+}
+
+.header h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 8px 0;
+}
+
+.header p {
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+}
+
+.tabBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tabBtn:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+
+.tabBtn.active {
+  background: var(--primary);
+  color: white;
+}
+
+.content {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   min-height: 400px;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th, .table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.table th {
+  background: var(--bg-secondary);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* Red Zone specific */
+.redRow {
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.dangerBadge {
+  display: inline-block;
+  padding: 4px 8px;
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+/* Overview specific */
+.rankBadge {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.rank1 { background: #ffd700; color: #856404; }
+.rank2 { background: #e0e0e0; color: #383d41; }
+.rank3 { background: #cd7f32; color: #721c24; }
+.rankOther { background: var(--bg-secondary); color: var(--text-secondary); }
+
+/* Export specific */
+.exportPanel {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  gap: 24px;
+  padding: 40px 0;
+}
+
+.exportButtons {
+  display: flex;
   gap: 16px;
-  color: var(--text-secondary);
+}
+
+.exportBtn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 32px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s;
+  color: white;
+}
+
+.exportBtn:hover {
+  transform: translateY(-2px);
+}
+
+.btnExcel {
+  background: #217346;
+}
+.btnPdf {
+  background: #db2728;
 }

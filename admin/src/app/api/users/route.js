@@ -69,6 +69,11 @@ export async function POST(request) {
         await supabaseAdmin.from('users').delete().eq('id', userId);
         throw studentError;
       }
+      
+      // Agar monitor bo'lsa, groups jadvalidagi monitor_id ni ham yangilash
+      if (role === 'monitor') {
+        await supabaseAdmin.from('groups').update({ monitor_id: userId }).eq('id', group_id);
+      }
     }
 
     return Response.json({ success: true, userId, password: userPassword });
@@ -95,9 +100,23 @@ export async function PUT(request) {
     if (userError) throw userError;
 
     if (['student', 'monitor'].includes(role) && group_id) {
-      const { error: studentError } = await supabaseAdmin.from('students')
-        .update({ group_id }).eq('user_id', id);
+      const { data: updatedData, error: studentError } = await supabaseAdmin.from('students')
+        .update({ group_id }).eq('user_id', id).select();
       if (studentError) throw studentError;
+      
+      if (!updatedData || updatedData.length === 0) {
+        const { error: insertError } = await supabaseAdmin.from('students').insert({
+          user_id: id,
+          group_id,
+          status: 'active'
+        });
+        if (insertError) throw insertError;
+      }
+      
+      // Agar role monitor bo'lsa, groups dagi monitor_id ni ham yangilash
+      if (role === 'monitor') {
+        await supabaseAdmin.from('groups').update({ monitor_id: id }).eq('id', group_id);
+      }
     }
 
     // Parol o'zgartirish

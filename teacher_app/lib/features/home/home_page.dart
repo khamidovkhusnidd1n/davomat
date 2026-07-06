@@ -123,29 +123,48 @@ class _HomePageState extends State<HomePage> {
     );
 
     try {
-      final existingLesson = await supabase
+      final lessonTitle = '${schedule['start_time']} darsi';
+
+      final existingLessons = await supabase
           .from('lessons')
           .select('id')
           .eq('group_id', schedule['group_id'])
           .eq('lesson_date', todayStr)
-          .maybeSingle();
+          .eq('title', lessonTitle)
+          .limit(1);
 
       String lessonId;
 
-      if (existingLesson == null) {
+      if (existingLessons.isEmpty) {
         // Bugun uchun dars yaratamiz
-        final newLesson = await supabase
-            .from('lessons')
-            .insert({
-              'group_id': schedule['group_id'],
-              'lesson_date': todayStr,
-              'title': '${schedule['start_time']} darsi', // Masalan: "14:00 darsi"
-            })
-            .select('id')
-            .single();
-        lessonId = newLesson['id'];
+        try {
+          final newLesson = await supabase
+              .from('lessons')
+              .insert({
+                'group_id': schedule['group_id'],
+                'lesson_date': todayStr,
+                'title': lessonTitle,
+              })
+              .select('id')
+              .single();
+          lessonId = newLesson['id'];
+        } catch (e) {
+          // Boshqa foydalanuvchi aynan shu vaqtda dars yaratgan bo'lishi mumkin (Race Condition)
+          final fallbackLessons = await supabase
+              .from('lessons')
+              .select('id')
+              .eq('group_id', schedule['group_id'])
+              .eq('lesson_date', todayStr)
+              .eq('title', lessonTitle)
+              .limit(1);
+          if (fallbackLessons.isNotEmpty) {
+            lessonId = fallbackLessons[0]['id'];
+          } else {
+            throw e; // Boshqa noma'lum xatolik
+          }
+        }
       } else {
-        lessonId = existingLesson['id'];
+        lessonId = existingLessons[0]['id'];
       }
 
       if (mounted) Navigator.pop(context); // loading ni yopish

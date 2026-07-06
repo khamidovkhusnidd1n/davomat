@@ -404,7 +404,7 @@ CREATE POLICY "teacher_insert_attendance"
             JOIN public.groups g ON g.id = l.group_id
             WHERE l.id = attendance.lesson_id
               AND (g.teacher_id = auth.uid() OR g.tutor_id = auth.uid() OR g.monitor_id = auth.uid())
-              AND l.lesson_date = CURRENT_DATE
+              AND l.lesson_date >= CURRENT_DATE - INTERVAL '1 day'
         )
     );
 

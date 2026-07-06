@@ -128,8 +128,9 @@ class _AttendancePageState extends State<AttendancePage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Saqlashda xatolik. Ehtimol vaqt cheklovi (24s) tugagan.'),
+            content: const Text('Xatolik: Faqat bugun va kechagi kun darslariga davomat belgilash mumkin (RLS cheklovi).'),
             backgroundColor: Theme.of(context).colorScheme.error,
+            duration: const Duration(seconds: 4),
           ),
         );
       }

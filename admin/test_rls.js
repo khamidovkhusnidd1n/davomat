@@ -1,46 +1,38 @@
+const fs = require('fs');
 const { createClient } = require('@supabase/supabase-js');
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
+const envFile = fs.readFileSync('.env.local', 'utf8');
+const envVars = {};
+envFile.split('\n').forEach(line => {
+  const [key, ...val] = line.split('=');
+  if (key && val) envVars[key.trim()] = val.join('=').trim();
+});
 
-async function test() {
-  const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-    email: 'admin@itacademy.uz',
-    password: 'Admin123!',
+const supabase = createClient(envVars['NEXT_PUBLIC_SUPABASE_URL'], envVars['NEXT_PUBLIC_SUPABASE_ANON_KEY']);
+
+async function testAuth() {
+  const { data, error: authErr } = await supabase.auth.signInWithPassword({
+    email: 'student1',
+    password: 'student1'
   });
-  if (authError) {
-    console.error('Login error:', authError.message);
-    return;
-  }
+  if (authErr) { console.log(authErr); return; }
   
-  const user = authData.user;
-  console.log('Logged in as:', user.id);
+  const scheduleGroupId = '20f37ff5-c0f0-43d3-8116-63d0ddc927ed';
   
-  const { data: userData, error: userError } = await supabase.from('users').select('*').eq('id', user.id).single();
-  if (userError) {
-    console.error('User fetch error:', userError.message);
-    return;
-  }
-  
-  console.log('User data:', userData);
-  
-  const payload = {
-    name: 'Test Group',
-    course_name: 'Test Course',
-    tutor_id: null,
-    monitor_id: null,
-    organization_id: userData.organization_id
-  };
-  
-  const { data, error } = await supabase.from('groups').insert(payload).select();
-  if (error) {
-    console.error('Insert error:', error);
-  } else {
-    console.log('Insert success:', data);
-    await supabase.from('groups').delete().eq('id', data[0].id);
+  try {
+    const newLesson = await supabase
+      .from('lessons')
+      .insert({
+        group_id: scheduleGroupId,
+        lesson_date: '2026-07-06',
+        title: 'Another Test',
+      })
+      .select('id')
+      .single();
+    console.log("Success:", newLesson);
+  } catch (e) {
+    console.log("Error caught:", e);
   }
 }
 
-test();
+testAuth();

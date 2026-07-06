@@ -107,13 +107,15 @@ COMMENT ON COLUMN public.schedules.day_of_week IS '1=Dushanba, 2=Seshanba, 3=Cho
 -- ============================================================================
 CREATE TABLE public.students (
     id        UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id   UUID NOT NULL UNIQUE REFERENCES public.users(id) ON DELETE CASCADE,
+    user_id   UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
     group_id  UUID NOT NULL REFERENCES public.groups(id) ON DELETE CASCADE,
     joined_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     status    TEXT NOT NULL DEFAULT 'active',
 
     -- Talaba holati
-    CONSTRAINT students_status_check CHECK (status IN ('active', 'left', 'transferred'))
+    CONSTRAINT students_status_check CHECK (status IN ('active', 'left', 'transferred')),
+    -- Bitta talaba bitta guruhga faqat bir marta qo'shilishi mumkin
+    CONSTRAINT students_user_group_unique UNIQUE (user_id, group_id)
 );
 
 CREATE INDEX idx_students_group_id ON public.students(group_id);
@@ -137,8 +139,8 @@ CREATE TABLE public.lessons (
     created_by  UUID REFERENCES public.users(id) ON DELETE SET NULL,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
 
-    -- Bitta guruhda bitta sanada faqat bitta dars
-    CONSTRAINT lessons_group_date_unique UNIQUE (group_id, lesson_date)
+    -- Bitta guruhda bitta sanada bitta mavzuda faqat bitta dars (1 kunda 2 xil dars bo'lishi mumkin)
+    CONSTRAINT lessons_group_date_unique UNIQUE (group_id, lesson_date, title)
 );
 
 CREATE INDEX idx_lessons_group_id    ON public.lessons(group_id);

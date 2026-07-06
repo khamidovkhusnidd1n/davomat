@@ -37,7 +37,7 @@ export default function TutorsPage() {
           created_at,
           groups!groups_tutor_id_fkey ( name, course_name )
         `)
-        .eq('role', 'tutor');
+        .in('role', ['tutor', 'teacher']);
       
       if (error) throw error;
       setTutors(data || []);
@@ -78,14 +78,14 @@ export default function TutorsPage() {
           <Search size={20} className={styles.searchIcon} />
           <input 
             type="text" 
-            placeholder="Tutor ismi yoki telefon..." 
+            placeholder="O'qituvchi / Tutor ismi yoki telefon..." 
             className="input" 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
         <button className="btn btn-primary" onClick={() => { setEditingTutor(null); setShowModal(true); }}>
-          <Plus size={18} /> Yangi Tutor
+          <Plus size={18} /> Yangi Qo'shish
         </button>
       </div>
 

@@ -1,0 +1,1 @@
+-- ============================================\n-- DAVOMAD: UNIQUE CONSTRAINTNI OCHIRISH\n-- Ushbu SQL ni Supabase Dashboard > SQL Editor da bajaring\n-- ============================================\n\nALTER TABLE lessons DROP CONSTRAINT IF EXISTS lessons_group_date_unique;

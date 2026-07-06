@@ -20,7 +20,7 @@ import styles from './Sidebar.module.css';
 const menuItems = [
   { name: 'Bosh sahifa', path: '/dashboard', icon: LayoutDashboard },
   { name: "O'quvchilar", path: '/students', icon: GraduationCap },
-  { name: "Tutorlar", path: '/tutors', icon: Users },
+  { name: "O'qituvchilar", path: '/tutors', icon: Users },
   { name: 'Guruhlar', path: '/groups', icon: BookOpen },
   { name: 'Jadval', path: '/schedules', icon: CalendarDays },
   { name: 'Darslar', path: '/lessons', icon: CalendarClock },

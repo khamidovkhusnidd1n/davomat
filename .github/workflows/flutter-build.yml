@@ -41,6 +41,10 @@ jobs:
         working-directory: ./teacher_app
         run: flutter pub get
 
+      - name: Generate Launcher Icons
+        working-directory: ./teacher_app
+        run: flutter pub run flutter_launcher_icons
+
       - name: Build APK
         working-directory: ./teacher_app
         run: flutter build apk --release

@@ -2,12 +2,18 @@ const https = require('https');
 
 const url = 'https://davomat-53eq.onrender.com';
 
-console.log('[KeepAlive] Started! Pinging every 10 minutes...');
+console.log('[KeepAlive] Started! Pinging every 5 minutes...');
 
-setInterval(() => {
+function pingServer() {
   https.get(url, (res) => {
     console.log(`[KeepAlive] Pinged ${url} - Status: ${res.statusCode}`);
   }).on('error', (err) => {
     console.error(`[KeepAlive] Error pinging ${url}:`, err.message);
   });
-}, 10 * 60 * 1000); // 10 minutes
+}
+
+// Ping har 5 daqiqada (300000 ms)
+setInterval(pingServer, 5 * 60 * 1000);
+
+// Server yonishi bilan birinchi marta ping yuborish (10 soniyadan so'ng)
+setTimeout(pingServer, 10000);

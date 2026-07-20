@@ -190,6 +190,7 @@ class _AttendancePageState extends State<AttendancePage> {
                 ),
                 Expanded(
                   child: ListView.builder(
+                    padding: const EdgeInsets.only(bottom: 80),
                     itemCount: _students.length,
                     itemBuilder: (context, index) {
                       final student = _students[index];
@@ -209,7 +210,9 @@ class _AttendancePageState extends State<AttendancePage> {
                               child: Text(fullName.isNotEmpty ? fullName[0].toUpperCase() : '?'),
                             ),
                             title: Text(fullName, style: const TextStyle(fontWeight: FontWeight.bold)),
-                            subtitle: Row(
+                            subtitle: Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
                               children: [
                                 _StatusChip(
                                   label: 'Bor',
@@ -221,22 +224,30 @@ class _AttendancePageState extends State<AttendancePage> {
                                     if (!isSelf) setState(() => _attendanceMap[id] = 'present');
                                   },
                                 ),
-                                const SizedBox(width: 8),
                                 _StatusChip(
-                                  label: 'Yo\'q',
-                                  icon: Icons.close,
-                                  color: Colors.red,
-                                  isSelected: _attendanceMap[id] == 'absent',
+                                  label: 'Sababli',
+                                  icon: Icons.info_outline,
+                                  color: Colors.orange,
+                                  isSelected: _attendanceMap[id] == 'excused',
                                   isDisabled: isSelf,
                                   onTap: () {
-                                    if (!isSelf) setState(() => _attendanceMap[id] = 'absent');
+                                    if (!isSelf) setState(() => _attendanceMap[id] = 'excused');
                                   },
                                 ),
-                                const SizedBox(width: 8),
+                                _StatusChip(
+                                  label: 'Sababsiz',
+                                  icon: Icons.close,
+                                  color: Colors.red,
+                                  isSelected: _attendanceMap[id] == 'unexcused',
+                                  isDisabled: isSelf,
+                                  onTap: () {
+                                    if (!isSelf) setState(() => _attendanceMap[id] = 'unexcused');
+                                  },
+                                ),
                                 _StatusChip(
                                   label: 'Kech',
                                   icon: Icons.access_time,
-                                  color: Colors.orange,
+                                  color: Colors.amber,
                                   isSelected: _attendanceMap[id] == 'late',
                                   isDisabled: isSelf,
                                   onTap: () {

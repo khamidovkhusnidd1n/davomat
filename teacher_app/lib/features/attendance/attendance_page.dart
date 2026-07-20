@@ -196,7 +196,7 @@ class _AttendancePageState extends State<AttendancePage> {
                       final id = student['id'].toString();
                       final studentUserId = student['user_id']?.toString();
                       final user = student['users'];
-                      final fullName = user != null ? user['full_name'] : 'Noma\'lum';
+                      final String fullName = user != null ? (user['full_name']?.toString() ?? 'Noma\'lum') : 'Noma\'lum';
                       
                       final currentUserId = supabase.auth.currentUser?.id;
                       final isSelf = currentUserId != null && studentUserId == currentUserId;

@@ -176,7 +176,7 @@ class _HomePageState extends State<HomePage> {
           MaterialPageRoute(
             builder: (context) => AttendancePage(
               lessonId: lessonId,
-              groupName: schedule['group_name'],
+              groupName: schedule['group_name'].toString(),
               lessonTitle: '${schedule['course_name']} (${schedule['start_time']}-${schedule['end_time']})',
             ),
           ),
@@ -387,7 +387,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                     )
                   else
-                    ..._todaySchedules.map((schedule) => Container(
+                    ..._todaySchedules.map<Widget>((schedule) => Container(
                           margin: const EdgeInsets.only(bottom: 16),
                           decoration: BoxDecoration(
                             color: Colors.white,
@@ -420,7 +420,7 @@ class _HomePageState extends State<HomePage> {
                                       child: Column(
                                         children: [
                                           Text(
-                                            schedule['start_time'],
+                                            schedule['start_time'].toString(),
                                             style: GoogleFonts.inter(
                                               fontWeight: FontWeight.bold,
                                               fontSize: 16,
@@ -429,7 +429,7 @@ class _HomePageState extends State<HomePage> {
                                           ),
                                           const SizedBox(height: 4),
                                           Text(
-                                            schedule['end_time'],
+                                            schedule['end_time'].toString(),
                                             style: GoogleFonts.inter(
                                               fontWeight: FontWeight.w500,
                                               fontSize: 12,
@@ -447,7 +447,7 @@ class _HomePageState extends State<HomePage> {
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            schedule['group_name'],
+                                            schedule['group_name'].toString(),
                                             style: GoogleFonts.outfit(
                                               fontSize: 18,
                                               fontWeight: FontWeight.bold,
@@ -456,7 +456,7 @@ class _HomePageState extends State<HomePage> {
                                           ),
                                           const SizedBox(height: 4),
                                           Text(
-                                            schedule['course_name'],
+                                            schedule['course_name'].toString(),
                                             style: GoogleFonts.inter(
                                               fontSize: 14,
                                               color: Colors.grey.shade600,

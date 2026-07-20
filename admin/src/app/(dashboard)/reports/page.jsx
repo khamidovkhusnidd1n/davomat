@@ -125,7 +125,7 @@ export default function ReportsPage() {
       let consecutiveAbsent = 0;
       for (const les of recentLessons) {
         const att = data.attendance.find(a => a.lesson_id === les.id && a.student_id === st.id);
-        if (att && att.status === 'absent') {
+        if (att && (att.status === 'absent' || att.status === 'excused' || att.status === 'unexcused')) {
           consecutiveAbsent++;
         } else if (att) {
           // Came or excused, break streak
@@ -171,7 +171,7 @@ export default function ReportsPage() {
           let mark = '';
           if (att) {
             if (att.status === 'present') mark = '+';
-            else if (att.status === 'absent') mark = '-';
+            else if (att.status === 'absent' || att.status === 'unexcused') mark = '-';
             else if (att.status === 'late') mark = 'K';
             else if (att.status === 'excused') mark = 'S';
           }

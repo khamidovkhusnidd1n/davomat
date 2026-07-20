@@ -101,7 +101,7 @@ export default function AttendancePage() {
                         <td>{record.lessons?.title || 'Mavzusiz'}</td>
                         <td>
                           <span className={`${styles.statusBadge} ${styles[record.status] || ''}`}>
-                            {record.status === 'present' ? 'Kelgan' : record.status === 'absent' ? 'Kelmagan' : 'Kech qolgan'}
+                            {record.status === 'present' ? 'Kelgan' : record.status === 'excused' ? 'Kelmagan (Sababli)' : record.status === 'absent' || record.status === 'unexcused' ? 'Kelmagan (Sababsiz)' : 'Kech qolgan'}
                           </span>
                         </td>
                         <td className={styles.textSmall}>{record.users?.full_name || 'Tizim'}</td>

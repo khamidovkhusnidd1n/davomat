@@ -62,7 +62,7 @@ export default function Dashboard() {
         let late = 0;
         if (attendanceData) {
           attendanceData.forEach(record => {
-            if (record.status === 'absent') absent++;
+            if (record.status === 'absent' || record.status === 'excused' || record.status === 'unexcused') absent++;
             else if (record.status === 'present') present++;
             else if (record.status === 'late') late++;
           });

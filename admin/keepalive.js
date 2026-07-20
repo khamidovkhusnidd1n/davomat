@@ -1,6 +1,6 @@
 const https = require('https');
 
-const url = 'https://davomat-53eq.onrender.com';
+const url = 'https://davomat-s4d0.onrender.com';
 
 console.log('[KeepAlive] Started! Pinging every 5 minutes...');
 

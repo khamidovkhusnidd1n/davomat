@@ -301,7 +301,7 @@ INSERT INTO public.attendance (lesson_id, student_id, status, marked_by) VALUES
 -- ============================================================================
 -- Demo ma'lumotlar yaratildi ✅
 -- Login ma'lumotlari:
---   Admin:    admin@itacademy.uz     / Admin123!
---   Teacher1: teacher1@itacademy.uz  / Teacher123!
---   Teacher2: teacher2@itacademy.uz  / Teacher123!
+--   Admin:    admin@itacademy.uz     / [Xavfsizlik uchun olib tashlandi]
+--   Teacher1: teacher1@itacademy.uz  / [Xavfsizlik uchun olib tashlandi]
+--   Teacher2: teacher2@itacademy.uz  / [Xavfsizlik uchun olib tashlandi]
 -- ============================================================================

@@ -222,7 +222,7 @@ INSERT INTO public.organizations (id, name, phone, address) VALUES
 -- TAYYOR! Endi 2-qadamga o'ting:
 -- Supabase Dashboard → Authentication → Users → Add User:
 --   Email: admin@app.local
---   Password: Admin123
+--   Password: [Xavfsizlik uchun olib tashlandi]
 --   Auto Confirm: ✅
 -- Keyin 3-qadamdagi SQL ni run qiling (admin_setup.sql)
 -- ============================================================================

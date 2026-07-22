@@ -1,6 +1,8 @@
 require('dotenv').config();
 const { Telegraf, Markup } = require('telegraf');
 const { createClient } = require('@supabase/supabase-js');
+const express = require('express');
+const https = require('https');
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 const bot = new Telegraf(process.env.BOT_TOKEN);
@@ -142,6 +144,26 @@ bot.launch().then(() => {
   console.log("Bot ishlashni boshladi...");
 }).catch(err => {
   console.error("Bot ishga tushishda xatolik:", err);
+});
+
+// Express Server for Render Web Service port binding and keep-alive
+const app = express();
+app.get('/', (req, res) => {
+  res.send('Bot is running!');
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+  
+  // Keep-alive ping every 14 minutes (Render sleeps after 15 mins of inactivity)
+  setInterval(() => {
+    https.get('https://davomat-3sap.onrender.com', (res) => {
+      console.log(`Keep-alive ping sent, status: ${res.statusCode}`);
+    }).on('error', (err) => {
+      console.error('Keep-alive ping error:', err.message);
+    });
+  }, 14 * 60 * 1000); // 14 minutes
 });
 
 // Enable graceful stop

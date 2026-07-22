@@ -122,19 +122,20 @@ bot.hears('📚 Dars mavzulari', async (ctx) => {
   const { data: student } = await supabase.from('students').select('group_id').eq('user_id', user.id).single();
   if (!student) return ctx.reply("Guruh topilmadi.");
 
-  const { data: syllabuses } = await supabase
-    .from('syllabuses')
-    .select('*')
+  const { data: lessonsData } = await supabase
+    .from('lessons')
+    .select('title, lesson_date')
     .eq('group_id', student.group_id)
-    .order('day_number', { ascending: true });
+    .order('lesson_date', { ascending: true })
+    .limit(10); // Show upcoming or recent 10 lessons
 
-  if (!syllabuses || syllabuses.length === 0) {
-    return ctx.reply("Sizning guruhingiz uchun hali dars dasturi kiritilmagan.");
+  if (!lessonsData || lessonsData.length === 0) {
+    return ctx.reply("Sizning guruhingiz uchun hali dars dasturi (mavzulari) kiritilmagan.");
   }
 
-  let text = "<b>Guruhning dars dasturi:</b>\n\n";
-  syllabuses.forEach(s => {
-    text += `🔹 ${s.day_number}-kun: ${s.topic_title}\n`;
+  let text = "<b>Guruhning dars mavzulari:</b>\n\n";
+  lessonsData.forEach((s, idx) => {
+    text += `🔹 ${idx + 1}-dars (${s.lesson_date}): ${s.title}\n`;
   });
 
   ctx.replyWithHTML(text);

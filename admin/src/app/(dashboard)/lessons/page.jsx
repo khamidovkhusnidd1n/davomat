@@ -1,18 +1,34 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Search, Calendar, Eye } from 'lucide-react';
+import { Search, Calendar, Eye, Plus, X } from 'lucide-react';
 import Link from 'next/link';
 import styles from './page.module.css';
 
 export default function LessonsPage() {
   const [lessons, setLessons] = useState([]);
+  const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  
+  // Modal states
+  const [showModal, setShowModal] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [formData, setFormData] = useState({
+    group_id: '',
+    lesson_date: new Date().toISOString().split('T')[0],
+    title: ''
+  });
 
   useEffect(() => {
     fetchLessons();
+    fetchGroups();
   }, []);
+
+  async function fetchGroups() {
+    const { data } = await supabase.from('groups').select('id, name').order('name');
+    if (data) setGroups(data);
+  }
 
   async function fetchLessons() {
     try {
@@ -44,6 +60,32 @@ export default function LessonsPage() {
     l.groups?.name?.toLowerCase().includes(search.toLowerCase())
   );
 
+  async function handleSaveLesson(e) {
+    e.preventDefault();
+    if (!formData.group_id || !formData.lesson_date || !formData.title) return;
+    
+    try {
+      setSaving(true);
+      const { error } = await supabase.from('lessons').insert({
+        group_id: formData.group_id,
+        lesson_date: formData.lesson_date,
+        title: formData.title,
+        created_by: null // Tizim
+      });
+      
+      if (error) throw error;
+      
+      setShowModal(false);
+      setFormData({ group_id: '', lesson_date: new Date().toISOString().split('T')[0], title: '' });
+      fetchLessons();
+    } catch (err) {
+      console.error(err);
+      alert('Xatolik yuz berdi');
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -57,6 +99,10 @@ export default function LessonsPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
+        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+          <Plus size={20} />
+          <span>Dars qo'shish</span>
+        </button>
       </div>
 
       <div className={`card ${styles.tableCard}`}>
@@ -128,6 +174,68 @@ export default function LessonsPage() {
           </div>
         )}
       </div>
+
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2>Yangi dars qo'shish</h2>
+              <button className="modal-close" onClick={() => setShowModal(false)}>
+                <X size={24} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSaveLesson} className="modal-form">
+              <div className="form-group">
+                <label>Guruh</label>
+                <select 
+                  className="input" 
+                  value={formData.group_id}
+                  onChange={(e) => setFormData({...formData, group_id: e.target.value})}
+                  required
+                >
+                  <option value="">Guruhni tanlang</option>
+                  {groups.map(g => (
+                    <option key={g.id} value={g.id}>{g.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Sana</label>
+                <input 
+                  type="date" 
+                  className="input" 
+                  value={formData.lesson_date}
+                  onChange={(e) => setFormData({...formData, lesson_date: e.target.value})}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Dars mavzusi yoki nomi (masalan: 14:00 darsi)</label>
+                <input 
+                  type="text" 
+                  className="input" 
+                  placeholder="Mavzuni kiriting..."
+                  value={formData.title}
+                  onChange={(e) => setFormData({...formData, title: e.target.value})}
+                  required
+                />
+              </div>
+
+              <div className="modal-actions">
+                <button type="button" className="btn btn-outline" onClick={() => setShowModal(false)}>
+                  Bekor qilish
+                </button>
+                <button type="submit" className="btn btn-primary" disabled={saving}>
+                  {saving ? 'Saqlanmoqda...' : 'Saqlash'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

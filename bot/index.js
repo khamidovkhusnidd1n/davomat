@@ -44,7 +44,10 @@ const handlePhoneSubmit = async (ctx, phoneStr) => {
 
     await supabase.from('users').update({ telegram_id: tgId }).eq('id', user.id);
 
-    let kb = [['📅 Mening davomatim', '📅 Dars jadvali']];
+    let kb = [
+      ['📅 Mening davomatim', '📅 Dars jadvali'],
+      ['🏆 Oylik reyting']
+    ];
     if (user.role === 'admin') {
       kb.push(['📢 Xabar tarqatish']);
     }
@@ -79,7 +82,10 @@ bot.hears('❌ Bekor qilish', async (ctx) => {
   const tgId = ctx.from.id.toString();
   const { data: user } = await supabase.from('users').select('full_name, role').eq('telegram_id', tgId).single();
   
-  let kb = [['📅 Mening davomatim', '📅 Dars jadvali']];
+  let kb = [
+    ['📅 Mening davomatim', '📅 Dars jadvali'],
+    ['🏆 Oylik reyting']
+  ];
   if (user && user.role === 'admin') kb.push(['📢 Xabar tarqatish']);
   
   ctx.reply("Xabar yuborish bekor qilindi.", Markup.keyboard(kb).resize());
@@ -104,7 +110,10 @@ bot.on('message', async (ctx, next) => {
     
     const tgId = ctx.from.id.toString();
     const { data: user } = await supabase.from('users').select('full_name, role').eq('telegram_id', tgId).single();
-    let kb = [['📅 Mening davomatim', '📅 Dars jadvali']];
+    let kb = [
+      ['📅 Mening davomatim', '📅 Dars jadvali'],
+      ['🏆 Oylik reyting']
+    ];
     if (user && user.role === 'admin') kb.push(['📢 Xabar tarqatish']);
     
     return ctx.reply(`Xabar ${count} ta foydalanuvchiga muvaffaqiyatli yuborildi!`, Markup.keyboard(kb).resize());
@@ -207,6 +216,52 @@ bot.hears('📅 Dars jadvali', async (ctx) => {
   ctx.replyWithHTML(text);
 });
 
+bot.hears('🏆 Oylik reyting', async (ctx) => {
+  const tgId = ctx.from.id.toString();
+  const { data: user } = await supabase.from('users').select('id').eq('telegram_id', tgId).single();
+  if (!user) return ctx.reply("Siz tizimga kirmagansiz.");
+
+  const { data: student } = await supabase.from('students').select('group_id').eq('user_id', user.id).single();
+  if (!student) return ctx.reply("Guruh topilmadi.");
+
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const startOfMonth = `${year}-${month}-01T00:00:00.000Z`;
+  const endOfMonth = new Date(year, date.getMonth() + 1, 1).toISOString();
+
+  const { data: attendances } = await supabase
+    .from('attendance')
+    .select('student_id, status, students!inner(group_id, users(full_name))')
+    .eq('status', 'present')
+    .eq('students.group_id', student.group_id)
+    .gte('created_at', startOfMonth)
+    .lt('created_at', endOfMonth);
+
+  if (!attendances || attendances.length === 0) {
+    return ctx.reply("Bu oyda guruh bo'yicha yetarli ma'lumot yo'q.");
+  }
+
+  const counts = {};
+  const names = {};
+  attendances.forEach(a => {
+    if (!counts[a.student_id]) {
+      counts[a.student_id] = 0;
+      names[a.student_id] = a.students.users.full_name;
+    }
+    counts[a.student_id]++;
+  });
+
+  const sorted = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+  let text = `🏆 <b>Bu oydagi eng faol o'quvchilar:</b>\n\n`;
+  for(let i=0; i<Math.min(3, sorted.length); i++) {
+    const medals = ['🥇', '🥈', '🥉'];
+    text += `${medals[i]} ${names[sorted[i]]}: ${counts[sorted[i]]} marta kelgan\n`;
+  }
+  
+  ctx.replyWithHTML(text);
+});
+
 // Daily Report to Admin at 13:00
 cron.schedule('0 13 * * *', async () => {
   const today = new Date().toISOString().split('T')[0];
@@ -236,6 +291,64 @@ cron.schedule('0 13 * * *', async () => {
       try {
         await bot.telegram.sendMessage(a.telegram_id, reportText, { parse_mode: 'HTML' });
       } catch(e) {}
+    }
+  }
+}, {
+  timezone: "Asia/Tashkent"
+});
+
+// End of Month Top Student Announcement (Runs daily at 18:00, triggers only on last day)
+cron.schedule('0 18 * * *', async () => {
+  const date = new Date();
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  if (tomorrow.getDate() !== 1) return; // Only run on last day of the month
+
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const startOfMonth = `${year}-${month}-01T00:00:00.000Z`;
+  const endOfMonth = tomorrow.toISOString();
+
+  const { data: studentsInfo } = await supabase
+    .from('students')
+    .select('id, group_id, user_id, users(full_name, telegram_id)');
+  if (!studentsInfo) return;
+
+  const { data: attendances } = await supabase
+    .from('attendance')
+    .select('student_id, status')
+    .eq('status', 'present')
+    .gte('created_at', startOfMonth)
+    .lt('created_at', endOfMonth);
+  if (!attendances) return;
+
+  const groupScores = {};
+  attendances.forEach(a => {
+    const st = studentsInfo.find(s => s.id === a.student_id);
+    if (!st) return;
+    if (!groupScores[st.group_id]) groupScores[st.group_id] = {};
+    if (!groupScores[st.group_id][a.student_id]) groupScores[st.group_id][a.student_id] = 0;
+    groupScores[st.group_id][a.student_id]++;
+  });
+
+  for (const groupId in groupScores) {
+    const scores = groupScores[groupId];
+    const sorted = Object.keys(scores).sort((a, b) => scores[b] - scores[a]);
+    if (sorted.length === 0) continue;
+    
+    const topStudentId = sorted[0];
+    const topStInfo = studentsInfo.find(s => s.id === topStudentId);
+    if (!topStInfo) continue;
+    
+    const text = `🏆 <b>OY YAKUNI!</b>\n\nBu oyda guruhimizning eng faol o'quvchisi:\n🥇 <b>${topStInfo.users.full_name}</b> (${scores[topStudentId]} marta darsga qatnashdi!)\n\nTabriklaymiz! 🎉`;
+
+    const groupStudents = studentsInfo.filter(s => s.group_id === groupId);
+    for (const gs of groupStudents) {
+      if (gs.users && gs.users.telegram_id) {
+        try {
+          await bot.telegram.sendMessage(gs.users.telegram_id, text, { parse_mode: 'HTML' });
+        } catch(e) {}
+      }
     }
   }
 }, {

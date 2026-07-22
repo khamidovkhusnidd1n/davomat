@@ -9,6 +9,7 @@ export default function AttendancePage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterGroup, setFilterGroup] = useState('');
+  const [filterDate, setFilterDate] = useState('');
 
   useEffect(() => {
     fetchAttendance();
@@ -50,8 +51,9 @@ export default function AttendancePage() {
     
     const matchesSearch = studentName.includes(query) || groupName.toLowerCase().includes(query);
     const matchesGroup = filterGroup ? groupName === filterGroup : true;
+    const matchesDate = filterDate ? a.lessons?.lesson_date === filterDate : true;
 
-    return matchesSearch && matchesGroup;
+    return matchesSearch && matchesGroup && matchesDate;
   });
 
   return (
@@ -79,6 +81,14 @@ export default function AttendancePage() {
             <option key={g} value={g}>{g}</option>
           ))}
         </select>
+
+        <input 
+          type="date"
+          className="input"
+          style={{ maxWidth: '160px' }}
+          value={filterDate}
+          onChange={(e) => setFilterDate(e.target.value)}
+        />
       </div>
 
       <div className={`card ${styles.tableCard}`}>

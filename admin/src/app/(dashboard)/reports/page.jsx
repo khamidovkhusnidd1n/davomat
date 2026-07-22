@@ -13,18 +13,33 @@ export default function ReportsPage() {
   const [activeTab, setActiveTab] = useState('overview');
   const [data, setData] = useState({ groups: [], students: [], lessons: [], attendance: [] });
   const [loading, setLoading] = useState(true);
+  const [currentUserFullName, setCurrentUserFullName] = useState('');
+  
+  const [filterType, setFilterType] = useState('month'); // 'month' or 'date'
+  
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   });
 
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  });
+
   useEffect(() => {
     fetchData();
-  }, [selectedMonth]);
+  }, [filterType, selectedMonth, selectedDate]);
 
   async function fetchData() {
     setLoading(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: uData } = await supabase.from('users').select('full_name').eq('id', user.id).single();
+        if (uData) setCurrentUserFullName(uData.full_name);
+      }
+
       // Fetch groups
       const { data: groups, error: gErr } = await supabase
         .from('groups')
@@ -43,10 +58,12 @@ export default function ReportsPage() {
 
       // Fetch lessons
       let lessonsQuery = supabase.from('lessons').select('id, group_id, lesson_date, title').order('lesson_date', { ascending: true });
-      if (selectedMonth) {
+      if (filterType === 'month' && selectedMonth) {
         const startDate = `${selectedMonth}-01`;
         const endDate = `${selectedMonth}-31`; 
         lessonsQuery = lessonsQuery.gte('lesson_date', startDate).lte('lesson_date', endDate);
+      } else if (filterType === 'date' && selectedDate) {
+        lessonsQuery = lessonsQuery.eq('lesson_date', selectedDate);
       }
       const { data: lessons, error: lErr } = await lessonsQuery;
       if (lErr) throw lErr;
@@ -174,8 +191,8 @@ export default function ReportsPage() {
           if (att) {
             if (att.status === 'present') mark = '+';
             else if (att.status === 'absent' || att.status === 'unexcused') mark = '-';
-            else if (att.status === 'late') mark = 'K';
-            else if (att.status === 'excused') mark = 'S';
+            else if (att.status === 'late') mark = 'Kech keldi';
+            else if (att.status === 'excused') mark = 'Sababli';
           }
           row[les.lesson_date] = mark;
         });
@@ -200,6 +217,8 @@ export default function ReportsPage() {
     workbook.creator = 'Markaz Davomat Tizimi';
     workbook.created = new Date();
 
+    const exportLabel = filterType === 'month' ? selectedMonth : selectedDate;
+
     for (const [groupName, rows] of Object.entries(sheetsData)) {
       if (rows.length === 0) continue;
       const validName = groupName.substring(0, 31).replace(/[\\/?*[\]]/g, '');
@@ -208,7 +227,7 @@ export default function ReportsPage() {
       // Add Title
       sheet.mergeCells('A1:J1');
       const titleCell = sheet.getCell('A1');
-      titleCell.value = `Guruh: ${groupName} - Davomat Hisoboti (${selectedMonth})`;
+      titleCell.value = `Guruh: ${groupName} - Davomat Hisoboti (${exportLabel})`;
       titleCell.font = { name: 'Arial', size: 16, bold: true };
       titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
 
@@ -241,7 +260,7 @@ export default function ReportsPage() {
             } else if (cell.value === '-') {
               cell.font = { color: { argb: 'FFDC2626' }, bold: true }; // Red
               cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } };
-            } else if (cell.value === 'S') {
+            } else if (cell.value === 'Kech keldi' || cell.value === 'Sababli') {
               cell.font = { color: { argb: 'FFD97706' }, bold: true }; // Yellow/Orange
             }
           }
@@ -261,7 +280,7 @@ export default function ReportsPage() {
     }
 
     const buffer = await workbook.xlsx.writeBuffer();
-    saveAs(new Blob([buffer]), `Davomat_Hisoboti_${selectedMonth}.xlsx`);
+    saveAs(new Blob([buffer]), `Davomat_Hisoboti_${exportLabel}.xlsx`);
   };
 
   const exportPDF = () => {
@@ -273,6 +292,8 @@ export default function ReportsPage() {
 
     const doc = new jsPDF('landscape');
     
+    const exportLabel = filterType === 'month' ? selectedMonth : selectedDate;
+
     // Add branding header
     doc.setFontSize(22);
     doc.setTextColor(40, 40, 40);
@@ -280,7 +301,7 @@ export default function ReportsPage() {
     
     doc.setFontSize(14);
     doc.setTextColor(100, 100, 100);
-    doc.text(`Davomat Hisoboti: ${selectedMonth}`, 14, 28);
+    doc.text(`Davomat Hisoboti: ${exportLabel}`, 14, 28);
     
     doc.setDrawColor(200, 200, 200);
     doc.line(14, 32, 280, 32);
@@ -314,7 +335,7 @@ export default function ReportsPage() {
                  data.cell.styles.textColor = [220, 38, 38];
                  data.cell.styles.fontStyle = 'bold';
                  data.cell.styles.fillColor = [254, 226, 226];
-             } else if (data.cell.raw === 'S') {
+             } else if (data.cell.raw === 'Kech keldi' || data.cell.raw === 'Sababli') {
                  data.cell.styles.textColor = [217, 119, 6];
              }
           }
@@ -333,10 +354,10 @@ export default function ReportsPage() {
     if (yPos > 160) { doc.addPage(); yPos = 30; }
     doc.setFontSize(12);
     doc.setTextColor(0,0,0);
-    doc.text('Rahbar / Mas\'ul xodim: _________________________', 14, yPos + 10);
+    doc.text(`Mas'ul xodim: ${currentUserFullName || '_________________________'}`, 14, yPos + 10);
     doc.text('Sana: ' + new Date().toLocaleDateString('uz-UZ'), 14, yPos + 20);
 
-    doc.save(`Davomat_Hisoboti_${selectedMonth}.pdf`);
+    doc.save(`Davomat_Hisoboti_${exportLabel}.pdf`);
   };
 
   // --- RENDER ---
@@ -371,13 +392,31 @@ export default function ReportsPage() {
 
       <div className={styles.content}>
         <div style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
-          <label style={{ fontWeight: '500' }}>Hisobot oyi:</label>
-          <input 
-            type="month" 
+          <select 
             className="input" 
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-          />
+            style={{ width: '160px' }}
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value)}
+          >
+            <option value="month">Oy bo'yicha</option>
+            <option value="date">Sana bo'yicha</option>
+          </select>
+
+          {filterType === 'month' ? (
+            <input 
+              type="month" 
+              className="input" 
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+            />
+          ) : (
+            <input 
+              type="date" 
+              className="input" 
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+            />
+          )}
         </div>
 
         {loading ? (
@@ -467,7 +506,7 @@ export default function ReportsPage() {
             {/* EXPORT TAB */}
             {activeTab === 'export' && (
               <div className={styles.exportPanel}>
-                <h3>{selectedMonth} oyi uchun barcha guruhlar hisobotini yuklab olish</h3>
+                <h3>{filterType === 'month' ? selectedMonth : selectedDate} uchun barcha guruhlar hisobotini yuklab olish</h3>
                 <p style={{ color: 'var(--text-secondary)' }}>Excel faylida har bir guruh alohida varaq (sheet) bo'lib tushadi.</p>
                 
                 <div className={styles.exportButtons}>

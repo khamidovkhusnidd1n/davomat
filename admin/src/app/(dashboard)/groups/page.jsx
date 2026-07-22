@@ -1,8 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Search, Plus, Trash2, Edit2 } from 'lucide-react';
+import { Search, Plus, Trash2, Edit2, BookOpen } from 'lucide-react';
 import GroupModal from './GroupModal';
+import SyllabusModal from './SyllabusModal';
 import styles from './page.module.css';
 
 export default function GroupsPage() {
@@ -12,6 +13,7 @@ export default function GroupsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [showSyllabus, setShowSyllabus] = useState(false);
   const [editingGroup, setEditingGroup] = useState(null);
   const [organizationId, setOrganizationId] = useState(null);
   const [userRole, setUserRole] = useState(null);
@@ -70,12 +72,28 @@ export default function GroupsPage() {
     }
   };
 
-  const filteredGroups = groups.filter(g => 
-    g.name?.toLowerCase().includes(search.toLowerCase()) || 
-    g.course_name?.toLowerCase().includes(search.toLowerCase()) ||
-    g.tutor?.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-    g.monitor?.full_name?.toLowerCase().includes(search.toLowerCase())
-  );
+  const [activeTab, setActiveTab] = useState('active');
+
+  const filteredGroups = groups.filter(g => {
+    const isStatusMatch = activeTab === 'active' ? (g.status !== 'archived') : (g.status === 'archived');
+    if (!isStatusMatch) return false;
+
+    return g.name?.toLowerCase().includes(search.toLowerCase()) || 
+           g.course_name?.toLowerCase().includes(search.toLowerCase()) ||
+           g.tutor?.full_name?.toLowerCase().includes(search.toLowerCase()) ||
+           g.monitor?.full_name?.toLowerCase().includes(search.toLowerCase());
+  });
+
+  const toggleArchive = async (id, currentStatus) => {
+    const newStatus = currentStatus === 'archived' ? 'active' : 'archived';
+    try {
+      const { error } = await supabase.from('groups').update({ status: newStatus }).eq('id', id);
+      if (error) throw error;
+      fetchData();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
 
   return (
     <div className={styles.container}>
@@ -95,6 +113,21 @@ export default function GroupsPage() {
         </button>
       </div>
 
+      <div className={styles.tabs} style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+        <button 
+          className={`btn ${activeTab === 'active' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setActiveTab('active')}
+        >
+          Faol Guruhlar
+        </button>
+        <button 
+          className={`btn ${activeTab === 'archived' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setActiveTab('archived')}
+        >
+          Arxivlangan
+        </button>
+      </div>
+
       <div className={`card ${styles.tableCard}`}>
         {loading ? (
           <div className={styles.loading}>Yuklanmoqda...</div>
@@ -108,6 +141,7 @@ export default function GroupsPage() {
                   <th>Tutor</th>
                   <th>Sinf sardori</th>
                   <th>O'quvchilar soni</th>
+                  <th>Status</th>
                   <th>Yaratilgan sana</th>
                   <th>Amallar</th>
                 </tr>
@@ -115,11 +149,11 @@ export default function GroupsPage() {
               <tbody>
                 {filteredGroups.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className={styles.emptyText}>Ma'lumot topilmadi</td>
+                    <td colSpan="8" className={styles.emptyText}>Ma'lumot topilmadi</td>
                   </tr>
                 ) : (
                   filteredGroups.map((group) => (
-                    <tr key={group.id}>
+                    <tr key={group.id} style={{ opacity: group.status === 'archived' ? 0.6 : 1 }}>
                       <td style={{ fontWeight: 'bold' }}>{group.name}</td>
                       <td>{group.course_name}</td>
                       <td>{group.tutor?.full_name || 'Biriktirilmagan'}</td>
@@ -129,13 +163,29 @@ export default function GroupsPage() {
                           {group.students[0]?.count || 0} ta
                         </span>
                       </td>
+                      <td>
+                        <span className={`${styles.statusBadge} ${group.status === 'archived' ? styles.archived : styles.active}`}>
+                           {group.status === 'archived' ? 'Arxiv' : 'Faol'}
+                        </span>
+                      </td>
                       <td>{new Date(group.created_at).toLocaleDateString('uz-UZ')}</td>
                       <td>
                         <div className={styles.actions}>
-                          <button className={styles.actionBtn} onClick={() => { setEditingGroup(group); setShowModal(true); }}>
+                          <button className={styles.actionBtn} title="Dars dasturi" onClick={() => { setEditingGroup(group); setShowSyllabus(true); }}>
+                            <BookOpen size={16} />
+                          </button>
+                          <button className={styles.actionBtn} title="Tahrirlash" onClick={() => { setEditingGroup(group); setShowModal(true); }}>
                             <Edit2 size={16} />
                           </button>
-                          <button className={`${styles.actionBtn} ${styles.danger}`} onClick={() => handleDelete(group.id)}>
+                          <button 
+                            className={styles.actionBtn} 
+                            style={{ color: group.status === 'archived' ? '#10B981' : '#F59E0B' }}
+                            title={group.status === 'archived' ? 'Faollashtirish' : 'Arxivlash'} 
+                            onClick={() => toggleArchive(group.id, group.status)}
+                          >
+                            {group.status === 'archived' ? '♻️' : '📦'}
+                          </button>
+                          <button className={`${styles.actionBtn} ${styles.danger}`} title="O'chirish" onClick={() => handleDelete(group.id)}>
                             <Trash2 size={16} />
                           </button>
                         </div>
@@ -157,6 +207,11 @@ export default function GroupsPage() {
         monitors={monitors}
         organizationId={organizationId}
         onSuccess={fetchData}
+      />
+      <SyllabusModal
+        isOpen={showSyllabus}
+        onClose={() => setShowSyllabus(false)}
+        group={editingGroup}
       />
     </div>
   );

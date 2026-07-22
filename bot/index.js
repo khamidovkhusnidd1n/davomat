@@ -184,42 +184,63 @@ bot.hears('📅 Dars jadvali', async (ctx) => {
   const { data: student } = await supabase.from('students').select('group_id').eq('user_id', user.id).single();
   if (!student) return ctx.reply("Guruh topilmadi.");
 
+  const tashkentFormatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Tashkent',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hour12: false
+  });
+  const parts = tashkentFormatter.formatToParts(new Date());
+  const tObj = {};
+  parts.forEach(p => tObj[p.type] = p.value);
+  const todayStr = `${tObj.year}-${tObj.month}-${tObj.day}`;
+  const currentHourStr = `${tObj.hour}:${tObj.minute}`;
+
   const { data: lessonsData } = await supabase
     .from('lessons')
     .select('title, lesson_date')
     .eq('group_id', student.group_id)
+    .gte('lesson_date', todayStr)
     .order('lesson_date', { ascending: true })
-    .limit(10); // Show upcoming or recent 10 lessons
+    .limit(7);
 
   if (!lessonsData || lessonsData.length === 0) {
     return ctx.reply("Sizning guruhingiz uchun hali dars jadvali kiritilmagan.");
   }
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const { data: schedules } = await supabase.from('schedules').select('*').eq('group_id', student.group_id);
 
-  let text = "📅 <b>Guruhning dars jadvali:</b>\n\n";
-  lessonsData.forEach((s, idx) => {
-    const lDate = new Date(s.lesson_date);
-    lDate.setHours(0, 0, 0, 0);
-    
-    const diff = (lDate - today) / (1000 * 60 * 60 * 24);
-    
+  let text = "📅 <b>Guruhning keyingi darslari:</b>\n\n";
+  lessonsData.forEach((s) => {
+    let dayOfWeek = new Date(s.lesson_date).getDay();
+    if (dayOfWeek === 0) dayOfWeek = 7;
+
+    const sch = schedules?.find(x => x.day_of_week === dayOfWeek);
+    const startTime = sch ? sch.start_time.substring(0, 5) : '--:--';
+    const endTime = sch ? sch.end_time.substring(0, 5) : '--:--';
+
     let icon = '⏳';
     let dateStr = s.lesson_date;
 
-    if (diff < 0) {
-      icon = '✅';
-      dateStr = 'Tugadi';
-    } else if (diff === 0) {
-      icon = '🔥';
-      dateStr = 'Bugun';
-    } else if (diff === 1) {
-      icon = '🚀';
-      dateStr = 'Ertaga';
+    if (s.lesson_date === todayStr) {
+      if (currentHourStr > endTime) {
+        icon = '✅';
+        dateStr = 'Bugun (Tugadi)';
+      } else if (currentHourStr >= startTime && currentHourStr <= endTime) {
+        icon = '🔴';
+        dateStr = 'Bugun (Ketyapti)';
+      } else {
+        icon = '🔥';
+        dateStr = 'Bugun';
+      }
+    } else {
+      const diff = Math.round((new Date(s.lesson_date) - new Date(todayStr)) / (1000 * 60 * 60 * 24));
+      if (diff === 1) {
+        icon = '🚀';
+        dateStr = 'Ertaga';
+      }
     }
 
-    text += `${icon} <b>${idx + 1}-dars</b> (${dateStr}) — <i>${s.title}</i>\n`;
+    text += `${icon} <b>${dateStr}, soat ${startTime}</b> — <i>${s.title}</i>\n`;
   });
 
   ctx.replyWithHTML(text);

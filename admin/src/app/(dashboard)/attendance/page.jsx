@@ -12,6 +12,11 @@ export default function AttendancePage() {
   const [filterDate, setFilterDate] = useState('');
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('group')) setFilterGroup(params.get('group'));
+      if (params.get('date')) setFilterDate(params.get('date'));
+    }
     fetchAttendance();
   }, []);
 

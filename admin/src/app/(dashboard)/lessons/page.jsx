@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Search, Calendar, Eye } from 'lucide-react';
+import Link from 'next/link';
 import styles from './page.module.css';
 
 export default function LessonsPage() {
@@ -112,9 +113,11 @@ export default function LessonsPage() {
                           )}
                         </td>
                         <td>
-                          <button className={styles.actionBtn} title="Ko'rish">
-                            <Eye size={18} />
-                          </button>
+                          <Link href={`/attendance?group=${encodeURIComponent(lesson.groups?.name || '')}&date=${lesson.lesson_date}`}>
+                            <button className={styles.actionBtn} title="Ko'rish">
+                              <Eye size={18} />
+                            </button>
+                          </Link>
                         </td>
                       </tr>
                     );

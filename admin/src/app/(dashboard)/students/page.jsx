@@ -11,6 +11,7 @@ export default function StudentsPage() {
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [filterBot, setFilterBot] = useState('all'); // 'all' | 'connected' | 'not_connected'
   const [showImport, setShowImport] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
@@ -35,7 +36,7 @@ export default function StudentsPage() {
           status,
           joined_at,
           user_id,
-          users ( id, full_name, phone, email ),
+          users ( id, full_name, phone, email, telegram_id ),
           groups ( id, name, course_name )
         `),
         supabase.from('groups').select('id, name, course_name'),
@@ -68,10 +69,16 @@ export default function StudentsPage() {
     }
   };
 
-  const filteredStudents = students.filter(s =>
-    s.users?.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-    s.groups?.name?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredStudents = students.filter(s => {
+    const matchesSearch = s.users?.full_name?.toLowerCase().includes(search.toLowerCase()) ||
+                          s.groups?.name?.toLowerCase().includes(search.toLowerCase());
+    
+    let matchesBot = true;
+    if (filterBot === 'connected') matchesBot = !!s.users?.telegram_id;
+    if (filterBot === 'not_connected') matchesBot = !s.users?.telegram_id;
+
+    return matchesSearch && matchesBot;
+  });
 
   return (
     <div className={styles.container}>
@@ -86,6 +93,18 @@ export default function StudentsPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
+        
+        <select 
+          className="input" 
+          style={{ maxWidth: '180px' }}
+          value={filterBot}
+          onChange={(e) => setFilterBot(e.target.value)}
+        >
+          <option value="all">Barcha o'quvchilar</option>
+          <option value="connected">Botga ulanganlar</option>
+          <option value="not_connected">Botga ulanmaganlar</option>
+        </select>
+
         <div className={styles.btnGroup}>
           <button className="btn btn-secondary" onClick={() => setShowImport(true)}>
             <FileSpreadsheet size={18} /> Excel Import
@@ -108,6 +127,7 @@ export default function StudentsPage() {
                   <th>Login</th>
                   <th>Guruh</th>
                   <th>Telefon</th>
+                  <th>Bot</th>
                   <th>Status</th>
                   <th>Qo'shilgan sana</th>
                   <th>Amallar</th>
@@ -125,6 +145,13 @@ export default function StudentsPage() {
                       <td>{student.users?.email || '-'}</td>
                       <td>{student.groups?.name || 'Guruhsiz'}</td>
                       <td>{student.users?.phone || '-'}</td>
+                      <td>
+                        {student.users?.telegram_id ? (
+                          <span className={styles.statusBadge} style={{ background: 'var(--success-light)', color: 'var(--success)', border: '1px solid var(--success)' }}>Ulangan</span>
+                        ) : (
+                          <span className={styles.statusBadge} style={{ background: 'var(--danger-light)', color: 'var(--danger)' }}>Yo'q</span>
+                        )}
+                      </td>
                       <td>
                         <span className={`${styles.statusBadge} ${styles[student.status] || ''}`}>
                           {student.status === 'active' ? 'Faol' : student.status === 'left' ? 'Ketgan' : 'Ko\'chgan'}

@@ -3,6 +3,7 @@ const { Telegraf, Markup } = require('telegraf');
 const { createClient } = require('@supabase/supabase-js');
 const express = require('express');
 const https = require('https');
+const cron = require('node-cron');
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 const bot = new Telegraf(process.env.BOT_TOKEN);
@@ -43,9 +44,9 @@ const handlePhoneSubmit = async (ctx, phoneStr) => {
     await supabase.from('users').update({ telegram_id: tgId }).eq('id', user.id);
 
     ctx.reply(
-      `Xush kelibsiz, ${user.full_name}!\n\nSiz tizimga muvaffaqiyatli kirdingiz. Endi davomat va dars mavzularini ko'rishingiz mumkin.`,
+      `Xush kelibsiz, ${user.full_name}!\n\nSiz tizimga muvaffaqiyatli kirdingiz. Endi davomat va dars jadvalini ko'rishingiz mumkin.`,
       Markup.keyboard([
-        ['📅 Mening davomatim', '📚 Dars mavzulari']
+        ['📅 Mening davomatim', '📅 Dars jadvali']
       ]).resize()
     );
 
@@ -114,7 +115,7 @@ bot.hears('📅 Mening davomatim', async (ctx) => {
   ctx.replyWithHTML(text);
 });
 
-bot.hears('📚 Dars mavzulari', async (ctx) => {
+bot.hears('📅 Dars jadvali', async (ctx) => {
   const tgId = ctx.from.id.toString();
   const { data: user } = await supabase.from('users').select('id').eq('telegram_id', tgId).single();
   if (!user) return ctx.reply("Siz tizimga kirmagansiz. Iltimos, /start buyrug'i orqali raqamingizni yuboring.");
@@ -130,15 +131,86 @@ bot.hears('📚 Dars mavzulari', async (ctx) => {
     .limit(10); // Show upcoming or recent 10 lessons
 
   if (!lessonsData || lessonsData.length === 0) {
-    return ctx.reply("Sizning guruhingiz uchun hali dars dasturi (mavzulari) kiritilmagan.");
+    return ctx.reply("Sizning guruhingiz uchun hali dars jadvali kiritilmagan.");
   }
 
-  let text = "<b>Guruhning dars mavzulari:</b>\n\n";
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  let text = "<b>Guruhning dars jadvali:</b>\n\n";
   lessonsData.forEach((s, idx) => {
-    text += `🔹 ${idx + 1}-dars (${s.lesson_date}): ${s.title}\n`;
+    const lDate = new Date(s.lesson_date);
+    lDate.setHours(0, 0, 0, 0);
+    
+    const diff = (lDate - today) / (1000 * 60 * 60 * 24);
+    
+    let dateStr = s.lesson_date;
+    if (diff < 0) dateStr += ' (Tugadi)';
+    else if (diff === 0) dateStr += ' (Bugun)';
+    else if (diff === 1) dateStr += ' (Ertaga)';
+
+    text += `🔹 ${idx + 1}-dars (${dateStr}): ${s.title}\n`;
   });
 
   ctx.replyWithHTML(text);
+});
+
+// Admin Broadcast Command
+bot.command('yuborish', async (ctx) => {
+  const tgId = ctx.from.id.toString();
+  const { data: user } = await supabase.from('users').select('role').eq('telegram_id', tgId).single();
+  
+  if (!user || user.role !== 'admin') {
+    return ctx.reply("Sizda xabar yuborish huquqi yo'q.");
+  }
+
+  const messageText = ctx.message.text.replace('/yuborish', '').trim();
+  if (!messageText) {
+    return ctx.reply("Iltimos, xabarni quyidagi kabi yozing:\n/yuborish Xabar matni...");
+  }
+
+  // Get all users with telegram_id
+  const { data: users } = await supabase.from('users').select('telegram_id').not('telegram_id', 'is', null);
+  
+  let count = 0;
+  for (const u of users) {
+    try {
+      await bot.telegram.sendMessage(u.telegram_id, `📢 Admindan xabar:\n\n${messageText}`);
+      count++;
+    } catch(e) {
+      console.error('Failed to send to user', u.telegram_id, e.message);
+    }
+  }
+  
+  ctx.reply(`Xabar ${count} ta foydalanuvchiga muvaffaqiyatli yuborildi!`);
+});
+
+// Daily Reminder at 22:10
+cron.schedule('10 22 * * *', async () => {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+  const { data: lessons } = await supabase.from('lessons').select('title, group_id').eq('lesson_date', tomorrowStr);
+  if (!lessons || lessons.length === 0) return;
+
+  for (const lesson of lessons) {
+    const { data: students } = await supabase.from('students').select('user_id').eq('group_id', lesson.group_id);
+    if (!students) continue;
+
+    for (const st of students) {
+      const { data: u } = await supabase.from('users').select('telegram_id').eq('id', st.user_id).single();
+      if (u && u.telegram_id) {
+        try {
+          await bot.telegram.sendMessage(u.telegram_id, `🔔 Eslatma: Ertaga (${tomorrowStr}) sizda dars bor: ${lesson.title}`);
+        } catch(e) {
+          console.error('Failed to send reminder to', u.telegram_id);
+        }
+      }
+    }
+  }
+}, {
+  timezone: "Asia/Tashkent"
 });
 
 bot.launch().then(() => {

@@ -408,14 +408,20 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   
-  // Keep-alive ping every 14 minutes (Render sleeps after 15 mins of inactivity)
+  // Keep-alive ping every 10 minutes (Render sleeps after 15 mins of inactivity)
   setInterval(() => {
     https.get('https://davomat-s4d0.onrender.com', (res) => {
       console.log(`Keep-alive ping sent to admin, status: ${res.statusCode}`);
     }).on('error', (err) => {
-      console.error('Keep-alive ping error:', err.message);
+      console.error('Keep-alive ping admin error:', err.message);
     });
-  }, 14 * 60 * 1000); // 14 minutes
+
+    https.get('https://davomat-3sap.onrender.com', (res) => {
+      console.log(`Keep-alive ping sent to bot, status: ${res.statusCode}`);
+    }).on('error', (err) => {
+      console.error('Keep-alive ping bot error:', err.message);
+    });
+  }, 10 * 60 * 1000); // 10 minutes
 });
 
 // Enable graceful stop

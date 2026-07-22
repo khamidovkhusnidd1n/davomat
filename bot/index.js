@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { Telegraf, Markup } = require('telegraf');
+const { Telegraf, Markup, session } = require('telegraf');
 const { createClient } = require('@supabase/supabase-js');
 const express = require('express');
 const https = require('https');
@@ -7,6 +7,7 @@ const cron = require('node-cron');
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 const bot = new Telegraf(process.env.BOT_TOKEN);
+bot.use(session());
 
 bot.start((ctx) => {
   ctx.reply(
@@ -43,11 +44,14 @@ const handlePhoneSubmit = async (ctx, phoneStr) => {
 
     await supabase.from('users').update({ telegram_id: tgId }).eq('id', user.id);
 
+    let kb = [['📅 Mening davomatim', '📅 Dars jadvali']];
+    if (user.role === 'admin') {
+      kb.push(['📢 Xabar tarqatish']);
+    }
+
     ctx.reply(
       `Xush kelibsiz, ${user.full_name}!\n\nSiz tizimga muvaffaqiyatli kirdingiz. Endi davomat va dars jadvalini ko'rishingiz mumkin.`,
-      Markup.keyboard([
-        ['📅 Mening davomatim', '📅 Dars jadvali']
-      ]).resize()
+      Markup.keyboard(kb).resize()
     );
 
   } catch (err) {
@@ -58,6 +62,54 @@ const handlePhoneSubmit = async (ctx, phoneStr) => {
 
 bot.on('contact', async (ctx) => {
   await handlePhoneSubmit(ctx, ctx.message.contact.phone_number);
+});
+
+bot.hears('📢 Xabar tarqatish', async (ctx) => {
+  const tgId = ctx.from.id.toString();
+  const { data: user } = await supabase.from('users').select('role').eq('telegram_id', tgId).single();
+  if (!user || user.role !== 'admin') return ctx.reply("Sizda xabar yuborish huquqi yo'q.");
+  
+  if (!ctx.session) ctx.session = {};
+  ctx.session.awaitingBroadcast = true;
+  ctx.reply("Iltimos, barchaga yuboriladigan xabarni yuboring (Rasm, video yoki matn):\n\nBekor qilish uchun pastdagi tugmani bosing.", Markup.keyboard([['❌ Bekor qilish']]).resize());
+});
+
+bot.hears('❌ Bekor qilish', async (ctx) => {
+  if (ctx.session) ctx.session.awaitingBroadcast = false;
+  const tgId = ctx.from.id.toString();
+  const { data: user } = await supabase.from('users').select('full_name, role').eq('telegram_id', tgId).single();
+  
+  let kb = [['📅 Mening davomatim', '📅 Dars jadvali']];
+  if (user && user.role === 'admin') kb.push(['📢 Xabar tarqatish']);
+  
+  ctx.reply("Xabar yuborish bekor qilindi.", Markup.keyboard(kb).resize());
+});
+
+bot.on('message', async (ctx, next) => {
+  if (ctx.session && ctx.session.awaitingBroadcast) {
+    ctx.session.awaitingBroadcast = false;
+    
+    const { data: users } = await supabase.from('users').select('telegram_id').not('telegram_id', 'is', null);
+    
+    let count = 0;
+    if (users) {
+      for (const u of users) {
+        if (u.telegram_id === ctx.from.id.toString()) continue;
+        try {
+          await ctx.telegram.copyMessage(u.telegram_id, ctx.chat.id, ctx.message.message_id);
+          count++;
+        } catch(e) {}
+      }
+    }
+    
+    const tgId = ctx.from.id.toString();
+    const { data: user } = await supabase.from('users').select('full_name, role').eq('telegram_id', tgId).single();
+    let kb = [['📅 Mening davomatim', '📅 Dars jadvali']];
+    if (user && user.role === 'admin') kb.push(['📢 Xabar tarqatish']);
+    
+    return ctx.reply(`Xabar ${count} ta foydalanuvchiga muvaffaqiyatli yuborildi!`, Markup.keyboard(kb).resize());
+  }
+  return next();
 });
 
 bot.on('text', async (ctx, next) => {
@@ -155,34 +207,39 @@ bot.hears('📅 Dars jadvali', async (ctx) => {
   ctx.replyWithHTML(text);
 });
 
-// Admin Broadcast Command
-bot.command('yuborish', async (ctx) => {
-  const tgId = ctx.from.id.toString();
-  const { data: user } = await supabase.from('users').select('role').eq('telegram_id', tgId).single();
+// Daily Report to Admin at 13:00
+cron.schedule('0 13 * * *', async () => {
+  const today = new Date().toISOString().split('T')[0];
   
-  if (!user || user.role !== 'admin') {
-    return ctx.reply("Sizda xabar yuborish huquqi yo'q.");
-  }
-
-  const messageText = ctx.message.text.replace('/yuborish', '').trim();
-  if (!messageText) {
-    return ctx.reply("Iltimos, xabarni quyidagi kabi yozing:\n/yuborish Xabar matni...");
-  }
-
-  // Get all users with telegram_id
-  const { data: users } = await supabase.from('users').select('telegram_id').not('telegram_id', 'is', null);
+  const { data: lessons } = await supabase.from('lessons').select('id, group_id').eq('lesson_date', today);
+  if (!lessons || lessons.length === 0) return;
   
-  let count = 0;
-  for (const u of users) {
-    try {
-      await bot.telegram.sendMessage(u.telegram_id, `📢 Admindan xabar:\n\n${messageText}`);
-      count++;
-    } catch(e) {
-      console.error('Failed to send to user', u.telegram_id, e.message);
+  const lessonIds = lessons.map(l => l.id);
+  const uniqueGroups = new Set(lessons.map(l => l.group_id)).size;
+  
+  const { data: attendance } = await supabase.from('attendance').select('status').in('lesson_id', lessonIds);
+  
+  let present = 0;
+  let absent = 0;
+  if (attendance) {
+    for (const a of attendance) {
+      if (a.status === 'present' || a.status === 'late') present++;
+      else absent++;
     }
   }
+
+  const { data: admins } = await supabase.from('users').select('telegram_id').eq('role', 'admin').not('telegram_id', 'is', null);
+  const reportText = `📊 <b>Kunlik Hisobot</b>\n\nBugun ${uniqueGroups} ta guruhda dars bo'ldi.\n🟢 Kelganlar: ${present} kishi\n🔴 Kelmaganlar: ${absent} kishi`;
   
-  ctx.reply(`Xabar ${count} ta foydalanuvchiga muvaffaqiyatli yuborildi!`);
+  if (admins) {
+    for (const a of admins) {
+      try {
+        await bot.telegram.sendMessage(a.telegram_id, reportText, { parse_mode: 'HTML' });
+      } catch(e) {}
+    }
+  }
+}, {
+  timezone: "Asia/Tashkent"
 });
 
 // Daily Reminder at 22:10

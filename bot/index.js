@@ -198,19 +198,28 @@ bot.hears('📅 Dars jadvali', async (ctx) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  let text = "<b>Guruhning dars jadvali:</b>\n\n";
+  let text = "📅 <b>Guruhning dars jadvali:</b>\n\n";
   lessonsData.forEach((s, idx) => {
     const lDate = new Date(s.lesson_date);
     lDate.setHours(0, 0, 0, 0);
     
     const diff = (lDate - today) / (1000 * 60 * 60 * 24);
     
+    let icon = '⏳';
     let dateStr = s.lesson_date;
-    if (diff < 0) dateStr += ' (Tugadi)';
-    else if (diff === 0) dateStr += ' (Bugun)';
-    else if (diff === 1) dateStr += ' (Ertaga)';
 
-    text += `🔹 ${idx + 1}-dars (${dateStr}): ${s.title}\n`;
+    if (diff < 0) {
+      icon = '✅';
+      dateStr = 'Tugadi';
+    } else if (diff === 0) {
+      icon = '🔥';
+      dateStr = 'Bugun';
+    } else if (diff === 1) {
+      icon = '🚀';
+      dateStr = 'Ertaga';
+    }
+
+    text += `${icon} <b>${idx + 1}-dars</b> (${dateStr}) — <i>${s.title}</i>\n`;
   });
 
   ctx.replyWithHTML(text);

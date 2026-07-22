@@ -104,6 +104,7 @@ export default function AttendancePage() {
             <table className={styles.table}>
               <thead>
                 <tr>
+                  <th>#</th>
                   <th>Sana</th>
                   <th>O'quvchi</th>
                   <th>Guruh</th>
@@ -115,13 +116,14 @@ export default function AttendancePage() {
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className={styles.emptyText}>Ma'lumot topilmadi</td>
+                    <td colSpan="7" className={styles.emptyText}>Ma'lumot topilmadi</td>
                   </tr>
                 ) : (
-                  filtered.map((record) => {
+                  filtered.map((record, index) => {
                     const dateObj = new Date(record.created_at);
                     return (
                       <tr key={record.id}>
+                        <td>{index + 1}</td>
                         <td>
                           <div className={styles.dateBlock}>
                             <span className={styles.date}>{dateObj.toLocaleDateString('uz-UZ')}</span>

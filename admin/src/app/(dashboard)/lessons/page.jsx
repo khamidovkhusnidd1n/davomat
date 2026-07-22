@@ -113,6 +113,7 @@ export default function LessonsPage() {
             <table className={styles.table}>
               <thead>
                 <tr>
+                  <th>#</th>
                   <th>Sana</th>
                   <th>Guruh</th>
                   <th>Mavzu</th>
@@ -124,16 +125,17 @@ export default function LessonsPage() {
               <tbody>
                 {filteredLessons.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className={styles.emptyText}>Ma'lumot topilmadi</td>
+                    <td colSpan="7" className={styles.emptyText}>Ma'lumot topilmadi</td>
                   </tr>
                 ) : (
-                  filteredLessons.map((lesson) => {
+                  filteredLessons.map((lesson, index) => {
                     const present = lesson.attendance.filter(a => a.status === 'present').length;
                     const total = lesson.attendance.length;
                     const rate = total > 0 ? Math.round((present / total) * 100) : 0;
                     
                     return (
                       <tr key={lesson.id}>
+                        <td>{index + 1}</td>
                         <td>
                           <div className={styles.dateWrapper}>
                             <Calendar size={14} className={styles.dateIcon} />

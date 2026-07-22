@@ -97,6 +97,7 @@ export default function TutorsPage() {
             <table className={styles.table}>
               <thead>
                 <tr>
+                  <th>#</th>
                   <th>F.I.Sh</th>
                   <th>Guruhlari</th>
                   <th>Telefon</th>
@@ -108,11 +109,12 @@ export default function TutorsPage() {
               <tbody>
                 {filteredTutors.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className={styles.emptyText}>Ma'lumot topilmadi</td>
+                    <td colSpan="7" className={styles.emptyText}>Ma'lumot topilmadi</td>
                   </tr>
                 ) : (
-                  filteredTutors.map((tutor) => (
+                  filteredTutors.map((tutor, index) => (
                     <tr key={tutor.id}>
+                      <td>{index + 1}</td>
                       <td>{tutor.full_name || 'Noma\'lum'}</td>
                       <td>
                         {tutor.groups && tutor.groups.length > 0 

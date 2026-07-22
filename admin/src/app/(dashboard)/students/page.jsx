@@ -123,6 +123,7 @@ export default function StudentsPage() {
             <table className={styles.table}>
               <thead>
                 <tr>
+                  <th>#</th>
                   <th>F.I.Sh</th>
                   <th>Login</th>
                   <th>Guruh</th>
@@ -136,11 +137,12 @@ export default function StudentsPage() {
               <tbody>
                 {filteredStudents.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className={styles.emptyText}>Ma'lumot topilmadi</td>
+                    <td colSpan="9" className={styles.emptyText}>Ma'lumot topilmadi</td>
                   </tr>
                 ) : (
-                  filteredStudents.map((student) => (
+                  filteredStudents.map((student, index) => (
                     <tr key={student.id}>
+                      <td>{index + 1}</td>
                       <td>{student.users?.full_name || 'Noma\'lum'}</td>
                       <td>{student.users?.email || '-'}</td>
                       <td>{student.groups?.name || 'Guruhsiz'}</td>

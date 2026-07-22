@@ -410,8 +410,8 @@ app.listen(PORT, () => {
   
   // Keep-alive ping every 14 minutes (Render sleeps after 15 mins of inactivity)
   setInterval(() => {
-    https.get('https://davomat-3sap.onrender.com', (res) => {
-      console.log(`Keep-alive ping sent, status: ${res.statusCode}`);
+    https.get('https://davomat-s4d0.onrender.com', (res) => {
+      console.log(`Keep-alive ping sent to admin, status: ${res.statusCode}`);
     }).on('error', (err) => {
       console.error('Keep-alive ping error:', err.message);
     });

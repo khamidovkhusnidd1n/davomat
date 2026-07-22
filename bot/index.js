@@ -364,8 +364,8 @@ cron.schedule('0 18 * * *', async () => {
   timezone: "Asia/Tashkent"
 });
 
-// Daily Reminder at 16:05 (Test)
-cron.schedule('5 16 * * *', async () => {
+// Daily Reminder at 15:00
+cron.schedule('0 15 * * *', async () => {
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowStr = tomorrow.toISOString().split('T')[0];

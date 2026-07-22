@@ -8,6 +8,7 @@ export default function AttendancePage() {
   const [attendances, setAttendances] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [filterGroup, setFilterGroup] = useState('');
 
   useEffect(() => {
     fetchAttendance();
@@ -28,7 +29,7 @@ export default function AttendancePage() {
           users!attendance_marked_by_fkey ( full_name )
         `)
         .order('created_at', { ascending: false })
-        .limit(100); // For MVP, just show latest 100
+        .limit(500); // Kengaytirildi
       
       if (error) throw error;
       setAttendances(data || []);
@@ -39,11 +40,18 @@ export default function AttendancePage() {
     }
   }
 
+  // Guruhlar ro'yxatini ajratib olish
+  const uniqueGroups = [...new Set(attendances.map(a => a.lessons?.groups?.name).filter(Boolean))];
+
   const filtered = attendances.filter(a => {
     const studentName = a.students?.users?.full_name?.toLowerCase() || '';
-    const groupName = a.lessons?.groups?.name?.toLowerCase() || '';
+    const groupName = a.lessons?.groups?.name || '';
     const query = search.toLowerCase();
-    return studentName.includes(query) || groupName.includes(query);
+    
+    const matchesSearch = studentName.includes(query) || groupName.toLowerCase().includes(query);
+    const matchesGroup = filterGroup ? groupName === filterGroup : true;
+
+    return matchesSearch && matchesGroup;
   });
 
   return (
@@ -59,9 +67,18 @@ export default function AttendancePage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <button className="btn btn-secondary">
-          <Filter size={18} /> Filtrlash
-        </button>
+        
+        <select 
+          className="input" 
+          style={{ maxWidth: '200px' }}
+          value={filterGroup}
+          onChange={(e) => setFilterGroup(e.target.value)}
+        >
+          <option value="">Barcha guruhlar</option>
+          {uniqueGroups.map(g => (
+            <option key={g} value={g}>{g}</option>
+          ))}
+        </select>
       </div>
 
       <div className={`card ${styles.tableCard}`}>

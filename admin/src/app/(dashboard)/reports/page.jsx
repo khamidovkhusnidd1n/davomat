@@ -2,7 +2,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 import { BarChart3, AlertTriangle, FileSpreadsheet, Download, FileText } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import styles from './page.module.css';
@@ -187,33 +189,79 @@ export default function ReportsPage() {
     return sheetsData;
   };
 
-  const exportExcel = () => {
+  const exportExcel = async () => {
     const sheetsData = generateExportData();
     if (Object.keys(sheetsData).length === 0) {
       alert('Eksport qilish uchun ma\'lumot yo\'q');
       return;
     }
 
-    const wb = XLSX.utils.book_new();
-    for (const [sheetName, rows] of Object.entries(sheetsData)) {
-      // Create valid sheet name (max 31 chars)
-      const validName = sheetName.substring(0, 31).replace(/[\\/?*\[\]]/g, '');
-      const ws = XLSX.utils.json_to_sheet(rows);
-      
-      // Ustunlar kengligini o'rnatish
-      const cols = [{ wch: 25 }]; // O'quvchi F.I.O ustuni
-      if (rows.length > 0) {
-        const numDates = Object.keys(rows[0]).length - 1;
-        for (let i = 0; i < numDates; i++) {
-          cols.push({ wch: 12 }); // Sana ustunlari
-        }
-      }
-      ws['!cols'] = cols;
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'Markaz Davomat Tizimi';
+    workbook.created = new Date();
 
-      XLSX.utils.book_append_sheet(wb, ws, validName || 'Sheet');
+    for (const [groupName, rows] of Object.entries(sheetsData)) {
+      if (rows.length === 0) continue;
+      const validName = groupName.substring(0, 31).replace(/[\\/?*[\]]/g, '');
+      const sheet = workbook.addWorksheet(validName || 'Sheet');
+
+      // Add Title
+      sheet.mergeCells('A1:J1');
+      const titleCell = sheet.getCell('A1');
+      titleCell.value = `Guruh: ${groupName} - Davomat Hisoboti (${selectedMonth})`;
+      titleCell.font = { name: 'Arial', size: 16, bold: true };
+      titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+
+      sheet.addRow([]); // empty row
+
+      // Headers
+      const keys = Object.keys(rows[0]);
+      const headerRow = sheet.addRow(keys);
+      headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      headerRow.alignment = { horizontal: 'center' };
+      headerRow.eachCell((cell) => {
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF4F46E5' } // Indigo color
+        };
+      });
+
+      // Data Rows
+      rows.forEach(r => {
+        const rowData = keys.map(k => r[k]);
+        const excelRow = sheet.addRow(rowData);
+        
+        // Formatting cells based on attendance marks
+        excelRow.eachCell((cell, colNumber) => {
+          if (colNumber > 1) { // Skip name column
+            cell.alignment = { horizontal: 'center' };
+            if (cell.value === '+') {
+              cell.font = { color: { argb: 'FF16A34A' }, bold: true }; // Green
+            } else if (cell.value === '-') {
+              cell.font = { color: { argb: 'FFDC2626' }, bold: true }; // Red
+              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } };
+            } else if (cell.value === 'S') {
+              cell.font = { color: { argb: 'FFD97706' }, bold: true }; // Yellow/Orange
+            }
+          }
+        });
+      });
+
+      // Column widths
+      sheet.getColumn(1).width = 30; // F.I.Sh
+      for (let i = 2; i <= Object.keys(rows[0]).length; i++) {
+        sheet.getColumn(i).width = 12; // Dates
+      }
+
+      // Freeze panes
+      sheet.views = [
+        { state: 'frozen', xSplit: 1, ySplit: 3 }
+      ];
     }
 
-    XLSX.writeFile(wb, `Davomat_Hisoboti_${selectedMonth}.xlsx`);
+    const buffer = await workbook.xlsx.writeBuffer();
+    saveAs(new Blob([buffer]), `Davomat_Hisoboti_${selectedMonth}.xlsx`);
   };
 
   const exportPDF = () => {
@@ -225,37 +273,68 @@ export default function ReportsPage() {
 
     const doc = new jsPDF('landscape');
     
-    doc.setFontSize(18);
-    doc.text(`Davomat Hisoboti: ${selectedMonth}`, 14, 15);
+    // Add branding header
+    doc.setFontSize(22);
+    doc.setTextColor(40, 40, 40);
+    doc.text('MALAKA OSHIRISH MARKAZI', 14, 20);
     
-    let yPos = 25;
+    doc.setFontSize(14);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Davomat Hisoboti: ${selectedMonth}`, 14, 28);
+    
+    doc.setDrawColor(200, 200, 200);
+    doc.line(14, 32, 280, 32);
+
+    let yPos = 40;
 
     for (const [groupName, rows] of Object.entries(sheetsData)) {
       if (rows.length === 0) continue;
       
-      doc.setFontSize(14);
+      doc.setFontSize(16);
+      doc.setTextColor(79, 70, 229);
       doc.text(`Guruh: ${groupName}`, 14, yPos);
       yPos += 5;
 
       const columns = Object.keys(rows[0]).map(k => ({ header: k, dataKey: k }));
       
-      doc.autoTable({
+      autoTable(doc, {
         startY: yPos,
         columns: columns,
         body: rows,
         theme: 'grid',
-        styles: { fontSize: 8 },
-        headStyles: { fillColor: [79, 70, 229] }
+        styles: { fontSize: 8, cellPadding: 2 },
+        headStyles: { fillColor: [79, 70, 229], textColor: [255,255,255], fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [249, 250, 251] },
+        didParseCell: function(data) {
+          if (data.section === 'body' && data.column.index > 0) {
+             if (data.cell.raw === '+') {
+                 data.cell.styles.textColor = [22, 163, 74];
+                 data.cell.styles.fontStyle = 'bold';
+             } else if (data.cell.raw === '-') {
+                 data.cell.styles.textColor = [220, 38, 38];
+                 data.cell.styles.fontStyle = 'bold';
+                 data.cell.styles.fillColor = [254, 226, 226];
+             } else if (data.cell.raw === 'S') {
+                 data.cell.styles.textColor = [217, 119, 6];
+             }
+          }
+        }
       });
 
       yPos = doc.lastAutoTable.finalY + 15;
       
-      // Add new page if close to bottom
       if (yPos > 180) {
         doc.addPage();
         yPos = 20;
       }
     }
+    
+    // Add signature area at the end
+    if (yPos > 160) { doc.addPage(); yPos = 30; }
+    doc.setFontSize(12);
+    doc.setTextColor(0,0,0);
+    doc.text('Rahbar / Mas\'ul xodim: _________________________', 14, yPos + 10);
+    doc.text('Sana: ' + new Date().toLocaleDateString('uz-UZ'), 14, yPos + 20);
 
     doc.save(`Davomat_Hisoboti_${selectedMonth}.pdf`);
   };

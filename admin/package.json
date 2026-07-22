@@ -8,7 +8,10 @@
     "start": "node keepalive.js & next start"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.110.0",
+    "@supabase/supabase-js": "^2.110.7",
+    "dotenv": "^17.4.2",
+    "exceljs": "^4.4.0",
+    "file-saver": "^2.0.5",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
     "lucide-react": "^1.22.0",

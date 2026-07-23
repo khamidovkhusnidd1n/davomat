@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { checkAdminAuth } from '@/lib/auth_check';
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -7,6 +8,9 @@ const supabaseAdmin = createClient(
 
 export async function POST(request) {
   try {
+    const auth = await checkAdminAuth(request);
+    if (auth.error) return Response.json({ error: auth.error }, { status: auth.status });
+
     const { full_name, phone, email, role, organization_id, group_id, password } = await request.json();
 
     if (!full_name || !role || !organization_id) {
@@ -84,6 +88,9 @@ export async function POST(request) {
 
 export async function PUT(request) {
   try {
+    const auth = await checkAdminAuth(request);
+    if (auth.error) return Response.json({ error: auth.error }, { status: auth.status });
+
     const { id, full_name, phone, email, group_id, role, password } = await request.json();
 
     if (!id) return Response.json({ error: 'Missing id' }, { status: 400 });
@@ -135,6 +142,9 @@ export async function PUT(request) {
 
 export async function DELETE(request) {
   try {
+    const auth = await checkAdminAuth(request);
+    if (auth.error) return Response.json({ error: auth.error }, { status: auth.status });
+
     const { id } = await request.json();
     if (!id) return Response.json({ error: 'Missing id' }, { status: 400 });
 

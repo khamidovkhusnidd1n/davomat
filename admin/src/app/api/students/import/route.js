@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { checkAdminAuth } from '@/lib/auth_check';
 
 // Service Role key kerak — bu faqat server-side ishlaydi
 const supabaseAdmin = createClient(
@@ -8,6 +9,9 @@ const supabaseAdmin = createClient(
 
 export async function POST(request) {
   try {
+    const auth = await checkAdminAuth(request);
+    if (auth.error) return Response.json({ error: auth.error }, { status: auth.status });
+
     const { students, groupId, organizationId } = await request.json();
 
     if (!students || !groupId || !organizationId) {

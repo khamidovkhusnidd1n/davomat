@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 import Modal from '@/components/Modal/Modal';
 import styles from '../students/StudentModal.module.css';
 
@@ -40,9 +41,13 @@ export default function TutorModal({ isOpen, onClose, tutor, organizationId, onS
         organization_id: organizationId,
       };
 
+      const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch('/api/users', {
         method: isEdit ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': session?.access_token ? `Bearer ${session.access_token}` : ''
+        },
         body: JSON.stringify(payload),
       });
 

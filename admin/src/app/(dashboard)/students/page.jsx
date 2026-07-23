@@ -54,9 +54,13 @@ export default function StudentsPage() {
   const handleDelete = async (userId) => {
     if (!confirm('Rostdan ham o\'chirasizmi?')) return;
     try {
+      const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch('/api/users', {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': session?.access_token ? `Bearer ${session.access_token}` : ''
+        },
         body: JSON.stringify({ id: userId }),
       });
       if (!res.ok) {

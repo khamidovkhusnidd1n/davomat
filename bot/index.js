@@ -122,15 +122,7 @@ bot.on('message', async (ctx, next) => {
 });
 
 bot.on('text', async (ctx, next) => {
-  const text = ctx.message.text;
-  console.log("Received text: ", text);
-  // If it looks like an Uzbek phone number
-  if (/^\\+?998\\d{9}$/.test(text.replace(/\\s+/g, ''))) {
-     console.log("Matched phone pattern!");
-     await handlePhoneSubmit(ctx, text);
-  } else {
-     return next();
-  }
+  return next();
 });
 
 bot.hears('📅 Mening davomatim', async (ctx) => {

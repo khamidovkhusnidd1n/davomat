@@ -1,5 +1,6 @@
 'use client';
 import { useState, useRef, useCallback } from 'react';
+import { supabase } from '@/lib/supabase';
 import * as XLSX from 'xlsx';
 import { Upload, FileSpreadsheet, X, CheckCircle, AlertCircle, Loader } from 'lucide-react';
 import styles from './ExcelLessonsImport.module.css';
@@ -63,9 +64,13 @@ export default function ExcelLessonsImport({ isOpen, onClose, onSuccess }) {
   const handleImport = async () => {
     setImporting(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch('/api/lessons/import', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': session?.access_token ? `Bearer ${session.access_token}` : ''
+        },
         body: JSON.stringify({
           lessonsData: parsedData
         }),

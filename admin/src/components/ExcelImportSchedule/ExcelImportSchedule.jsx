@@ -1,5 +1,6 @@
 'use client';
 import { useState, useRef, useCallback } from 'react';
+import { supabase } from '@/lib/supabase';
 import * as XLSX from 'xlsx';
 import { Upload, FileSpreadsheet, X, CheckCircle, AlertCircle, Loader, Download } from 'lucide-react';
 import styles from './ExcelImportSchedule.module.css';
@@ -144,9 +145,13 @@ export default function ExcelImportSchedule({ isOpen, onClose, groups, organizat
 
     setImporting(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch('/api/schedules/import', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': session?.access_token ? `Bearer ${session.access_token}` : ''
+        },
         body: JSON.stringify({
           schedules: parsedData,
           groupId: selectedGroup,

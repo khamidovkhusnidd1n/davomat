@@ -405,6 +405,7 @@ CREATE POLICY "teacher_insert_attendance"
             WHERE l.id = attendance.lesson_id
               AND (g.teacher_id = auth.uid() OR g.tutor_id = auth.uid() OR g.monitor_id = auth.uid())
               AND l.lesson_date >= CURRENT_DATE - INTERVAL '1 day'
+              AND l.lesson_date <= CURRENT_DATE
         )
     );
 
@@ -444,6 +445,7 @@ CREATE POLICY "teacher_update_attendance"
               AND (g.teacher_id = auth.uid() OR g.tutor_id = auth.uid() OR g.monitor_id = auth.uid())
               -- 24 soat ichida tahrirlash mumkin
               AND l.lesson_date >= CURRENT_DATE - INTERVAL '1 day'
+              AND l.lesson_date <= CURRENT_DATE
         )
     )
     WITH CHECK (
@@ -454,6 +456,7 @@ CREATE POLICY "teacher_update_attendance"
             WHERE l.id = attendance.lesson_id
               AND (g.teacher_id = auth.uid() OR g.tutor_id = auth.uid() OR g.monitor_id = auth.uid())
               AND l.lesson_date >= CURRENT_DATE - INTERVAL '1 day'
+              AND l.lesson_date <= CURRENT_DATE
         )
     );
 

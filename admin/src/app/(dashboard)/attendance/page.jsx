@@ -9,6 +9,7 @@ export default function AttendancePage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterGroup, setFilterGroup] = useState('');
+  const [filterDate, setFilterDate] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [editStatus, setEditStatus] = useState('');
   const [editLateHours, setEditLateHours] = useState('');

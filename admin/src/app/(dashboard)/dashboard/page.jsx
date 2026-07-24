@@ -5,23 +5,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { supabase } from '@/lib/supabase';
 import styles from './page.module.css';
 
-// Using the same mock charts data for now since generating historical chart data requires complex SQL 
-// and we want to focus on the top stats cards and real recent activity.
-const weekData = [
-  { name: 'Dush', foiz: 95 },
-  { name: 'Sesh', foiz: 92 },
-  { name: 'Chor', foiz: 96 },
-  { name: 'Pay', foiz: 90 },
-  { name: 'Jum', foiz: 98 },
-  { name: 'Shan', foiz: 85 },
-];
+// Chart state will be populated dynamically from the database
 
-const monthData = [
-  { name: '1-hafta', foiz: 94 },
-  { name: '2-hafta', foiz: 92 },
-  { name: '3-hafta', foiz: 96 },
-  { name: '4-hafta', foiz: 95 },
-];
 
 export default function Dashboard() {
   const [stats, setStats] = useState({
@@ -32,6 +17,8 @@ export default function Dashboard() {
     attendanceRate: 0,
     absentToday: 0
   });
+  const [weekData, setWeekData] = useState([]);
+  const [monthData, setMonthData] = useState([]);
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -84,6 +71,79 @@ export default function Dashboard() {
         setActivities([
           { id: 1, title: 'Tizim ishga tushdi', desc: 'Davomat statistikasi real vaqtda yangilanmoqda', time: 'Hozir', type: 'system' }
         ]);
+
+        // CHARTS DATA CALCULATION
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
+        const startDateStr = thirtyDaysAgo.toISOString().split('T')[0];
+
+        const { data: chartData } = await supabase.from('attendance')
+          .select('status, lessons!inner(lesson_date)')
+          .gte('lessons.lesson_date', startDateStr)
+          .lte('lessons.lesson_date', today);
+
+        if (chartData && chartData.length > 0) {
+          // Group by date
+          const dateMap = {};
+          chartData.forEach(row => {
+            const date = row.lessons.lesson_date;
+            if (!dateMap[date]) dateMap[date] = { total: 0, present: 0 };
+            dateMap[date].total += 1;
+            if (row.status === 'present' || row.status === 'late') {
+              dateMap[date].present += 1;
+            }
+          });
+
+          // Sort dates
+          const sortedDates = Object.keys(dateMap).sort();
+          
+          // Weekly Data (last 7 available days)
+          const last7Dates = sortedDates.slice(-7);
+          const weekChart = last7Dates.map(date => {
+            const d = new Date(date);
+            const days = ['Yak', 'Dush', 'Sesh', 'Chor', 'Pay', 'Jum', 'Shan'];
+            const name = days[d.getDay()];
+            const stat = dateMap[date];
+            const foiz = stat.total > 0 ? Math.round((stat.present / stat.total) * 100) : 0;
+            return { name, foiz };
+          });
+          
+          // If less than 7 days, pad with zeros
+          while(weekChart.length < 7) {
+            weekChart.unshift({ name: '-', foiz: 0 });
+          }
+          setWeekData(weekChart);
+
+          // Monthly Data (group into 4 chunks)
+          // We have up to 30 days. Split them into 4 weeks.
+          const monthChart = [
+            { name: '1-hafta', present: 0, total: 0 },
+            { name: '2-hafta', present: 0, total: 0 },
+            { name: '3-hafta', present: 0, total: 0 },
+            { name: '4-hafta', present: 0, total: 0 },
+          ];
+
+          sortedDates.forEach((date, index) => {
+            const weekIndex = Math.floor((index / Math.max(1, sortedDates.length)) * 4);
+            const target = monthChart[Math.min(weekIndex, 3)];
+            target.present += dateMap[date].present;
+            target.total += dateMap[date].total;
+          });
+
+          const finalMonthChart = monthChart.map(w => ({
+            name: w.name,
+            foiz: w.total > 0 ? Math.round((w.present / w.total) * 100) : 0
+          }));
+          setMonthData(finalMonthChart);
+        } else {
+          setWeekData(Array(7).fill({ name: '-', foiz: 0 }));
+          setMonthData([
+            { name: '1-hafta', foiz: 0 },
+            { name: '2-hafta', foiz: 0 },
+            { name: '3-hafta', foiz: 0 },
+            { name: '4-hafta', foiz: 0 }
+          ]);
+        }
 
       } catch (error) {
         console.error('Error fetching stats:', error);

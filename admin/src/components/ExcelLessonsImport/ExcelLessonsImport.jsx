@@ -2,7 +2,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import * as XLSX from 'xlsx';
-import { Upload, FileSpreadsheet, X, CheckCircle, AlertCircle, Loader } from 'lucide-react';
+import { Upload, FileSpreadsheet, X, CheckCircle, AlertCircle, Loader, Download } from 'lucide-react';
 import styles from './ExcelLessonsImport.module.css';
 
 export default function ExcelLessonsImport({ isOpen, onClose, onSuccess }) {
@@ -129,6 +129,18 @@ export default function ExcelLessonsImport({ isOpen, onClose, onSuccess }) {
                   style={{ display: 'none' }}
                   onChange={e => parseFile(e.target.files[0])}
                 />
+              </div>
+
+              <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', gap: '8px' }}>
+                <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Excel shabloningiz yo'qmi?</span>
+                <a 
+                  href="/Darslar_Shabloni.xlsx" 
+                  download="Darslar_Shabloni.xlsx"
+                  className="btn btn-secondary" 
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px' }}
+                >
+                  <Download size={18} /> Shablonni yuklab olish
+                </a>
               </div>
             </div>
           )}

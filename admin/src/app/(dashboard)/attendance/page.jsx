@@ -9,19 +9,22 @@ export default function AttendancePage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterGroup, setFilterGroup] = useState('');
-  const [filterDate, setFilterDate] = useState('');
-  
   const [editingId, setEditingId] = useState(null);
-  const [lateHours, setLateHours] = useState('');
+  const [editStatus, setEditStatus] = useState('');
+  const [editLateHours, setEditLateHours] = useState('');
 
-  const handleUpdateLateHours = async (id) => {
+  const handleUpdateRecord = async (id) => {
     try {
-      const hours = parseInt(lateHours, 10);
-      if (isNaN(hours) || hours < 0 || hours > 6) {
-        alert("Soat 0 dan 6 gacha bo'lishi kerak!");
-        return;
+      let hours = 0;
+      if (editStatus === 'late') {
+        hours = parseInt(editLateHours, 10);
+        if (isNaN(hours) || hours <= 0 || hours > 6) {
+          alert("Kech qolgan soat 1 dan 6 gacha bo'lishi kerak!");
+          return;
+        }
       }
-      const { error } = await supabase.from('attendance').update({ late_hours: hours }).eq('id', id);
+      
+      const { error } = await supabase.from('attendance').update({ status: editStatus, late_hours: hours }).eq('id', id);
       if (error) throw error;
       setEditingId(null);
       fetchAttendance();
@@ -134,6 +137,7 @@ export default function AttendancePage() {
                   <th>Status</th>
                   <th>Kech qolgan soat</th>
                   <th>Belgiladi</th>
+                  <th>Harakat</th>
                 </tr>
               </thead>
               <tbody>
@@ -157,31 +161,43 @@ export default function AttendancePage() {
                         <td>{record.lessons?.groups?.name || '-'}</td>
                         <td>{record.lessons?.title || 'Mavzusiz'}</td>
                         <td>
-                          <span className={`${styles.statusBadge} ${styles[record.status] || ''}`}>
-                            {record.status === 'present' ? 'Kelgan' : record.status === 'excused' ? 'Kelmagan (Sababli)' : record.status === 'absent' || record.status === 'unexcused' ? 'Kelmagan (Sababsiz)' : 'Kech qolgan'}
-                          </span>
+                          {editingId === record.id ? (
+                            <select className="input" style={{ width: '130px', padding: '4px' }} value={editStatus} onChange={e => setEditStatus(e.target.value)}>
+                              <option value="present">Kelgan</option>
+                              <option value="absent">Kelmagan (Sababsiz)</option>
+                              <option value="excused">Kelmagan (Sababli)</option>
+                              <option value="late">Kech qolgan</option>
+                            </select>
+                          ) : (
+                            <span className={`${styles.statusBadge} ${styles[record.status] || ''}`}>
+                              {record.status === 'present' ? 'Kelgan' : record.status === 'excused' ? 'Kelmagan (Sababli)' : record.status === 'absent' || record.status === 'unexcused' ? 'Kelmagan (Sababsiz)' : 'Kech qolgan'}
+                            </span>
+                          )}
                         </td>
                         <td>
-                          {record.status === 'late' ? (
-                            editingId === record.id ? (
-                              <div style={{ display: 'flex', gap: '5px' }}>
-                                <input type="number" min="0" max="6" style={{ width: '60px' }} value={lateHours} onChange={(e) => setLateHours(e.target.value)} />
-                                <button className="btn btn-primary" style={{ padding: '4px 8px' }} onClick={() => handleUpdateLateHours(record.id)}>OK</button>
-                                <button className="btn btn-secondary" style={{ padding: '4px 8px' }} onClick={() => setEditingId(null)}>X</button>
-                              </div>
-                            ) : (
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                <span>{record.late_hours || 0} soat</span>
-                                <button className={styles.actionBtn} onClick={() => { setEditingId(record.id); setLateHours(record.late_hours?.toString() || '0'); }}>
-                                  <Edit2 size={16} />
-                                </button>
-                              </div>
-                            )
+                          {editingId === record.id && editStatus === 'late' ? (
+                            <input type="number" min="1" max="6" style={{ width: '60px', padding: '4px' }} className="input" value={editLateHours} onChange={(e) => setEditLateHours(e.target.value)} />
                           ) : (
-                            '-'
+                            record.status === 'late' ? <span>{record.late_hours || 0} soat</span> : '-'
                           )}
                         </td>
                         <td className={styles.textSmall}>{record.users?.full_name || 'Tizim'}</td>
+                        <td>
+                          {editingId === record.id ? (
+                            <div style={{ display: 'flex', gap: '5px' }}>
+                              <button className="btn btn-primary" style={{ padding: '4px 8px' }} onClick={() => handleUpdateRecord(record.id)}>OK</button>
+                              <button className="btn btn-secondary" style={{ padding: '4px 8px' }} onClick={() => setEditingId(null)}>X</button>
+                            </div>
+                          ) : (
+                            <button className={styles.actionBtn} onClick={() => { 
+                              setEditingId(record.id); 
+                              setEditStatus(record.status); 
+                              setEditLateHours(record.late_hours?.toString() || '0'); 
+                            }}>
+                              <Edit2 size={16} />
+                            </button>
+                          )}
+                        </td>
                       </tr>
                     );
                   })

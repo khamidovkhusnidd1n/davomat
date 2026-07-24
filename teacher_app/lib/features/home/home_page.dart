@@ -123,14 +123,20 @@ class _HomePageState extends State<HomePage> {
     );
 
     try {
-      final lessonTitle = '${schedule['start_time']} darsi';
+      // Dars nomi: "Fan nomi (09:00-11:00)" yoki "Guruh nomi"
+      final courseName = schedule['course_name']?.toString() ?? '';
+      final groupName = schedule['group_name']?.toString() ?? '';
+      final timeRange = '${schedule['start_time']}-${schedule['end_time']}';
+      final lessonTitle = courseName.isNotEmpty 
+          ? '$courseName ($timeRange)' 
+          : '$groupName ($timeRange)';
 
+      // Darsni group_id + sana bo'yicha qidiramiz (UNIQUE constraint)
       final existingLessons = await supabase
           .from('lessons')
           .select('id')
           .eq('group_id', schedule['group_id'])
           .eq('lesson_date', todayStr)
-          .eq('title', lessonTitle)
           .limit(1);
 
       String lessonId;
@@ -149,18 +155,17 @@ class _HomePageState extends State<HomePage> {
               .single();
           lessonId = newLesson['id'];
         } catch (e) {
-          // Boshqa foydalanuvchi aynan shu vaqtda dars yaratgan bo'lishi mumkin (Race Condition)
+          // Boshqa foydalanuvchi aynan shu vaqtda dars yaratgan bo'lishi mumkin
           final fallbackLessons = await supabase
               .from('lessons')
               .select('id')
               .eq('group_id', schedule['group_id'])
               .eq('lesson_date', todayStr)
-              .eq('title', lessonTitle)
               .limit(1);
           if (fallbackLessons.isNotEmpty) {
             lessonId = fallbackLessons[0]['id'];
           } else {
-            throw e; // Boshqa noma'lum xatolik
+            throw e;
           }
         }
       } else {

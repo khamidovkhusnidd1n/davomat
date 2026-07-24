@@ -139,22 +139,25 @@ export default function ReportsPage() {
     data.students.forEach(st => {
       const groupLessons = lessonsByGroup[st.group_id] || [];
       
-      let totalUnexcused = 0;
+      let totalUnexcusedHours = 0;
       for (const les of groupLessons) {
         const att = data.attendance.find(a => a.lesson_id === les.id && a.student_id === st.id);
-        // Only count unexcused absences ("uzrli sababsiz")
-        if (att && (att.status === 'absent' || att.status === 'unexcused')) {
-          totalUnexcused++;
+        if (att) {
+          if (att.status === 'absent' || att.status === 'unexcused') {
+            totalUnexcusedHours += 6;
+          } else if (att.status === 'late' && att.late_hours > 0) {
+            totalUnexcusedHours += att.late_hours;
+          }
         }
       }
 
       // Qayta tayyorlash kursi uchun 36 soat (6 marta dars) limit
-      if (totalUnexcused >= 6) {
+      if (totalUnexcusedHours >= 36) {
         const group = data.groups.find(g => g.id === st.group_id);
         alerts.push({
           student: st,
           groupName: group?.name || 'Noma\'lum',
-          absentCount: totalUnexcused
+          absentCount: totalUnexcusedHours
         });
       }
     });
@@ -472,7 +475,7 @@ export default function ReportsPage() {
                     <tr>
                       <th>Tinglovchi Ismi</th>
                       <th>Guruh</th>
-                      <th>Holati</th>
+                      <th>Qoldirilgan soat</th>
                       <th>Ota-ona raqami</th>
                     </tr>
                   </thead>
@@ -485,9 +488,10 @@ export default function ReportsPage() {
                           <td style={{ fontWeight: '600' }}>{item.student.users?.full_name || 'Ismsiz'}</td>
                           <td>{item.groupName}</td>
                           <td>
-                            <span className={styles.dangerBadge}>
-                              {item.absentCount * 6} soat ({item.absentCount} dars) sababsiz kelmadi
-                            </span>
+                            <div className={styles.alertBadge}>
+                              <AlertTriangle size={14} />
+                              <span className={styles.alertCount}>{item.absentCount} soat</span>
+                            </div>
                           </td>
                           <td style={{ fontFamily: 'monospace' }}>
                             {item.student.users?.phone || 'Kiritilmagan'}
@@ -505,7 +509,6 @@ export default function ReportsPage() {
               <div className={styles.exportPanel}>
                 <h3>{filterType === 'month' ? selectedMonth : selectedDate} uchun barcha guruhlar hisobotini yuklab olish</h3>
                 <p style={{ color: 'var(--text-secondary)' }}>Excel faylida har bir guruh alohida varaq (sheet) bo'lib tushadi.</p>
-                
                 <div className={styles.exportButtons}>
                   <button className={`${styles.exportBtn} ${styles.btnExcel}`} onClick={exportExcel}>
                     <FileSpreadsheet size={24} /> Excel Yuklash (.xlsx)

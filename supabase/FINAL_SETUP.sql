@@ -184,13 +184,15 @@ CREATE TABLE public.attendance (
     lesson_id  UUID NOT NULL REFERENCES public.lessons(id) ON DELETE CASCADE,
     student_id UUID NOT NULL REFERENCES public.students(id) ON DELETE CASCADE,
     status     TEXT NOT NULL DEFAULT 'absent',
+    late_hours INTEGER DEFAULT 0,
     marked_by  UUID REFERENCES public.users(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
     -- Bitta darsda bitta talaba faqat bir marta qayd etiladi
     CONSTRAINT attendance_lesson_student_unique UNIQUE (lesson_id, student_id),
     -- Davomat holati
-    CONSTRAINT attendance_status_check CHECK (status IN ('present', 'absent', 'late'))
+    CONSTRAINT attendance_status_check CHECK (status IN ('present', 'absent', 'late')),
+    CONSTRAINT attendance_late_hours_check CHECK (late_hours >= 0 AND late_hours <= 6)
 );
 
 CREATE INDEX idx_attendance_lesson_id  ON public.attendance(lesson_id);

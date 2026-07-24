@@ -381,8 +381,6 @@ cron.schedule('0 18 * * *', async () => {
 cron.schedule('30 18 * * *', async () => {
   const today = new Date().toISOString().split('T')[0];
 
-  // Get all attendances marked today as absent or unexcused
-  // To avoid complex joins if not supported, we fetch today's lessons first
   const { data: todayLessons } = await supabase
     .from('lessons')
     .select('id')
@@ -391,26 +389,52 @@ cron.schedule('30 18 * * *', async () => {
   if (!todayLessons || todayLessons.length === 0) return;
   const lessonIds = todayLessons.map(l => l.id);
 
+  // Get all attendances marked today as absent, unexcused or late
   const { data: todayAbsences } = await supabase
     .from('attendance')
     .select('student_id')
     .in('lesson_id', lessonIds)
-    .in('status', ['absent', 'unexcused']);
+    .in('status', ['absent', 'unexcused', 'late']);
 
   if (!todayAbsences || todayAbsences.length === 0) return;
 
-  const absentStudentIds = [...new Set(todayAbsences.map(a => a.student_id))];
+  const affectedStudentIds = [...new Set(todayAbsences.map(a => a.student_id))];
 
-  for (const stId of absentStudentIds) {
-    const { data: totalAbs } = await supabase
+  for (const stId of affectedStudentIds) {
+    // Count ALL absences/lates for this student
+    const { data: allAbs } = await supabase
       .from('attendance')
-      .select('id')
+      .select('id, status, late_hours, lessons(lesson_date)')
       .eq('student_id', stId)
-      .in('status', ['absent', 'unexcused']);
+      .in('status', ['absent', 'unexcused', 'late']);
 
-    const total = totalAbs ? totalAbs.length : 0;
+    if (!allAbs) continue;
 
-    if (total === 2 || total === 4 || total === 6) {
+    let totalHoursBeforeToday = 0;
+    let totalHoursIncludingToday = 0;
+
+    for (const record of allAbs) {
+      const isToday = record.lessons?.lesson_date === today;
+      let hours = 0;
+      if (record.status === 'absent' || record.status === 'unexcused') {
+        hours = 6;
+      } else if (record.status === 'late' && record.late_hours > 0) {
+        hours = record.late_hours;
+      }
+
+      totalHoursIncludingToday += hours;
+      if (!isToday) {
+        totalHoursBeforeToday += hours;
+      }
+    }
+
+    // Check if we crossed any thresholds TODAY
+    let thresholdCrossed = 0;
+    if (totalHoursBeforeToday < 12 && totalHoursIncludingToday >= 12) thresholdCrossed = 12;
+    else if (totalHoursBeforeToday < 24 && totalHoursIncludingToday >= 24) thresholdCrossed = 24;
+    else if (totalHoursBeforeToday < 36 && totalHoursIncludingToday >= 36) thresholdCrossed = 36;
+
+    if (thresholdCrossed > 0) {
       const { data: stInfo } = await supabase
         .from('students')
         .select('users(full_name, telegram_id)')
@@ -419,12 +443,12 @@ cron.schedule('30 18 * * *', async () => {
       
       if (stInfo && stInfo.users && stInfo.users.telegram_id) {
         let text = '';
-        if (total === 2) {
-          text = `⚠️ <b>Ogohlantirish:</b> Hurmatli ${stInfo.users.full_name}, siz jami <b>12 soat</b> (2 ta dars moduli) qoldirdingiz. Eslatib o'tamiz, qayta tayyorlash kurslarida 36 soat dars qoldirilganda tinglovchilar safidan chetlashtiriladi.`;
-        } else if (total === 4) {
-          text = `🚨 <b>Qat'iy Ogohlantirish:</b> Hurmatli ${stInfo.users.full_name}, siz jami <b>24 soat</b> (4 ta dars moduli) qoldirdingiz. Agar yana 12 soat dars qoldirsangiz, nizomga asosan kursdan chetlashtirilasiz!`;
-        } else if (total === 6) {
-          text = `❌ <b>CHETLASHTIRISH XAVFI:</b> Hurmatli ${stInfo.users.full_name}, siz jami <b>36 soat</b> (6 ta dars moduli) uzrli sababsiz qoldirdingiz! Qayta tayyorlash kursi nizomiga muvofiq, siz tinglovchilar safidan chetlashtirishga tavsiya etilasiz.`;
+        if (thresholdCrossed === 12) {
+          text = `⚠️ <b>Ogohlantirish:</b> Hurmatli ${stInfo.users.full_name}, siz jami <b>${totalHoursIncludingToday} soat</b> dars qoldirdingiz. Eslatib o'tamiz, qayta tayyorlash kurslarida 36 soat dars qoldirilganda tinglovchilar safidan chetlashtiriladi.`;
+        } else if (thresholdCrossed === 24) {
+          text = `🚨 <b>Qat'iy Ogohlantirish:</b> Hurmatli ${stInfo.users.full_name}, siz jami <b>${totalHoursIncludingToday} soat</b> dars qoldirdingiz. Agar yana ${36 - totalHoursIncludingToday} soat dars qoldirsangiz, nizomga asosan kursdan chetlashtirilasiz!`;
+        } else if (thresholdCrossed === 36) {
+          text = `❌ <b>CHETLASHTIRISH XAVFI:</b> Hurmatli ${stInfo.users.full_name}, siz jami <b>${totalHoursIncludingToday} soat</b> uzrli sababsiz qoldirdingiz! Qayta tayyorlash kursi nizomiga muvofiq, siz tinglovchilar safidan chetlashtirishga tavsiya etilasiz.`;
         }
 
         try {

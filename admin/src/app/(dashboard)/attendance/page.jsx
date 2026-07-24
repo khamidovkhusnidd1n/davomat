@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Search, Filter } from 'lucide-react';
+import { Search, Filter, Edit2 } from 'lucide-react';
 import styles from './page.module.css';
 
 export default function AttendancePage() {
@@ -10,6 +10,25 @@ export default function AttendancePage() {
   const [search, setSearch] = useState('');
   const [filterGroup, setFilterGroup] = useState('');
   const [filterDate, setFilterDate] = useState('');
+  
+  const [editingId, setEditingId] = useState(null);
+  const [lateHours, setLateHours] = useState('');
+
+  const handleUpdateLateHours = async (id) => {
+    try {
+      const hours = parseInt(lateHours, 10);
+      if (isNaN(hours) || hours < 0 || hours > 6) {
+        alert("Soat 0 dan 6 gacha bo'lishi kerak!");
+        return;
+      }
+      const { error } = await supabase.from('attendance').update({ late_hours: hours }).eq('id', id);
+      if (error) throw error;
+      setEditingId(null);
+      fetchAttendance();
+    } catch (e) {
+      alert("Xatolik yuz berdi: " + e.message);
+    }
+  };
 
   useEffect(() => {
     let initialDate = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tashkent' });
@@ -31,6 +50,7 @@ export default function AttendancePage() {
         .select(`
           id,
           status,
+          late_hours,
           created_at,
           students ( users ( full_name ) ),
           lessons ( lesson_date, title, groups ( name ) ),
@@ -112,6 +132,7 @@ export default function AttendancePage() {
                   <th>Guruh</th>
                   <th>Dars Mavzusi</th>
                   <th>Status</th>
+                  <th>Kech qolgan soat</th>
                   <th>Belgiladi</th>
                 </tr>
               </thead>
@@ -139,6 +160,26 @@ export default function AttendancePage() {
                           <span className={`${styles.statusBadge} ${styles[record.status] || ''}`}>
                             {record.status === 'present' ? 'Kelgan' : record.status === 'excused' ? 'Kelmagan (Sababli)' : record.status === 'absent' || record.status === 'unexcused' ? 'Kelmagan (Sababsiz)' : 'Kech qolgan'}
                           </span>
+                        </td>
+                        <td>
+                          {record.status === 'late' ? (
+                            editingId === record.id ? (
+                              <div style={{ display: 'flex', gap: '5px' }}>
+                                <input type="number" min="0" max="6" style={{ width: '60px' }} value={lateHours} onChange={(e) => setLateHours(e.target.value)} />
+                                <button className="btn btn-primary" style={{ padding: '4px 8px' }} onClick={() => handleUpdateLateHours(record.id)}>OK</button>
+                                <button className="btn btn-secondary" style={{ padding: '4px 8px' }} onClick={() => setEditingId(null)}>X</button>
+                              </div>
+                            ) : (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <span>{record.late_hours || 0} soat</span>
+                                <button className={styles.actionBtn} onClick={() => { setEditingId(record.id); setLateHours(record.late_hours?.toString() || '0'); }}>
+                                  <Edit2 size={16} />
+                                </button>
+                              </div>
+                            )
+                          ) : (
+                            '-'
+                          )}
                         </td>
                         <td className={styles.textSmall}>{record.users?.full_name || 'Tizim'}</td>
                       </tr>

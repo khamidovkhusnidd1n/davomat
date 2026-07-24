@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Search, Calendar, Eye, Plus, X } from 'lucide-react';
 import Link from 'next/link';
+import { FileSpreadsheet } from 'lucide-react';
+import ExcelLessonsImport from '@/components/ExcelLessonsImport/ExcelLessonsImport';
 import styles from './page.module.css';
 
 export default function LessonsPage() {
@@ -13,6 +15,7 @@ export default function LessonsPage() {
   
   // Modal states
   const [showModal, setShowModal] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     group_id: '',
@@ -99,10 +102,15 @@ export default function LessonsPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-          <Plus size={20} />
-          <span>Dars qo'shish</span>
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button className="btn btn-secondary" style={{backgroundColor: '#e0e7ff', color: '#4f46e5'}} onClick={() => setShowImport(true)}>
+            <FileSpreadsheet size={18} /> Excel Import
+          </button>
+          <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+            <Plus size={20} />
+            <span>Dars qo'shish</span>
+          </button>
+        </div>
       </div>
 
       <div className={`card ${styles.tableCard}`}>
@@ -215,7 +223,7 @@ export default function LessonsPage() {
               </div>
 
               <div className="form-group">
-                <label>Dars mavzusi yoki nomi (masalan: 14:00 darsi)</label>
+                <label>Modul/fan mavzusi (masalan: Rangtasvir)</label>
                 <input 
                   type="text" 
                   className="input" 
@@ -238,6 +246,11 @@ export default function LessonsPage() {
           </div>
         </div>
       )}
+      <ExcelLessonsImport
+        isOpen={showImport}
+        onClose={() => setShowImport(false)}
+        onSuccess={fetchLessons}
+      />
     </div>
   );
 }

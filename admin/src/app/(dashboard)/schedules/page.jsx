@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { Search, Plus, Trash2, Edit2, Clock, FileSpreadsheet } from 'lucide-react';
 import ScheduleModal from './ScheduleModal';
 import ExcelImportSchedule from '@/components/ExcelImportSchedule/ExcelImportSchedule';
-import ExcelLessonsImport from '@/components/ExcelLessonsImport/ExcelLessonsImport';
+
 import styles from './page.module.css';
 
 const DAYS = {
@@ -24,7 +24,6 @@ export default function SchedulesPage() {
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [showImport, setShowImport] = useState(false);
-  const [showLessonsImport, setShowLessonsImport] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState(null);
   
   // Fake organizationId hozircha
@@ -94,9 +93,6 @@ export default function SchedulesPage() {
           />
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button className="btn btn-secondary" style={{backgroundColor: '#e0e7ff', color: '#4f46e5'}} onClick={() => setShowLessonsImport(true)}>
-            <FileSpreadsheet size={18} /> Aniq Sanali Import
-          </button>
           <button className="btn btn-secondary" onClick={() => setShowImport(true)}>
             <FileSpreadsheet size={18} /> Excel Import
           </button>
@@ -183,11 +179,6 @@ export default function SchedulesPage() {
         onClose={() => setShowImport(false)}
         groups={groups}
         organizationId={organizationId}
-        onSuccess={fetchData}
-      />
-      <ExcelLessonsImport
-        isOpen={showLessonsImport}
-        onClose={() => setShowLessonsImport(false)}
         onSuccess={fetchData}
       />
     </div>

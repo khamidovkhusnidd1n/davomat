@@ -56,6 +56,7 @@ BEGIN
         SELECT
             s.group_id,
             g.name AS group_name,
+            g.course_name,
             s.day_of_week,
             -- day_of_week: 1=Dushanba, 2=Seshanba, ...
             -- week_start Dushanba bo'lgani uchun: week_start + (day_of_week - 1)
@@ -71,16 +72,8 @@ BEGIN
         INSERT INTO public.lessons (group_id, title, lesson_date, created_by)
         SELECT
             sd.group_id,
-            -- Avtomatik sarlavha: "Guruh nomi — Kun nomi"
-            sd.group_name || ' — ' ||
-            CASE sd.day_of_week
-                WHEN 1 THEN 'Dushanba'
-                WHEN 2 THEN 'Seshanba'
-                WHEN 3 THEN 'Chorshanba'
-                WHEN 4 THEN 'Payshanba'
-                WHEN 5 THEN 'Juma'
-                WHEN 6 THEN 'Shanba'
-            END || ' darsi',
+            -- Avtomatik sarlavha: "Modul/Fan nomi"
+            sd.course_name,
             sd.target_date,
             v_created_by
         FROM schedule_dates sd
@@ -154,6 +147,7 @@ BEGIN
         SELECT
             s.group_id,
             g.name AS group_name,
+            g.course_name,
             s.day_of_week,
             v_week_start + (s.day_of_week - 1) AS target_date
         FROM public.schedules s
@@ -164,15 +158,7 @@ BEGIN
         INSERT INTO public.lessons (group_id, title, lesson_date, created_by)
         SELECT
             sd.group_id,
-            sd.group_name || ' — ' ||
-            CASE sd.day_of_week
-                WHEN 1 THEN 'Dushanba'
-                WHEN 2 THEN 'Seshanba'
-                WHEN 3 THEN 'Chorshanba'
-                WHEN 4 THEN 'Payshanba'
-                WHEN 5 THEN 'Juma'
-                WHEN 6 THEN 'Shanba'
-            END || ' darsi',
+            sd.course_name,
             sd.target_date,
             v_created_by
         FROM schedule_dates sd

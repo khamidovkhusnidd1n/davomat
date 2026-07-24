@@ -163,8 +163,7 @@ CREATE TABLE public.lessons (
     created_by  UUID REFERENCES public.users(id) ON DELETE SET NULL,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
 
-    -- Bitta guruhda bitta sanada bitta mavzuda faqat bitta dars (1 kunda 2 xil dars bo'lishi mumkin)
-    CONSTRAINT lessons_group_date_unique UNIQUE (group_id, lesson_date, title)
+    CONSTRAINT lessons_group_date_unique UNIQUE (group_id, lesson_date)
 );
 
 CREATE INDEX idx_lessons_group_id    ON public.lessons(group_id);

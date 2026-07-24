@@ -74,7 +74,7 @@ export default function ReportsPage() {
       if (lessonIds.length > 0) {
         const { data: attData, error: aErr } = await supabase
           .from('attendance')
-          .select('id, lesson_id, student_id, status')
+          .select('id, lesson_id, student_id, status, late_hours')
           .in('lesson_id', lessonIds);
         if (aErr) throw aErr;
         attendance = attData || [];

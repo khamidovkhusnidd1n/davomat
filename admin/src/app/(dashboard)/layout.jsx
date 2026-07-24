@@ -44,7 +44,7 @@ export default function DashboardLayout({ children }) {
     const path = pathname.split('/')[1];
     switch(path) {
       case 'dashboard': return 'Bosh sahifa';
-      case 'students': return "O'quvchilar";
+      case 'students': return "Tinglovchilar";
       case 'teachers': return "O'qituvchilar";
       case 'groups': return 'Guruhlar';
       case 'schedules': return 'Jadval';

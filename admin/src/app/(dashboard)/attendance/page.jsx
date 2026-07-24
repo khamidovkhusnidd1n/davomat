@@ -70,7 +70,7 @@ export default function AttendancePage() {
           <Search size={20} className={styles.searchIcon} />
           <input 
             type="text" 
-            placeholder="O'quvchi yoki guruh..." 
+            placeholder="Tinglovchi yoki guruh..." 
             className="input" 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -108,7 +108,7 @@ export default function AttendancePage() {
                 <tr>
                   <th>#</th>
                   <th>Sana</th>
-                  <th>O'quvchi</th>
+                  <th>Tinglovchi</th>
                   <th>Guruh</th>
                   <th>Dars Mavzusi</th>
                   <th>Status</th>

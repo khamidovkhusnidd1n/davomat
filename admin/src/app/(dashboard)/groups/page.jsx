@@ -140,7 +140,7 @@ export default function GroupsPage() {
                   <th>Kurs Nomi</th>
                   <th>Tutor</th>
                   <th>Sinf sardori</th>
-                  <th>O'quvchilar soni</th>
+                  <th>Tinglovchilar soni</th>
                   <th>Status</th>
                   <th>Yaratilgan sana</th>
                   <th>Amallar</th>

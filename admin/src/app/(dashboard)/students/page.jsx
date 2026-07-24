@@ -91,7 +91,7 @@ export default function StudentsPage() {
           <Search size={20} className={styles.searchIcon} />
           <input
             type="text"
-            placeholder="O'quvchi ismi yoki guruh..."
+            placeholder="Tinglovchi ismi yoki guruh..."
             className="input"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -114,7 +114,7 @@ export default function StudentsPage() {
             <FileSpreadsheet size={18} /> Excel Import
           </button>
           <button className="btn btn-primary" onClick={() => { setEditingStudent(null); setShowModal(true); }}>
-            <Plus size={18} /> Yangi O'quvchi
+            <Plus size={18} /> Yangi Tinglovchi
           </button>
         </div>
       </div>

@@ -60,7 +60,7 @@ export default function StudentModal({ isOpen, onClose, student, groups, organiz
       if (!res.ok) throw new Error(data.error);
 
       if (!isEdit && data.password) {
-        alert(`O'quvchi qo'shildi!\nVaqtinchalik parol: ${data.password}`);
+        alert(`Tinglovchi qo'shildi!\nVaqtinchalik parol: ${data.password}`);
       }
       
       onSuccess?.();
@@ -85,7 +85,7 @@ export default function StudentModal({ isOpen, onClose, student, groups, organiz
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={isEdit ? "O'quvchini tahrirlash" : "Yangi o'quvchi qo'shish"}
+      title={isEdit ? "Tinglovchini tahrirlash" : "Yangi tinglovchi qo'shish"}
       footer={footer}
     >
       <form className={styles.form} onSubmit={handleSubmit}>

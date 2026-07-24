@@ -104,7 +104,7 @@ export default function Dashboard() {
             <GraduationCap size={24} />
           </div>
           <div className={styles.statInfo}>
-            <p className={styles.statTitle}>Jami O'quvchilar</p>
+            <p className={styles.statTitle}>Jami Tinglovchilar</p>
             <h3 className={styles.statValue}>{loading ? '...' : stats.students}</h3>
             <span className={styles.statTrend} data-trend="neutral">Faol o'quvchilar</span>
           </div>

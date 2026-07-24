@@ -138,26 +138,23 @@ export default function ReportsPage() {
 
     data.students.forEach(st => {
       const groupLessons = lessonsByGroup[st.group_id] || [];
-      // Take last 5 lessons to check
-      const recentLessons = groupLessons.slice(0, 5);
       
-      let consecutiveAbsent = 0;
-      for (const les of recentLessons) {
+      let totalUnexcused = 0;
+      for (const les of groupLessons) {
         const att = data.attendance.find(a => a.lesson_id === les.id && a.student_id === st.id);
-        if (att && (att.status === 'absent' || att.status === 'excused' || att.status === 'unexcused')) {
-          consecutiveAbsent++;
-        } else if (att) {
-          // Came or excused, break streak
-          break; 
+        // Only count unexcused absences ("uzrli sababsiz")
+        if (att && (att.status === 'absent' || att.status === 'unexcused')) {
+          totalUnexcused++;
         }
       }
 
-      if (consecutiveAbsent >= 3) {
+      // Qayta tayyorlash kursi uchun 36 soat (6 marta dars) limit
+      if (totalUnexcused >= 6) {
         const group = data.groups.find(g => g.id === st.group_id);
         alerts.push({
           student: st,
           groupName: group?.name || 'Noma\'lum',
-          absentCount: consecutiveAbsent
+          absentCount: totalUnexcused
         });
       }
     });
@@ -468,12 +465,12 @@ export default function ReportsPage() {
             {activeTab === 'redzone' && (
               <div className={styles.tableWrapper}>
                 <div style={{ marginBottom: 16, color: 'var(--text-secondary)' }}>
-                  * Quyidagi o'quvchilar oxirgi darslarda <strong>ketma-ket 3 va undan ortiq marta</strong> qatnashmagan. Ota-onalari bilan bog'lanish tavsiya etiladi.
+                  * Quyidagi tinglovchilar <strong>uzrli sababsiz 36 soat (6 ta modul) va undan ortiq</strong> qatnashmagan. Qayta tayyorlash kursi nizomiga muvofiq, ular tinglovchilar safidan chetlashtirishga tavsiya etiladi.
                 </div>
                 <table className={styles.table}>
                   <thead>
                     <tr>
-                      <th>O'quvchi Ismi</th>
+                      <th>Tinglovchi Ismi</th>
                       <th>Guruh</th>
                       <th>Holati</th>
                       <th>Ota-ona raqami</th>
@@ -481,7 +478,7 @@ export default function ReportsPage() {
                   </thead>
                   <tbody>
                     {redZoneStudents.length === 0 ? (
-                      <tr><td colSpan={4} style={{ textAlign: 'center', color: 'var(--success)', padding: 32 }}>Tabriklaymiz! Qizil zonada o'quvchilar yo'q 🎉</td></tr>
+                      <tr><td colSpan={4} style={{ textAlign: 'center', color: 'var(--success)', padding: 32 }}>Tabriklaymiz! Chetlashtirish xavfi ostida bo'lgan tinglovchilar yo'q 🎉</td></tr>
                     ) : (
                       redZoneStudents.map((item, idx) => (
                         <tr key={idx} className={styles.redRow}>
@@ -489,7 +486,7 @@ export default function ReportsPage() {
                           <td>{item.groupName}</td>
                           <td>
                             <span className={styles.dangerBadge}>
-                              Ketma-ket {item.absentCount} marta kelmadi
+                              {item.absentCount * 6} soat ({item.absentCount} dars) sababsiz kelmadi
                             </span>
                           </td>
                           <td style={{ fontFamily: 'monospace' }}>

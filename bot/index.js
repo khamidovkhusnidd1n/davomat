@@ -377,6 +377,68 @@ cron.schedule('0 18 * * *', async () => {
   timezone: "Asia/Tashkent"
 });
 
+// Retraining Course Absence Warnings (Runs daily at 18:30)
+cron.schedule('30 18 * * *', async () => {
+  const today = new Date().toISOString().split('T')[0];
+
+  // Get all attendances marked today as absent or unexcused
+  // To avoid complex joins if not supported, we fetch today's lessons first
+  const { data: todayLessons } = await supabase
+    .from('lessons')
+    .select('id')
+    .eq('lesson_date', today);
+
+  if (!todayLessons || todayLessons.length === 0) return;
+  const lessonIds = todayLessons.map(l => l.id);
+
+  const { data: todayAbsences } = await supabase
+    .from('attendance')
+    .select('student_id')
+    .in('lesson_id', lessonIds)
+    .in('status', ['absent', 'unexcused']);
+
+  if (!todayAbsences || todayAbsences.length === 0) return;
+
+  const absentStudentIds = [...new Set(todayAbsences.map(a => a.student_id))];
+
+  for (const stId of absentStudentIds) {
+    const { data: totalAbs } = await supabase
+      .from('attendance')
+      .select('id')
+      .eq('student_id', stId)
+      .in('status', ['absent', 'unexcused']);
+
+    const total = totalAbs ? totalAbs.length : 0;
+
+    if (total === 2 || total === 4 || total === 6) {
+      const { data: stInfo } = await supabase
+        .from('students')
+        .select('users(full_name, telegram_id)')
+        .eq('id', stId)
+        .single();
+      
+      if (stInfo && stInfo.users && stInfo.users.telegram_id) {
+        let text = '';
+        if (total === 2) {
+          text = `⚠️ <b>Ogohlantirish:</b> Hurmatli ${stInfo.users.full_name}, siz jami <b>12 soat</b> (2 ta dars moduli) qoldirdingiz. Eslatib o'tamiz, qayta tayyorlash kurslarida 36 soat dars qoldirilganda tinglovchilar safidan chetlashtiriladi.`;
+        } else if (total === 4) {
+          text = `🚨 <b>Qat'iy Ogohlantirish:</b> Hurmatli ${stInfo.users.full_name}, siz jami <b>24 soat</b> (4 ta dars moduli) qoldirdingiz. Agar yana 12 soat dars qoldirsangiz, nizomga asosan kursdan chetlashtirilasiz!`;
+        } else if (total === 6) {
+          text = `❌ <b>CHETLASHTIRISH XAVFI:</b> Hurmatli ${stInfo.users.full_name}, siz jami <b>36 soat</b> (6 ta dars moduli) uzrli sababsiz qoldirdingiz! Qayta tayyorlash kursi nizomiga muvofiq, siz tinglovchilar safidan chetlashtirishga tavsiya etilasiz.`;
+        }
+
+        try {
+          await bot.telegram.sendMessage(stInfo.users.telegram_id, text, { parse_mode: 'HTML' });
+        } catch(e) {
+          console.error('Failed to send absence warning to', stInfo.users.telegram_id);
+        }
+      }
+    }
+  }
+}, {
+  timezone: "Asia/Tashkent"
+});
+
 // Daily Reminder at 15:00
 cron.schedule('0 15 * * *', async () => {
   const tomorrow = new Date();

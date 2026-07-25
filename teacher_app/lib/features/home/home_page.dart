@@ -131,46 +131,13 @@ class _HomePageState extends State<HomePage> {
           ? '$courseName ($timeRange)' 
           : '$groupName ($timeRange)';
 
-      // Darsni group_id + sana bo'yicha qidiramiz (UNIQUE constraint)
-      final existingLessons = await supabase
-          .from('lessons')
-          .select('id')
-          .eq('group_id', schedule['group_id'])
-          .eq('lesson_date', todayStr)
-          .limit(1);
-
-      String lessonId;
-
-      if (existingLessons.isEmpty) {
-        // Bugun uchun dars yaratamiz
-        try {
-          final newLesson = await supabase
-              .from('lessons')
-              .insert({
-                'group_id': schedule['group_id'],
-                'lesson_date': todayStr,
-                'title': lessonTitle,
-              })
-              .select('id')
-              .single();
-          lessonId = newLesson['id'];
-        } catch (e) {
-          // Boshqa foydalanuvchi aynan shu vaqtda dars yaratgan bo'lishi mumkin
-          final fallbackLessons = await supabase
-              .from('lessons')
-              .select('id')
-              .eq('group_id', schedule['group_id'])
-              .eq('lesson_date', todayStr)
-              .limit(1);
-          if (fallbackLessons.isNotEmpty) {
-            lessonId = fallbackLessons[0]['id'];
-          } else {
-            throw e;
-          }
-        }
-      } else {
-        lessonId = existingLessons[0]['id'];
-      }
+      // Darsni get_or_create_today_lesson RPC orqali xavfsiz olamiz yoki yaratamiz
+      final lessonIdResponse = await supabase.rpc('get_or_create_today_lesson', params: {
+        'p_group_id': schedule['group_id'],
+        'p_lesson_title': lessonTitle,
+      });
+      
+      final String lessonId = lessonIdResponse.toString();
 
       if (mounted) Navigator.pop(context); // loading ni yopish
 

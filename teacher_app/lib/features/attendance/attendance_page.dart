@@ -22,6 +22,7 @@ class _AttendancePageState extends State<AttendancePage> {
   bool _isLoading = true;
   List<dynamic> _students = [];
   Map<String, String> _attendanceMap = {}; // student_id -> status ('present', 'absent', 'late')
+  Map<String, int> _lateHoursMap = {}; // student_id -> late_hours
 
   @override
   void initState() {
@@ -52,12 +53,17 @@ class _AttendancePageState extends State<AttendancePage> {
       // 2. Agar avval belgilangan davomat bo'lsa, uni yuklab olamiz
       final attendanceRes = await supabase
           .from('attendance')
-          .select('student_id, status')
+          .select('student_id, status, late_hours')
           .eq('lesson_id', widget.lessonId);
 
       _attendanceMap = {};
+      _lateHoursMap = {};
       for (var att in attendanceRes) {
-        _attendanceMap[att['student_id'].toString()] = att['status'];
+        final id = att['student_id'].toString();
+        _attendanceMap[id] = att['status'];
+        if (att['late_hours'] != null) {
+          _lateHoursMap[id] = att['late_hours'] as int;
+        }
       }
 
       // Hali belgilanmagan bo'lsa barchaga default 'present' beramiz MVP uchun
@@ -102,6 +108,7 @@ class _AttendancePageState extends State<AttendancePage> {
           'lesson_id': widget.lessonId,
           'student_id': student['id'],
           'status': _attendanceMap[id],
+          'late_hours': _attendanceMap[id] == 'late' ? (_lateHoursMap[id] ?? 2) : 0,
           'marked_by': user.id,
         });
       }
@@ -210,50 +217,91 @@ class _AttendancePageState extends State<AttendancePage> {
                               child: Text(fullName.isNotEmpty ? fullName[0].toUpperCase() : '?'),
                             ),
                             title: Text(fullName, style: const TextStyle(fontWeight: FontWeight.bold)),
-                            subtitle: Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _StatusChip(
-                                  label: 'Bor',
-                                  icon: Icons.check,
-                                  color: Colors.green,
-                                  isSelected: _attendanceMap[id] == 'present',
-                                  isDisabled: isSelf,
-                                  onTap: () {
-                                    if (!isSelf) setState(() => _attendanceMap[id] = 'present');
-                                  },
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: [
+                                    _StatusChip(
+                                      label: 'Bor',
+                                      icon: Icons.check,
+                                      color: Colors.green,
+                                      isSelected: _attendanceMap[id] == 'present',
+                                      isDisabled: isSelf,
+                                      onTap: () {
+                                        if (!isSelf) setState(() => _attendanceMap[id] = 'present');
+                                      },
+                                    ),
+                                    _StatusChip(
+                                      label: 'Sababli',
+                                      icon: Icons.info_outline,
+                                      color: Colors.orange,
+                                      isSelected: _attendanceMap[id] == 'excused',
+                                      isDisabled: isSelf,
+                                      onTap: () {
+                                        if (!isSelf) setState(() => _attendanceMap[id] = 'excused');
+                                      },
+                                    ),
+                                    _StatusChip(
+                                      label: 'Sababsiz',
+                                      icon: Icons.close,
+                                      color: Colors.red,
+                                      isSelected: _attendanceMap[id] == 'unexcused',
+                                      isDisabled: isSelf,
+                                      onTap: () {
+                                        if (!isSelf) setState(() => _attendanceMap[id] = 'unexcused');
+                                      },
+                                    ),
+                                    _StatusChip(
+                                      label: 'Kech',
+                                      icon: Icons.access_time,
+                                      color: Colors.amber,
+                                      isSelected: _attendanceMap[id] == 'late',
+                                      isDisabled: isSelf,
+                                      onTap: () {
+                                        if (!isSelf) setState(() => _attendanceMap[id] = 'late');
+                                      },
+                                    ),
+                                  ],
                                 ),
-                                _StatusChip(
-                                  label: 'Sababli',
-                                  icon: Icons.info_outline,
-                                  color: Colors.orange,
-                                  isSelected: _attendanceMap[id] == 'excused',
-                                  isDisabled: isSelf,
-                                  onTap: () {
-                                    if (!isSelf) setState(() => _attendanceMap[id] = 'excused');
-                                  },
-                                ),
-                                _StatusChip(
-                                  label: 'Sababsiz',
-                                  icon: Icons.close,
-                                  color: Colors.red,
-                                  isSelected: _attendanceMap[id] == 'unexcused',
-                                  isDisabled: isSelf,
-                                  onTap: () {
-                                    if (!isSelf) setState(() => _attendanceMap[id] = 'unexcused');
-                                  },
-                                ),
-                                _StatusChip(
-                                  label: 'Kech',
-                                  icon: Icons.access_time,
-                                  color: Colors.amber,
-                                  isSelected: _attendanceMap[id] == 'late',
-                                  isDisabled: isSelf,
-                                  onTap: () {
-                                    if (!isSelf) setState(() => _attendanceMap[id] = 'late');
-                                  },
-                                ),
+                                if (_attendanceMap[id] == 'late')
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 12),
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.timer_outlined, size: 16, color: Colors.amber),
+                                        const SizedBox(width: 4),
+                                        const Text('Kechikkan vaqti:', style: TextStyle(fontSize: 13, color: Colors.black87)),
+                                        const SizedBox(width: 8),
+                                        Container(
+                                          height: 30,
+                                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                                          decoration: BoxDecoration(
+                                            border: Border.all(color: Colors.grey.shade300),
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: DropdownButtonHideUnderline(
+                                            child: DropdownButton<int>(
+                                              value: _lateHoursMap[id] ?? 2,
+                                              isDense: true,
+                                              icon: const Icon(Icons.arrow_drop_down, size: 18),
+                                              items: [2, 4, 6, 8, 10, 12, 14, 16, 18, 20].map((h) => DropdownMenuItem(
+                                                value: h, 
+                                                child: Text('$h soat', style: const TextStyle(fontSize: 13))
+                                              )).toList(),
+                                              onChanged: isSelf ? null : (val) {
+                                                if (val != null) {
+                                                  setState(() => _lateHoursMap[id] = val);
+                                                }
+                                              },
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                               ],
                             ),
                           ),

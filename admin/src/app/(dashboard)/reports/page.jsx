@@ -184,18 +184,28 @@ export default function ReportsPage() {
       
       const rows = gStudents.map(st => {
         const row = { 'O\'quvchi F.I.O': st.users?.full_name || 'Ismsiz' };
+        let missedHours = 0;
         
         gLessons.forEach(les => {
           const att = data.attendance.find(a => a.lesson_id === les.id && a.student_id === st.id);
           let mark = '';
           if (att) {
-            if (att.status === 'present') mark = '+';
-            else if (att.status === 'absent' || att.status === 'unexcused') mark = '-';
-            else if (att.status === 'late') mark = 'Kech keldi';
-            else if (att.status === 'excused') mark = 'Sababli';
+            if (att.status === 'present') {
+              mark = '+';
+            } else if (att.status === 'absent' || att.status === 'unexcused') {
+              mark = '-';
+              missedHours += 6;
+            } else if (att.status === 'late') {
+              mark = 'Kech keldi';
+              if (att.late_hours > 0) missedHours += att.late_hours;
+            } else if (att.status === 'excused') {
+              mark = 'Sababli';
+            }
           }
           row[les.lesson_date] = mark;
         });
+        
+        row['Qoldirilgan (soat)'] = missedHours > 0 ? `${missedHours} soat` : '0';
         
         return row;
       });
@@ -269,9 +279,11 @@ export default function ReportsPage() {
 
       // Column widths
       sheet.getColumn(1).width = 30; // F.I.Sh
-      for (let i = 2; i <= Object.keys(rows[0]).length; i++) {
+      const totalCols = Object.keys(rows[0]).length;
+      for (let i = 2; i < totalCols; i++) {
         sheet.getColumn(i).width = 12; // Dates
       }
+      sheet.getColumn(totalCols).width = 18; // Qoldirilgan (soat)
 
       // Freeze panes
       sheet.views = [

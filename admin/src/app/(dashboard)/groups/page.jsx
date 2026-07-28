@@ -1,9 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Search, Plus, Trash2, Edit2, BookOpen } from 'lucide-react';
+import { Search, Plus, Trash2, Edit2, BookOpen, FileSpreadsheet } from 'lucide-react';
 import GroupModal from './GroupModal';
 import SyllabusModal from './SyllabusModal';
+import ExcelGroupsImport from '@/components/ExcelGroupsImport/ExcelGroupsImport';
 import styles from './page.module.css';
 
 export default function GroupsPage() {
@@ -14,6 +15,7 @@ export default function GroupsPage() {
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [showSyllabus, setShowSyllabus] = useState(false);
+  const [showGroupsImport, setShowGroupsImport] = useState(false);
   const [editingGroup, setEditingGroup] = useState(null);
   const [organizationId, setOrganizationId] = useState(null);
   const [userRole, setUserRole] = useState(null);
@@ -108,9 +110,14 @@ export default function GroupsPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <button className="btn btn-primary" onClick={() => { setEditingGroup(null); setShowModal(true); }}>
-          <Plus size={18} /> Yangi Guruh
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button className="btn btn-secondary" onClick={() => setShowGroupsImport(true)}>
+            <FileSpreadsheet size={18} /> Excel yuklash
+          </button>
+          <button className="btn btn-primary" onClick={() => { setEditingGroup(null); setShowModal(true); }}>
+            <Plus size={18} /> Yangi Guruh
+          </button>
+        </div>
       </div>
 
       <div className={styles.tabs} style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
@@ -212,6 +219,12 @@ export default function GroupsPage() {
         isOpen={showSyllabus}
         onClose={() => setShowSyllabus(false)}
         group={editingGroup}
+      />
+      <ExcelGroupsImport
+        isOpen={showGroupsImport}
+        onClose={() => setShowGroupsImport(false)}
+        organizationId={organizationId}
+        onSuccess={fetchData}
       />
     </div>
   );

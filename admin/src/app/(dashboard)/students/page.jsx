@@ -12,6 +12,7 @@ export default function StudentsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterBot, setFilterBot] = useState('all'); // 'all' | 'connected' | 'not_connected'
+  const [selectedGroupFilter, setSelectedGroupFilter] = useState('all');
   const [showImport, setShowImport] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
@@ -81,7 +82,10 @@ export default function StudentsPage() {
     if (filterBot === 'connected') matchesBot = !!s.users?.telegram_id;
     if (filterBot === 'not_connected') matchesBot = !s.users?.telegram_id;
 
-    return matchesSearch && matchesBot;
+    let matchesGroup = true;
+    if (selectedGroupFilter !== 'all') matchesGroup = s.groups?.id === selectedGroupFilter;
+
+    return matchesSearch && matchesBot && matchesGroup;
   });
 
   return (
@@ -98,16 +102,30 @@ export default function StudentsPage() {
           />
         </div>
         
-        <select 
-          className="input" 
-          style={{ maxWidth: '180px' }}
-          value={filterBot}
-          onChange={(e) => setFilterBot(e.target.value)}
-        >
-          <option value="all">Barcha o'quvchilar</option>
-          <option value="connected">Botga ulanganlar</option>
-          <option value="not_connected">Botga ulanmaganlar</option>
-        </select>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <select 
+            className="input" 
+            style={{ maxWidth: '180px' }}
+            value={filterBot}
+            onChange={(e) => setFilterBot(e.target.value)}
+          >
+            <option value="all">Barcha o'quvchilar</option>
+            <option value="connected">Botga ulanganlar</option>
+            <option value="not_connected">Botga ulanmaganlar</option>
+          </select>
+
+          <select 
+            className="input" 
+            style={{ maxWidth: '180px' }}
+            value={selectedGroupFilter}
+            onChange={(e) => setSelectedGroupFilter(e.target.value)}
+          >
+            <option value="all">Barcha guruhlar</option>
+            {groups.map(g => (
+              <option key={g.id} value={g.id}>{g.name}</option>
+            ))}
+          </select>
+        </div>
 
         <div className={styles.btnGroup}>
           <button className="btn btn-secondary" onClick={() => setShowImport(true)}>

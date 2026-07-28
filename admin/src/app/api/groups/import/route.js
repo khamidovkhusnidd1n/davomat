@@ -23,7 +23,7 @@ export async function POST(request) {
     for (const row of rows) {
       const groupName = row['Guruh Nomi'] || row['guruh_nomi'] || row['Guruh'] || row['guruh'];
       const courseName = row['Fan Nomi'] || row['fan_nomi'] || row['Fan'] || row['fan'] || 'Umumiy';
-      const studentName = row['Talaba F.I.Sh'] || row['talaba_fish'] || row['O\'quvchi'] || row['o\'quvchi'] || row['Ism'] || row['ism'];
+      const studentName = row['Talaba F.I.Sh'] || row['talaba_f.i.sh'] || row['talaba_fish'] || row['O\'quvchi'] || row['o\'quvchi'] || row['Ism'] || row['ism'];
       const phone = row['Telefon raqami'] || row['telefon_raqami'] || row['Telefon'] || row['telefon'] || row['phone'];
 
       if (!groupName || !String(groupName).trim()) {

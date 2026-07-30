@@ -87,7 +87,7 @@ const handlePhoneSubmit = async (ctx, phoneStr) => {
     await supabase.from('users').update({ telegram_id: tgId }).eq('id', user.id);
 
     let kb = [];
-    if (user.role === 'teacher') {
+    if (user.role === 'nazoratchi') {
       kb = [
         ['📅 Mening darslarim', '📋 Guruhlarim ro\'yxati'],
         ['📊 Davomat hisobotlari']
@@ -139,7 +139,7 @@ bot.hears('❌ Bekor qilish', async (ctx) => {
   const { data: user } = await supabase.from('users').select('full_name, role').eq('telegram_id', tgId).single();
   
   let kb = [];
-  if (user && user.role === 'teacher') {
+  if (user && user.role === 'nazoratchi') {
     kb = [
       ['📅 Mening darslarim', '📋 Guruhlarim ro\'yxati'],
       ['📊 Davomat hisobotlari']
@@ -188,7 +188,7 @@ bot.on('message', async (ctx, next) => {
     const tgId = ctx.from.id.toString();
     const { data: user } = await supabase.from('users').select('full_name, role').eq('telegram_id', tgId).single();
     let kb = [];
-    if (user && user.role === 'teacher') {
+    if (user && user.role === 'nazoratchi') {
       kb = [
         ['📅 Mening darslarim', '📋 Guruhlarim ro\'yxati'],
         ['📊 Davomat hisobotlari']
@@ -518,34 +518,60 @@ cron.schedule('30 18 * * *', async () => {
       }
     }
 
+    const { data: stInfo } = await supabase
+      .from('students')
+      .select('users(full_name, telegram_id), groups(education_type)')
+      .eq('id', stId)
+      .single();
+
+    if (!stInfo || !stInfo.users || !stInfo.users.telegram_id) continue;
+    const eduType = stInfo.groups?.education_type || 'qayta_tayyorlov';
+
     // Check if we crossed any thresholds TODAY
     let thresholdCrossed = 0;
-    if (totalHoursBeforeToday < 12 && totalHoursIncludingToday >= 12) thresholdCrossed = 12;
-    else if (totalHoursBeforeToday < 24 && totalHoursIncludingToday >= 24) thresholdCrossed = 24;
-    else if (totalHoursBeforeToday < 36 && totalHoursIncludingToday >= 36) thresholdCrossed = 36;
+    if (eduType === 'malaka_oshirish') {
+      if (totalHoursBeforeToday < 4 && totalHoursIncludingToday >= 4) thresholdCrossed = 4;
+      else if (totalHoursBeforeToday < 8 && totalHoursIncludingToday >= 8) thresholdCrossed = 8;
+      else if (totalHoursBeforeToday < 12 && totalHoursIncludingToday >= 12) thresholdCrossed = 12;
+      else if (totalHoursBeforeToday < 16 && totalHoursIncludingToday >= 16) thresholdCrossed = 16;
+      else if (totalHoursBeforeToday < 18 && totalHoursIncludingToday >= 18) thresholdCrossed = 18;
+    } else {
+      if (totalHoursBeforeToday < 12 && totalHoursIncludingToday >= 12) thresholdCrossed = 12;
+      else if (totalHoursBeforeToday < 24 && totalHoursIncludingToday >= 24) thresholdCrossed = 24;
+      else if (totalHoursBeforeToday < 36 && totalHoursIncludingToday >= 36) thresholdCrossed = 36;
+    }
 
     if (thresholdCrossed > 0) {
-      const { data: stInfo } = await supabase
-        .from('students')
-        .select('users(full_name, telegram_id)')
-        .eq('id', stId)
-        .single();
-      
-      if (stInfo && stInfo.users && stInfo.users.telegram_id) {
-        let text = '';
-        if (thresholdCrossed === 12) {
-          text = `⚠️ <b>Ogohlantirish:</b> Hurmatli ${stInfo.users.full_name}, siz jami <b>${totalHoursIncludingToday} soat</b> dars qoldirdingiz. Eslatib o'tamiz, qayta tayyorlash kurslarida 36 soat dars qoldirilganda tinglovchilar safidan chetlashtiriladi.`;
-        } else if (thresholdCrossed === 24) {
-          text = `🚨 <b>Qat'iy Ogohlantirish:</b> Hurmatli ${stInfo.users.full_name}, siz jami <b>${totalHoursIncludingToday} soat</b> dars qoldirdingiz. Agar yana ${36 - totalHoursIncludingToday} soat dars qoldirsangiz, nizomga asosan kursdan chetlashtirilasiz!`;
-        } else if (thresholdCrossed === 36) {
-          text = `❌ <b>CHETLASHTIRISH XAVFI:</b> Hurmatli ${stInfo.users.full_name}, siz jami <b>${totalHoursIncludingToday} soat</b> uzrli sababsiz qoldirdingiz! Qayta tayyorlash kursi nizomiga muvofiq, siz tinglovchilar safidan chetlashtirishga tavsiya etilasiz.`;
-        }
+      let text = '';
+      const name = stInfo.users.full_name;
+      const total = totalHoursIncludingToday;
 
-        try {
-          await bot.telegram.sendMessage(stInfo.users.telegram_id, text, { parse_mode: 'HTML' });
-        } catch(e) {
-          console.error('Failed to send absence warning to', stInfo.users.telegram_id);
+      if (eduType === 'malaka_oshirish') {
+        if (thresholdCrossed === 4) {
+          text = `⚠️ Ogohlantirish: Hurmatli ${name}, siz ${total} soat dars qoldirdingiz. Malaka oshirish kursida 18 soat dars qoldirilganda tinglovchilar safidan chetlashtiriladi.`;
+        } else if (thresholdCrossed === 8) {
+          text = `🚨 Qat'iy Ogohlantirish: Hurmatli ${name}, siz ${total} soat dars qoldirdingiz. Agar yana ${18 - total} soat qoldirsangiz, chetlashtirilasiz!`;
+        } else if (thresholdCrossed === 12) {
+          text = `🔴 Jiddiy Ogohlantirish: Hurmatli ${name}, siz ${total} soat dars qoldirdingiz. Faqat ${18 - total} soat qoldi!`;
+        } else if (thresholdCrossed === 16) {
+          text = `🚨 Oxirgi Ogohlantirish: Hurmatli ${name}, siz ${total} soat dars qoldirdingiz. Yana 2 soat qoldi, chetlashtirilasiz!`;
+        } else if (thresholdCrossed === 18) {
+          text = `❌ CHETLASHTIRISH XAVFI: Hurmatli ${name}, siz ${total} soat uzrli sababsiz qoldirdingiz! Malaka oshirish kursi nizomiga muvofiq, chetlashtirishga tavsiya etilasiz.`;
         }
+      } else {
+        if (thresholdCrossed === 12) {
+          text = `⚠️ <b>Ogohlantirish:</b> Hurmatli ${name}, siz jami <b>${total} soat</b> dars qoldirdingiz. Eslatib o'tamiz, qayta tayyorlash kurslarida 36 soat dars qoldirilganda tinglovchilar safidan chetlashtiriladi.`;
+        } else if (thresholdCrossed === 24) {
+          text = `🚨 <b>Qat'iy Ogohlantirish:</b> Hurmatli ${name}, siz jami <b>${total} soat</b> dars qoldirdingiz. Agar yana ${36 - total} soat dars qoldirsangiz, nizomga asosan kursdan chetlashtirilasiz!`;
+        } else if (thresholdCrossed === 36) {
+          text = `❌ <b>CHETLASHTIRISH XAVFI:</b> Hurmatli ${name}, siz jami <b>${total} soat</b> uzrli sababsiz qoldirdingiz! Qayta tayyorlash kursi nizomiga muvofiq, siz tinglovchilar safidan chetlashtirishga tavsiya etilasiz.`;
+        }
+      }
+
+      try {
+        await bot.telegram.sendMessage(stInfo.users.telegram_id, text, { parse_mode: 'HTML' });
+      } catch(e) {
+        console.error('Failed to send absence warning to', stInfo.users.telegram_id);
       }
     }
   }
@@ -587,13 +613,13 @@ bot.hears('📅 Mening darslarim', async (ctx) => {
   try {
     const tgId = ctx.from.id.toString();
     const { data: user } = await supabase.from('users').select('id, role').eq('telegram_id', tgId).single();
-    if (!user || user.role !== 'teacher') return ctx.reply("Siz o'qituvchi roliga ega emassiz.");
+    if (!user || user.role !== 'nazoratchi') return ctx.reply("Siz o'qituvchi roliga ega emassiz.");
 
     const tz = getTashkentTime();
     let dayOfWeek = tz.dayOfWeek;
     const todayStr = tz.dateStr;
 
-    const { data: groups } = await supabase.from('groups').select('id, name').eq('teacher_id', user.id);
+    const { data: groups } = await supabase.from('groups').select('id, name').eq('nazoratchi_id', user.id);
     if (!groups || groups.length === 0) return ctx.reply("Sizga biriktirilgan guruhlar topilmadi.");
 
     const groupIds = groups.map(g => g.id);
@@ -696,9 +722,9 @@ bot.hears('📋 Guruhlarim ro\'yxati', async (ctx) => {
   try {
     const tgId = ctx.from.id.toString();
     const { data: user } = await supabase.from('users').select('id, role').eq('telegram_id', tgId).single();
-    if (!user || user.role !== 'teacher') return ctx.reply("Siz o'qituvchi roliga ega emassiz.");
+    if (!user || user.role !== 'nazoratchi') return ctx.reply("Siz o'qituvchi roliga ega emassiz.");
 
-    const { data: groups } = await supabase.from('groups').select('id, name, course_name').eq('teacher_id', user.id);
+    const { data: groups } = await supabase.from('groups').select('id, name, course_name').eq('nazoratchi_id', user.id);
     if (!groups || groups.length === 0) return ctx.reply("Sizga biriktirilgan guruhlar topilmadi.");
 
     ctx.session.myGroups = groups;
@@ -737,9 +763,9 @@ bot.hears('📊 Davomat hisobotlari', async (ctx) => {
   try {
     const tgId = ctx.from.id.toString();
     const { data: user } = await supabase.from('users').select('id, role').eq('telegram_id', tgId).single();
-    if (!user || user.role !== 'teacher') return ctx.reply("Siz o'qituvchi roliga ega emassiz.");
+    if (!user || user.role !== 'nazoratchi') return ctx.reply("Siz o'qituvchi roliga ega emassiz.");
 
-    const { data: groups } = await supabase.from('groups').select('id, name').eq('teacher_id', user.id);
+    const { data: groups } = await supabase.from('groups').select('id, name').eq('nazoratchi_id', user.id);
     if (!groups || groups.length === 0) return ctx.reply("Sizga biriktirilgan guruhlar topilmadi.");
 
     const groupStats = [];
@@ -1101,7 +1127,7 @@ cron.schedule('*/5 * * * *', async () => {
 
     const { data: schedules } = await supabase
       .from('schedules')
-      .select('*, groups(name, teacher_id, users!groups_teacher_id_fkey(telegram_id, full_name))')
+      .select('*, groups(name, nazoratchi_id, users!groups_nazoratchi_id_fkey(telegram_id, full_name))')
       .eq('day_of_week', tz.dayOfWeek);
       
     if (schedules) {
@@ -1119,13 +1145,13 @@ cron.schedule('*/5 * * * *', async () => {
             .maybeSingle();
             
           if (!existing) {
-            const teacher = s.groups?.users;
-            if (teacher && teacher.telegram_id) {
-              const text = `🔔 <b>Eslatma:</b> Hurmatli ${teacher.full_name}, sizning <b>${s.groups.name}</b> guruhingizda soat <b>${s.start_time.substring(0, 5)}</b> da dars boshlandi. Iltimos, dars davomatini belgilang.`;
+            const nazoratchi = s.groups?.users;
+            if (nazoratchi && nazoratchi.telegram_id) {
+              const text = `🔔 <b>Eslatma:</b> Hurmatli ${nazoratchi.full_name}, sizning <b>${s.groups.name}</b> guruhingizda soat <b>${s.start_time.substring(0, 5)}</b> da dars boshlandi. Iltimos, dars davomatini belgilang.`;
               const kb = Markup.inlineKeyboard([
                 [Markup.button.callback("🟢 Davomat belgilash", `wiz_start:${s.id}`)]
               ]);
-              await bot.telegram.sendMessage(teacher.telegram_id, text, { parse_mode: 'HTML', ...kb }).catch(console.error);
+              await bot.telegram.sendMessage(nazoratchi.telegram_id, text, { parse_mode: 'HTML', ...kb }).catch(console.error);
             }
           }
         }
@@ -1173,7 +1199,7 @@ cron.schedule('*/30 * * * *', async () => {
 
       const { data: schedules } = await supabase
         .from('schedules')
-        .select('*, groups(id, name, teacher_id, tutor_id, users!groups_teacher_id_fkey(telegram_id, full_name))')
+        .select('*, groups(id, name, nazoratchi_id, tutor_id, users!groups_nazoratchi_id_fkey(telegram_id, full_name))')
         .eq('day_of_week', d.day);
 
       if (!schedules) continue;
@@ -1196,24 +1222,24 @@ cron.schedule('*/30 * * * *', async () => {
         const diffMs = new Date() - startDateTime;
         const diffHours = diffMs / (1000 * 60 * 60);
 
-        const teacher = s.groups?.users;
-        if (!teacher || !teacher.telegram_id) continue;
+        const nazoratchi = s.groups?.users;
+        if (!nazoratchi || !nazoratchi.telegram_id) continue;
 
         if (diffHours >= 12 && diffHours < 12.5) {
-          const text = `⚠️ <b>DIQQAT:</b> Hurmatli ${teacher.full_name}, sizning <b>${s.groups.name}</b> guruhingizda soat <b>${s.start_time.substring(0, 5)}</b> dagi dars uchun davomat belgilanmaganiga <b>12 soat</b> bo'ldi. Iltimos, davomatni oling.`;
+          const text = `⚠️ <b>DIQQAT:</b> Hurmatli ${nazoratchi.full_name}, sizning <b>${s.groups.name}</b> guruhingizda soat <b>${s.start_time.substring(0, 5)}</b> dagi dars uchun davomat belgilanmaganiga <b>12 soat</b> bo'ldi. Iltimos, davomatni oling.`;
           const kb = Markup.inlineKeyboard([[Markup.button.callback("🟢 Davomat belgilash", `wiz_start:${s.id}`)]]);
-          await bot.telegram.sendMessage(teacher.telegram_id, text, { parse_mode: 'HTML', ...kb }).catch(console.error);
+          await bot.telegram.sendMessage(nazoratchi.telegram_id, text, { parse_mode: 'HTML', ...kb }).catch(console.error);
         }
         else if (diffHours >= 24 && diffHours < 24.5) {
-          const text = `🚨 <b>QAT'IY OGOHLANTIRISH:</b> Hurmatli ${teacher.full_name}, sizning <b>${s.groups.name}</b> guruhingizda soat <b>${s.start_time.substring(0, 5)}</b> dagi dars uchun davomat belgilanmaganiga <b>24 soat</b> bo'ldi. Iltimos, davomatni belgilang!`;
+          const text = `🚨 <b>QAT'IY OGOHLANTIRISH:</b> Hurmatli ${nazoratchi.full_name}, sizning <b>${s.groups.name}</b> guruhingizda soat <b>${s.start_time.substring(0, 5)}</b> dagi dars uchun davomat belgilanmaganiga <b>24 soat</b> bo'ldi. Iltimos, davomatni belgilang!`;
           const kb = Markup.inlineKeyboard([[Markup.button.callback("🟢 Davomat belgilash", `wiz_start:${s.id}`)]]);
-          await bot.telegram.sendMessage(teacher.telegram_id, text, { parse_mode: 'HTML', ...kb }).catch(console.error);
+          await bot.telegram.sendMessage(nazoratchi.telegram_id, text, { parse_mode: 'HTML', ...kb }).catch(console.error);
         }
         else if (diffHours >= 36 && diffHours < 36.5) {
-          const textTeacher = `❌ <b>MUDDAT O'TDI:</b> Hurmatli ${teacher.full_name}, sizning <b>${s.groups.name}</b> guruhingizda soat <b>${s.start_time.substring(0, 5)}</b> dagi dars uchun davomat belgilanmaganiga <b>36 soat</b> bo'ldi. Ushbu qoidabuzarlik haqida rahbariyatga xabar yuborildi.`;
-          await bot.telegram.sendMessage(teacher.telegram_id, textTeacher, { parse_mode: 'HTML' }).catch(console.error);
+          const textNazoratchi = `❌ <b>MUDDAT O'TDI:</b> Hurmatli ${nazoratchi.full_name}, sizning <b>${s.groups.name}</b> guruhingizda soat <b>${s.start_time.substring(0, 5)}</b> dagi dars uchun davomat belgilanmaganiga <b>36 soat</b> bo'ldi. Ushbu qoidabuzarlik haqida rahbariyatga xabar yuborildi.`;
+          await bot.telegram.sendMessage(nazoratchi.telegram_id, textNazoratchi, { parse_mode: 'HTML' }).catch(console.error);
 
-          const textAdmin = `📢 <b>Tizim ogohlantirishi:</b> O'qituvchi ${teacher.full_name} <b>${s.groups.name}</b> guruhida soat <b>${s.start_time.substring(0, 5)}</b> dagi dars uchun davomatni <b>36 soat</b> ichida topshirmadi.`;
+          const textAdmin = `📢 <b>Tizim ogohlantirishi:</b> O'qituvchi ${nazoratchi.full_name} <b>${s.groups.name}</b> guruhida soat <b>${s.start_time.substring(0, 5)}</b> dagi dars uchun davomatni <b>36 soat</b> ichida topshirmadi.`;
 
           if (s.groups.tutor_id) {
             const { data: tutor } = await supabase.from('users').select('telegram_id').eq('id', s.groups.tutor_id).single();
@@ -1232,7 +1258,7 @@ cron.schedule('*/30 * * * *', async () => {
       }
     }
   } catch (err) {
-    console.error('Error in teacher warning cron job:', err);
+    console.error('Error in nazoratchi warning cron job:', err);
   }
 }, {
   timezone: "Asia/Tashkent"

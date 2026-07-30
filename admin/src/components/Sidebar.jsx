@@ -15,14 +15,16 @@ import {
   BarChart3, 
   Settings, 
   User, 
-  LogOut 
+  LogOut,
+  UserCheck
 } from 'lucide-react';
 import styles from './Sidebar.module.css';
 
 const menuItems = [
   { name: 'Bosh sahifa', path: '/dashboard', icon: LayoutDashboard },
   { name: "O'quvchilar", path: '/students', icon: GraduationCap },
-  { name: "O'qituvchilar", path: '/teachers', icon: Users },
+  { name: "Nazoratchilar", path: '/tutors', icon: Users },
+  { name: "O'qituvchilar", path: '/teachers', icon: UserCheck },
   { name: 'Guruhlar', path: '/groups', icon: BookOpen },
   { name: 'Jadval', path: '/schedules', icon: CalendarDays },
   { name: 'Darslar', path: '/lessons', icon: CalendarClock },
@@ -76,10 +78,10 @@ export default function Sidebar() {
   const filteredMenuItems = menuItems.filter(item => {
     if (loading || !role) return false;
     if (role === 'director') {
-      return ['/dashboard', '/students', '/teachers', '/groups', '/attendance', '/reports'].includes(item.path);
+      return ['/dashboard', '/students', '/tutors', '/teachers', '/groups', '/attendance', '/reports'].includes(item.path);
     }
     if (role === 'academic') {
-      return ['/dashboard', '/students', '/teachers', '/groups', '/schedules', '/lessons', '/attendance', '/reports'].includes(item.path);
+      return ['/dashboard', '/students', '/tutors', '/teachers', '/groups', '/schedules', '/lessons', '/attendance', '/reports'].includes(item.path);
     }
     return true; // sysadmin and admin can see all
   });

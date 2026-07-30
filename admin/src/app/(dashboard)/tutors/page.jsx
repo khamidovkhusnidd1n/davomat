@@ -30,7 +30,7 @@ export default function TutorsPage() {
         }
       }
       
-      // Fetch tutors and their assigned groups
+      // Fetch nazoratchilar and their assigned groups
       const { data, error } = await supabase
         .from('users')
         .select(`
@@ -39,14 +39,14 @@ export default function TutorsPage() {
           phone,
           email,
           created_at,
-          groups!groups_tutor_id_fkey ( name, course_name )
+          groups!groups_nazoratchi_id_fkey ( name, course_name )
         `)
-        .in('role', ['tutor', 'teacher']);
+        .eq('role', 'nazoratchi');
       
       if (error) throw error;
       setTutors(data || []);
     } catch (error) {
-      console.error('Error fetching tutors:', error);
+      console.error('Error fetching nazoratchilar:', error);
     } finally {
       setLoading(false);
     }
@@ -90,7 +90,7 @@ export default function TutorsPage() {
           <Search size={20} className={styles.searchIcon} />
           <input 
             type="text" 
-            placeholder="O'qituvchi / Tutor ismi yoki telefon..." 
+            placeholder="Nazoratchi ismi yoki telefon..." 
             className="input" 
             value={search}
             onChange={(e) => setSearch(e.target.value)}

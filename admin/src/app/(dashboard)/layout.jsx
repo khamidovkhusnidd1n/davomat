@@ -45,6 +45,7 @@ export default function DashboardLayout({ children }) {
     switch(path) {
       case 'dashboard': return 'Bosh sahifa';
       case 'students': return "Tinglovchilar";
+      case 'tutors': return "Nazoratchilar";
       case 'teachers': return "O'qituvchilar";
       case 'groups': return 'Guruhlar';
       case 'schedules': return 'Jadval';

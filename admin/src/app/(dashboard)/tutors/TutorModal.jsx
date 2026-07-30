@@ -37,7 +37,7 @@ export default function TutorModal({ isOpen, onClose, tutor, organizationId, onS
     try {
       const payload = {
         ...formData,
-        role: 'tutor',
+        role: 'nazoratchi',
         organization_id: organizationId,
       };
 
@@ -55,7 +55,7 @@ export default function TutorModal({ isOpen, onClose, tutor, organizationId, onS
       if (!res.ok) throw new Error(data.error);
 
       if (!isEdit && data.password) {
-        alert(`Tutor qo'shildi!\nVaqtinchalik parol: ${data.password}`);
+        alert(`Nazoratchi qo'shildi!\nVaqtinchalik parol: ${data.password}`);
       }
       
       onSuccess?.();
@@ -80,7 +80,7 @@ export default function TutorModal({ isOpen, onClose, tutor, organizationId, onS
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={isEdit ? "Tutorni tahrirlash" : "Yangi tutor qo'shish"}
+      title={isEdit ? "Nazoratchini tahrirlash" : "Yangi nazoratchi qo'shish"}
       footer={footer}
     >
       <form className={styles.form} onSubmit={handleSubmit}>
@@ -110,7 +110,7 @@ export default function TutorModal({ isOpen, onClose, tutor, organizationId, onS
               className="input" 
               value={formData.email}
               onChange={e => setFormData({...formData, email: e.target.value})}
-              placeholder="Masalan: tutor1"
+              placeholder="Masalan: nazoratchi1"
             />
           </div>
         </div>

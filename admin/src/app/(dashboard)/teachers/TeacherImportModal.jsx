@@ -3,6 +3,8 @@ import { useState } from 'react';
 import Modal from '@/components/Modal/Modal';
 import * as XLSX from 'xlsx';
 import { supabase } from '@/lib/supabase';
+import { UploadCloud, Download, FileSpreadsheet, AlertCircle } from 'lucide-react';
+import styles from './TeacherImportModal.module.css';
 
 export default function TeacherImportModal({ isOpen, onClose, onSuccess, academicYear }) {
   const [file, setFile] = useState(null);
@@ -11,10 +13,9 @@ export default function TeacherImportModal({ isOpen, onClose, onSuccess, academi
   const [error, setError] = useState('');
   const [step, setStep] = useState('upload'); // 'upload' | 'preview' | 'done'
   const [results, setResults] = useState({ success: 0, failed: 0 });
+  const [isDragOver, setIsDragOver] = useState(false);
 
-  function handleFileChange(e) {
-    const f = e.target.files[0];
-    if (!f) return;
+  function parseExcelFile(f) {
     setFile(f);
     setError('');
 
@@ -41,13 +42,43 @@ export default function TeacherImportModal({ isOpen, onClose, onSuccess, academi
           subject3_hours: parseInt(row["Fan 3 soat"] || row["soat3"] || 0),
         })).filter(r => r.full_name);
 
+        if (parsed.length === 0) {
+          throw new Error("Excel faylda yaroqli o'qituvchi ma'lumotlari topilmadi. Ustun nomlarini tekshiring.");
+        }
+
         setPreview(parsed);
         setStep('preview');
       } catch (e) {
-        setError('Faylni o\'qishda xatolik: ' + e.message);
+        setError(e.message);
+        setFile(null);
       }
     };
+    reader.onerror = () => {
+      setError('Faylni yuklashda xatolik yuz berdi');
+      setFile(null);
+    };
     reader.readAsBinaryString(f);
+  }
+
+  function handleFileChange(e) {
+    const f = e.target.files[0];
+    if (f) parseExcelFile(f);
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault();
+    setIsDragOver(true);
+  }
+
+  function handleDragLeave() {
+    setIsDragOver(false);
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    setIsDragOver(false);
+    const f = e.dataTransfer.files[0];
+    if (f) parseExcelFile(f);
   }
 
   async function handleImport() {
@@ -166,75 +197,97 @@ export default function TeacherImportModal({ isOpen, onClose, onSuccess, academi
       footer={footer}
     >
       {step === 'upload' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <button className="btn btn-secondary" onClick={downloadTemplate} style={{ alignSelf: 'flex-start' }}>
-            📥 Shablon yuklab olish
+        <div className={styles.uploadSection}>
+          <button className={styles.templateBtn} onClick={downloadTemplate}>
+            <Download size={18} /> Shablon yuklab olish
           </button>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
-            Shablon ustunlari: <strong>To'liq ism, Telefon, Ta'lim shakli, Fan 1, Fan 1 soat, Fan 2, Fan 2 soat</strong>
-          </p>
-          <div className="form-group">
-            <label>Excel fayl tanlang</label>
+          
+          <div 
+            className={`${styles.dropZone} ${isDragOver ? styles.dragOver : ''}`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            <UploadCloud size={48} className={styles.uploadIcon} />
+            <span className={styles.dropText}>Excel faylni bu yerga tashlang yoki bosing</span>
+            <span className={styles.dropHint}>Faqat .xlsx, .xls fayllar</span>
             <input
               type="file"
-              className="input"
+              className={styles.fileInput}
               accept=".xlsx,.xls"
               onChange={handleFileChange}
             />
           </div>
-          {error && <p style={{ color: '#ef4444', fontSize: '0.85rem' }}>{error}</p>}
+
+          <div className={styles.colGuide}>
+            <p>Shablon talab qilinadigan ustunlari:</p>
+            <ul>
+              <li><code>To'liq ism</code> — o'qituvchi ism-sharifi</li>
+              <li><code>Telefon</code> — aloqa raqami</li>
+              <li><code>Ta'lim shakli</code> — <code>malaka_oshirish</code> yoki <code>qayta_tayyorlov</code></li>
+              <li><code>Fan 1</code>, <code>Fan 1 soat</code>, <code>Fan 2</code>, <code>Fan 2 soat</code></li>
+            </ul>
+          </div>
+          
+          {error && (
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', color: '#ef4444' }}>
+              <AlertCircle size={16} />
+              <p className={styles.errorText}>{error}</p>
+            </div>
+          )}
         </div>
       )}
 
       {step === 'preview' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <p style={{ fontSize: '0.9rem', margin: 0 }}>
-            <strong>{preview.length}</strong> ta o'qituvchi topildi. O'quv yili: <strong>{academicYear}</strong>
-          </p>
-          <div style={{ maxHeight: '320px', overflowY: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.83rem' }}>
+        <div className={styles.previewSection}>
+          <div className={styles.previewMeta}>
+            <span className={styles.countChip}>{preview.length} ta o'qituvchi topildi</span>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>O'quv yili: <strong>{academicYear}</strong></span>
+          </div>
+          
+          <div className={styles.tableWrapper}>
+            <table className={styles.previewTable}>
               <thead>
-                <tr style={{ background: 'var(--bg-secondary)' }}>
-                  <th style={{ padding: '6px 8px', textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>#</th>
-                  <th style={{ padding: '6px 8px', textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>Ism</th>
-                  <th style={{ padding: '6px 8px', textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>Ta'lim turi</th>
-                  <th style={{ padding: '6px 8px', textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>Fan 1</th>
-                  <th style={{ padding: '6px 8px', textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>Fan 2</th>
+                <tr>
+                  <th>#</th>
+                  <th>Ism</th>
+                  <th>Ta'lim turi</th>
+                  <th>Fan 1</th>
+                  <th>Fan 2</th>
                 </tr>
               </thead>
               <tbody>
                 {preview.map((row, i) => (
-                  <tr key={i} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                    <td style={{ padding: '5px 8px' }}>{i + 1}</td>
-                    <td style={{ padding: '5px 8px', fontWeight: '600' }}>{row.full_name}</td>
-                    <td style={{ padding: '5px 8px' }}>
-                      <span style={{
-                        padding: '1px 6px', borderRadius: '10px', fontSize: '0.75rem',
-                        background: row.education_type === 'malaka_oshirish' ? '#dbeafe' : '#dcfce7',
-                        color: row.education_type === 'malaka_oshirish' ? '#1d4ed8' : '#15803d'
-                      }}>
+                  <tr key={i}>
+                    <td>{i + 1}</td>
+                    <td style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{row.full_name}</td>
+                    <td>
+                      <span className={`${styles.badge} ${row.education_type === 'malaka_oshirish' ? styles.badgeMalaka : styles.badgeQayta}`}>
                         {row.education_type === 'malaka_oshirish' ? 'Malaka' : 'Qayta'}
                       </span>
                     </td>
-                    <td style={{ padding: '5px 8px' }}>{row.subject1 ? `${row.subject1} (${row.subject1_hours}s)` : '—'}</td>
-                    <td style={{ padding: '5px 8px' }}>{row.subject2 ? `${row.subject2} (${row.subject2_hours}s)` : '—'}</td>
+                    <td>{row.subject1 ? `${row.subject1} (${row.subject1_hours}s)` : '—'}</td>
+                    <td>{row.subject2 ? `${row.subject2} (${row.subject2_hours}s)` : '—'}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          {error && <p style={{ color: '#ef4444', fontSize: '0.85rem' }}>{error}</p>}
+          {error && <p className={styles.errorText}>{error}</p>}
         </div>
       )}
 
       {step === 'done' && (
-        <div style={{ textAlign: 'center', padding: '1rem 0' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>✅</div>
-          <p style={{ fontWeight: '600', fontSize: '1.1rem' }}>Yuklash yakunlandi!</p>
-          <p style={{ color: 'var(--text-secondary)' }}>
+        <div className={styles.doneSection}>
+          <div className={styles.successIcon}>✅</div>
+          <h4 className={styles.doneTitle}>Muvaffaqiyatli yuklandi!</h4>
+          <p className={styles.doneText}>
+            Yangi o'qituvchilar va ularning dars soatlari tizimga qo'shildi.
+          </p>
+          <div style={{ marginTop: '0.5rem', fontSize: '0.9rem' }}>
             Muvaffaqiyatli: <strong style={{ color: '#22c55e' }}>{results.success}</strong> ta
             {results.failed > 0 && <>, Xatolik: <strong style={{ color: '#ef4444' }}>{results.failed}</strong> ta</>}
-          </p>
+          </div>
         </div>
       )}
     </Modal>

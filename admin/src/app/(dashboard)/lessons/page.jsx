@@ -26,14 +26,16 @@ export default function LessonsPage() {
     group_id: '',
     lesson_date: new Date().toISOString().split('T')[0],
     title: '',
-    schedule_id: ''
+    start_time: '09:00',
+    end_time: '13:00'
   });
   const [editFormData, setEditFormData] = useState({
     id: '',
     group_id: '',
     lesson_date: '',
     title: '',
-    schedule_id: ''
+    start_time: '09:00',
+    end_time: '13:00'
   });
 
   useEffect(() => {
@@ -89,30 +91,97 @@ export default function LessonsPage() {
       setLoading(false);
     }
   }
+  const isWriteEnabled = userRole === 'sysadmin' || userRole === 'admin' || userRole === 'academic';
 
   const filteredLessons = lessons.filter(l => 
     l.title?.toLowerCase().includes(search.toLowerCase()) || 
     l.groups?.name?.toLowerCase().includes(search.toLowerCase())
   );
 
+  const getOrCreateScheduleId = async (groupId, dateStr, startTime, endTime) => {
+    const dateObj = new Date(dateStr);
+    let dayOfWeek = dateObj.getDay();
+    if (dayOfWeek === 0) dayOfWeek = 7;
+
+    const start = startTime.length === 5 ? `${startTime}:00` : startTime;
+    const end = endTime.length === 5 ? `${endTime}:00` : endTime;
+
+    const { data: existing } = await supabase
+      .from('schedules')
+      .select('id')
+      .eq('group_id', groupId)
+      .eq('day_of_week', dayOfWeek)
+      .eq('start_time', start)
+      .maybeSingle();
+
+    if (existing) {
+      return existing.id;
+    }
+
+    const { data: inserted, error } = await supabase
+      .from('schedules')
+      .insert({
+        group_id: groupId,
+        day_of_week: dayOfWeek,
+        start_time: start,
+        end_time: end
+      })
+      .select('id')
+      .single();
+
+    if (error) throw error;
+    
+    fetchSchedules();
+    return inserted.id;
+  };
+
+  const parseLessonTitle = (rawTitle, scheduleId, schedulesList) => {
+    let startTime = '09:00';
+    let endTime = '13:00';
+    let cleanTitle = rawTitle || '';
+
+    const timePrefixMatch = cleanTitle.match(/^(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})\s*\|\s*(.*)$/);
+    if (timePrefixMatch) {
+      startTime = timePrefixMatch[1];
+      endTime = timePrefixMatch[2];
+      cleanTitle = timePrefixMatch[3];
+    } else if (scheduleId) {
+      const sch = schedulesList.find(s => s.id === scheduleId);
+      if (sch) {
+        startTime = sch.start_time.substring(0, 5);
+        endTime = sch.end_time.substring(0, 5);
+      }
+    }
+    return { startTime, endTime, cleanTitle };
+  };
+
   async function handleSaveLesson(e) {
     e.preventDefault();
-    if (!formData.group_id || !formData.lesson_date || !formData.title) return;
+    if (!formData.group_id || !formData.lesson_date || !formData.title || !formData.start_time || !formData.end_time) return;
     
     try {
       setSaving(true);
+      const scheduleId = await getOrCreateScheduleId(formData.group_id, formData.lesson_date, formData.start_time, formData.end_time);
+      const finalTitle = `${formData.start_time}-${formData.end_time} | ${formData.title}`;
+
       const { error } = await supabase.from('lessons').insert({
         group_id: formData.group_id,
         lesson_date: formData.lesson_date,
-        title: formData.title,
-        schedule_id: formData.schedule_id || null,
-        created_by: null // Tizim
+        title: finalTitle,
+        schedule_id: scheduleId,
+        created_by: null
       });
       
       if (error) throw error;
       
       setShowModal(false);
-      setFormData({ group_id: '', lesson_date: new Date().toISOString().split('T')[0], title: '', schedule_id: '' });
+      setFormData({
+        group_id: '',
+        lesson_date: new Date().toISOString().split('T')[0],
+        title: '',
+        start_time: '09:00',
+        end_time: '13:00'
+      });
       fetchLessons();
     } catch (err) {
       console.error(err);
@@ -123,28 +192,33 @@ export default function LessonsPage() {
   }
 
   const handleEditClick = (lesson) => {
+    const { startTime, endTime, cleanTitle } = parseLessonTitle(lesson.title, lesson.schedule_id, schedules);
     setEditFormData({
       id: lesson.id,
       group_id: lesson.group_id || '',
       lesson_date: lesson.lesson_date || '',
-      title: lesson.title || '',
-      schedule_id: lesson.schedule_id || ''
+      title: cleanTitle,
+      start_time: startTime,
+      end_time: endTime
     });
     setShowEditModal(true);
   };
 
   const handleUpdateLesson = async (e) => {
     e.preventDefault();
-    if (!editFormData.group_id || !editFormData.lesson_date || !editFormData.title) return;
+    if (!editFormData.group_id || !editFormData.lesson_date || !editFormData.title || !editFormData.start_time || !editFormData.end_time) return;
     try {
       setEditing(true);
+      const scheduleId = await getOrCreateScheduleId(editFormData.group_id, editFormData.lesson_date, editFormData.start_time, editFormData.end_time);
+      const finalTitle = `${editFormData.start_time}-${editFormData.end_time} | ${editFormData.title}`;
+
       const { error } = await supabase
         .from('lessons')
         .update({
           group_id: editFormData.group_id,
           lesson_date: editFormData.lesson_date,
-          title: editFormData.title,
-          schedule_id: editFormData.schedule_id || null
+          title: finalTitle,
+          schedule_id: scheduleId
         })
         .eq('id', editFormData.id);
       
@@ -179,12 +253,11 @@ export default function LessonsPage() {
     return <div style={{ padding: '2rem', textAlign: 'center' }}>Sizda ushbu sahifaga kirish huquqi yo'q.</div>;
   }
 
-  const isWriteEnabled = userRole === 'sysadmin' || userRole === 'admin' || userRole === 'academic';
-
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <div className={styles.searchWrapper}>
+        <h1>Darslar jadvali</h1>
+        <div className={styles.controls}>
           <Search size={20} className={styles.searchIcon} />
           <input 
             type="text" 
@@ -312,23 +385,27 @@ export default function LessonsPage() {
             </select>
           </div>
 
-          <div className="form-group">
-            <label>Dars soati (Jadval)</label>
-            <select 
-              className="input" 
-              value={formData.schedule_id}
-              onChange={(e) => setFormData({...formData, schedule_id: e.target.value})}
-            >
-              <option value="">— Biriktirilmagan (Ad-hoc) —</option>
-              {schedules.filter(s => s.group_id === formData.group_id).map(s => {
-                const days = { 1: 'Dushanba', 2: 'Seshanba', 3: 'Chorshanba', 4: 'Payshanba', 5: 'Juma', 6: 'Shanba', 7: 'Yakshanba' };
-                return (
-                  <option key={s.id} value={s.id}>
-                    {days[s.day_of_week]} ({s.start_time.substring(0, 5)} - {s.end_time.substring(0, 5)})
-                  </option>
-                );
-              })}
-            </select>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="form-group">
+              <label>Dars boshlanishi</label>
+              <input 
+                type="time" 
+                className="input" 
+                value={formData.start_time}
+                onChange={(e) => setFormData({...formData, start_time: e.target.value})}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Dars tugashi</label>
+              <input 
+                type="time" 
+                className="input" 
+                value={formData.end_time}
+                onChange={(e) => setFormData({...formData, end_time: e.target.value})}
+                required
+              />
+            </div>
           </div>
 
           <div className="form-group">
@@ -386,23 +463,27 @@ export default function LessonsPage() {
             </select>
           </div>
 
-          <div className="form-group">
-            <label>Dars soati (Jadval)</label>
-            <select 
-              className="input" 
-              value={editFormData.schedule_id}
-              onChange={(e) => setEditFormData({...editFormData, schedule_id: e.target.value})}
-            >
-              <option value="">— Biriktirilmagan (Ad-hoc) —</option>
-              {schedules.filter(s => s.group_id === editFormData.group_id).map(s => {
-                const days = { 1: 'Dushanba', 2: 'Seshanba', 3: 'Chorshanba', 4: 'Payshanba', 5: 'Juma', 6: 'Shanba', 7: 'Yakshanba' };
-                return (
-                  <option key={s.id} value={s.id}>
-                    {days[s.day_of_week]} ({s.start_time.substring(0, 5)} - {s.end_time.substring(0, 5)})
-                  </option>
-                );
-              })}
-            </select>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="form-group">
+              <label>Dars boshlanishi</label>
+              <input 
+                type="time" 
+                className="input" 
+                value={editFormData.start_time}
+                onChange={(e) => setEditFormData({...editFormData, start_time: e.target.value})}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Dars tugashi</label>
+              <input 
+                type="time" 
+                className="input" 
+                value={editFormData.end_time}
+                onChange={(e) => setEditFormData({...editFormData, end_time: e.target.value})}
+                required
+              />
+            </div>
           </div>
 
           <div className="form-group">

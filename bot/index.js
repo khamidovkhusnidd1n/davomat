@@ -595,13 +595,12 @@ bot.action(/start_lesson_sch:(\d+)/, async (ctx) => {
     const sch = schedules[idx];
     const title = `${sch.groups.course_name || sch.groups.name} (${sch.start_time.substring(0, 5)} - ${sch.end_time.substring(0, 5)})`;
     
-    const lessonIdResponse = await supabase.rpc('get_or_create_today_lesson', {
+    const { data: lessonId, error: rpcError } = await supabase.rpc('get_or_create_today_lesson', {
       p_group_id: sch.group_id,
       p_lesson_title: title,
       p_schedule_id: sch.id
     });
-    
-    const lessonId = lessonIdResponse.toString();
+    if (rpcError) throw rpcError;
 
     await startAttendanceWizard(ctx, sch.group_id, lessonId, title);
     await ctx.answerCbQuery();
@@ -766,13 +765,12 @@ bot.action(/wiz_start:(.+)/, async (ctx) => {
 
     const title = `${sch.groups.course_name || sch.groups.name} (${sch.start_time.substring(0, 5)} - ${sch.end_time.substring(0, 5)})`;
     
-    const lessonIdResponse = await supabase.rpc('get_or_create_today_lesson', {
+    const { data: lessonId, error: rpcError } = await supabase.rpc('get_or_create_today_lesson', {
       p_group_id: sch.group_id,
       p_lesson_title: title,
       p_schedule_id: sch.id
     });
-    
-    const lessonId = lessonIdResponse.toString();
+    if (rpcError) throw rpcError;
 
     await startAttendanceWizard(ctx, sch.group_id, lessonId, title);
     await ctx.answerCbQuery();
@@ -862,13 +860,12 @@ async function saveAttendance(ctx) {
 
 async function startAdhocLesson(ctx, groupId, title) {
   try {
-    const lessonIdResponse = await supabase.rpc('get_or_create_today_lesson', {
+    const { data: lessonId, error: rpcError } = await supabase.rpc('get_or_create_today_lesson', {
       p_group_id: groupId,
       p_lesson_title: title,
       p_schedule_id: null
     });
-    
-    const lessonId = lessonIdResponse.toString();
+    if (rpcError) throw rpcError;
     await startAttendanceWizard(ctx, groupId, lessonId, title);
   } catch (err) {
     console.error(err);

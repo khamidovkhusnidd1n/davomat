@@ -1,8 +1,8 @@
--- Darsni xavfsiz (RLS va Race Condition'larsiz) olish yoki yaratish funksiyasi
+-- 2-parametrli get_or_create_today_lesson funksiyasini race condition (unique_violation)dan himoya qilish
 CREATE OR REPLACE FUNCTION public.get_or_create_today_lesson(p_group_id UUID, p_lesson_title TEXT)
 RETURNS UUID
 LANGUAGE plpgsql
-SECURITY DEFINER -- RLS ni aylanib o'tib, xavfsiz ishlaydi
+SECURITY DEFINER
 AS $$
 DECLARE
     v_lesson_id UUID;
@@ -21,6 +21,7 @@ BEGIN
             VALUES (p_group_id, v_today, p_lesson_title, NULL)
             RETURNING id INTO v_lesson_id;
         EXCEPTION WHEN unique_violation THEN
+            -- Parallel so'rovda yaratib ketilgan bo'lsa, o'shani tanlaymiz
             SELECT id INTO v_lesson_id
             FROM public.lessons
             WHERE group_id = p_group_id AND lesson_date = v_today AND schedule_id IS NULL

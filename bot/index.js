@@ -751,31 +751,50 @@ bot.hears('📊 Davomat hisobotlari', async (ctx) => {
   }
 });
 
+bot.action(/wiz_edit_std:(\d+)/, async (ctx) => {
+  try {
+    const idx = parseInt(ctx.match[1], 10);
+    const wizard = ctx.session.attendanceWizard;
+    if (!wizard || !wizard.students[idx]) return ctx.answerCbQuery("Sessiya faol emas.");
+
+    wizard.editingIdx = idx;
+    const student = wizard.students[idx];
+
+    const kb = Markup.inlineKeyboard([
+      [Markup.button.callback("🟢 Bor (Kelgan)", "wiz_status:present"), Markup.button.callback("🔵 Sababli", "wiz_status:excused")],
+      [Markup.button.callback("🔴 Yo'q (Sababsiz)", "wiz_status:unexcused"), Markup.button.callback("🟡 Kechikdi", "wiz_status:late")],
+      [Markup.button.callback("⬅️ Orqaga", "wiz_back")]
+    ]);
+
+    await ctx.editMessageText(`👤 <b>${student.name}</b> uchun holatni tanlang:`, { parse_mode: 'HTML', ...kb });
+    await ctx.answerCbQuery();
+  } catch (err) {
+    console.error(err);
+  }
+});
+
 bot.action(/wiz_status:(.+)/, async (ctx) => {
   try {
     const status = ctx.match[1];
     const wizard = ctx.session.attendanceWizard;
-    if (!wizard) return ctx.answerCbQuery("Davomat sessiyasi faol emas.");
+    if (!wizard || wizard.editingIdx === null || wizard.editingIdx === undefined) {
+      return ctx.answerCbQuery("Sessiya faol emas.");
+    }
 
-    const student = wizard.students[wizard.currentIndex];
+    const student = wizard.students[wizard.editingIdx];
 
     if (status === 'late') {
       const kb = Markup.inlineKeyboard([
         [Markup.button.callback("1 soat", "wiz_late:1"), Markup.button.callback("2 soat", "wiz_late:2")],
         [Markup.button.callback("3 soat", "wiz_late:3"), Markup.button.callback("4 soat", "wiz_late:4")],
         [Markup.button.callback("5 soat", "wiz_late:5"), Markup.button.callback("6 soat", "wiz_late:6")],
-        [Markup.button.callback("❌ Bekor qilish", "wiz_cancel")]
+        [Markup.button.callback("⬅️ Orqaga", "wiz_back")]
       ]);
       await ctx.editMessageText(`👤 <b>${student.name}</b> necha soatga kechikdi?`, { parse_mode: 'HTML', ...kb });
     } else {
       wizard.attendance[student.id] = { status, late_hours: 0 };
-      wizard.currentIndex++;
-      
-      if (wizard.currentIndex < wizard.students.length) {
-        await sendWizardQuestion(ctx, true);
-      } else {
-        await saveAttendance(ctx);
-      }
+      wizard.editingIdx = null;
+      await sendInteractiveWizardMenu(ctx, true);
     }
     await ctx.answerCbQuery();
   } catch (err) {
@@ -787,17 +806,28 @@ bot.action(/wiz_late:(\d+)/, async (ctx) => {
   try {
     const hours = parseInt(ctx.match[1], 10);
     const wizard = ctx.session.attendanceWizard;
-    if (!wizard) return ctx.answerCbQuery("Davomat sessiyasi faol emas.");
-
-    const student = wizard.students[wizard.currentIndex];
-    wizard.attendance[student.id] = { status: 'late', late_hours: hours };
-    wizard.currentIndex++;
-
-    if (wizard.currentIndex < wizard.students.length) {
-      await sendWizardQuestion(ctx, true);
-    } else {
-      await saveAttendance(ctx);
+    if (!wizard || wizard.editingIdx === null || wizard.editingIdx === undefined) {
+      return ctx.answerCbQuery("Sessiya faol emas.");
     }
+
+    const student = wizard.students[wizard.editingIdx];
+    wizard.attendance[student.id] = { status: 'late', late_hours: hours };
+    wizard.editingIdx = null;
+
+    await sendInteractiveWizardMenu(ctx, true);
+    await ctx.answerCbQuery();
+  } catch (err) {
+    console.error(err);
+  }
+});
+
+bot.action('wiz_back', async (ctx) => {
+  try {
+    const wizard = ctx.session.attendanceWizard;
+    if (!wizard) return ctx.answerCbQuery("Sessiya faol emas.");
+
+    wizard.editingIdx = null;
+    await sendInteractiveWizardMenu(ctx, true);
     await ctx.answerCbQuery();
   } catch (err) {
     console.error(err);
@@ -811,6 +841,18 @@ bot.action('wiz_cancel', async (ctx) => {
     await ctx.answerCbQuery();
   } catch(e) {
     console.error(e);
+  }
+});
+
+bot.action('wiz_save', async (ctx) => {
+  try {
+    const wizard = ctx.session.attendanceWizard;
+    if (!wizard) return ctx.answerCbQuery("Sessiya faol emas.");
+
+    await saveAttendance(ctx);
+    await ctx.answerCbQuery();
+  } catch (err) {
+    console.error(err);
   }
 });
 
@@ -862,30 +904,35 @@ async function startAttendanceWizard(ctx, groupId, lessonId, title) {
     .select('student_id, status, late_hours')
     .eq('lesson_id', lessonId);
 
-  if (!existingAtt || existingAtt.length === 0) {
-    ctx.session.attendanceWizard = {
-      lessonId,
-      groupId,
-      students: students.map(s => ({ id: s.id, name: s.users.full_name })),
-      currentIndex: 0,
-      attendance: {}
-    };
-    await sendWizardQuestion(ctx, false);
-  } else {
-    await sendInteractiveEditMenu(ctx, groupId, lessonId, title, students, existingAtt, false);
-  }
-}
-
-async function sendInteractiveEditMenu(ctx, groupId, lessonId, title, students, existingAtt, editExisting = false) {
-  const attMap = {};
-  if (existingAtt) {
+  const attendanceMap = {};
+  if (existingAtt && existingAtt.length > 0) {
     existingAtt.forEach(a => {
-      attMap[a.student_id] = { status: a.status, late_hours: a.late_hours };
+      attendanceMap[a.student_id] = { status: a.status, late_hours: a.late_hours };
+    });
+  } else {
+    students.forEach(s => {
+      attendanceMap[s.id] = { status: 'present', late_hours: 0 };
     });
   }
 
-  let text = `📋 <b>${title}</b>\n`;
-  text += `Davomat allaqachon kiritilgan. O'zgartirmoqchi bo'lgan o'quvchini tanlang:\n\n`;
+  ctx.session.attendanceWizard = {
+    lessonId,
+    groupId,
+    title,
+    students: students.map(s => ({ id: s.id, name: s.users.full_name })),
+    attendance: attendanceMap,
+    editingIdx: null
+  };
+
+  await sendInteractiveWizardMenu(ctx, false);
+}
+
+async function sendInteractiveWizardMenu(ctx, editExisting = false) {
+  const wizard = ctx.session.attendanceWizard;
+  if (!wizard) return;
+
+  let text = `📋 <b>${wizard.title}</b> darsi davomati\n`;
+  text += `Tahrirlash yoki o'zgartirish uchun o'quvchi ismini bosing. Yakunlash uchun <b>Saqlash</b> tugmasini bosing:\n\n`;
 
   const statusEmojis = {
     present: '🟢 Kelgan',
@@ -895,8 +942,8 @@ async function sendInteractiveEditMenu(ctx, groupId, lessonId, title, students, 
     late: '🟡 Kechikdi'
   };
 
-  students.forEach((s, i) => {
-    const att = attMap[s.id];
+  wizard.students.forEach((s, i) => {
+    const att = wizard.attendance[s.id];
     let statusText = '⚪ Belgilanmagan';
     if (att) {
       if (att.status === 'late') {
@@ -905,62 +952,32 @@ async function sendInteractiveEditMenu(ctx, groupId, lessonId, title, students, 
         statusText = statusEmojis[att.status] || att.status;
       }
     }
-    text += `${i + 1}. <b>${s.users.full_name}</b> - ${statusText}\n`;
+    text += `${i + 1}. <b>${s.name}</b> - ${statusText}\n`;
   });
 
-  ctx.session.interactiveEdit = {
-    lessonId,
-    groupId,
-    title,
-    students: students.map(s => ({ id: s.id, name: s.users.full_name }))
-  };
-
   const buttons = [];
-  for (let i = 0; i < students.length; i += 2) {
+  for (let i = 0; i < wizard.students.length; i += 2) {
     const row = [];
-    const s1 = students[i];
-    const att1 = attMap[s1.id];
+    const s1 = wizard.students[i];
+    const att1 = wizard.attendance[s1.id];
     const emoji1 = att1 ? (att1.status === 'present' ? '🟢' : att1.status === 'late' ? '🟡' : att1.status === 'excused' ? '🔵' : '🔴') : '⚪';
-    row.push(Markup.button.callback(`${emoji1} ${s1.users.full_name.split(' ')[0]}`, `edit_std:${i}`));
+    row.push(Markup.button.callback(`${emoji1} ${s1.name.split(' ')[0]}`, `wiz_edit_std:${i}`));
     
-    if (i + 1 < students.length) {
-      const s2 = students[i + 1];
-      const att2 = attMap[s2.id];
+    if (i + 1 < wizard.students.length) {
+      const s2 = wizard.students[i + 1];
+      const att2 = wizard.attendance[s2.id];
       const emoji2 = att2 ? (att2.status === 'present' ? '🟢' : att2.status === 'late' ? '🟡' : att2.status === 'excused' ? '🔵' : '🔴') : '⚪';
-      row.push(Markup.button.callback(`${emoji2} ${s2.users.full_name.split(' ')[0]}`, `edit_std:${i + 1}`));
+      row.push(Markup.button.callback(`${emoji2} ${s2.name.split(' ')[0]}`, `wiz_edit_std:${i + 1}`));
     }
     buttons.push(row);
   }
 
   buttons.push([
-    Markup.button.callback("🔄 Boshqatdan dars boshlash", `edit_restart`),
-    Markup.button.callback("✅ Tayyor", `edit_done`)
+    Markup.button.callback("❌ Bekor qilish", `wiz_cancel`),
+    Markup.button.callback("✅ Saqlash", `wiz_save`)
   ]);
 
   const keyboard = Markup.inlineKeyboard(buttons);
-
-  if (editExisting) {
-    try {
-      await ctx.editMessageText(text, { parse_mode: 'HTML', ...keyboard });
-    } catch(e) {
-      await ctx.replyWithHTML(text, keyboard);
-    }
-  } else {
-    await ctx.replyWithHTML(text, keyboard);
-  }
-}
-
-async function sendWizardQuestion(ctx, editExisting = false) {
-  const wizard = ctx.session.attendanceWizard;
-  if (!wizard) return;
-  const student = wizard.students[wizard.currentIndex];
-  const progress = `${wizard.currentIndex + 1}/${wizard.students.length}`;
-  const text = `<b>[${progress}]</b> 👤 <b>${student.name}</b> darsdami?`;
-  const keyboard = Markup.inlineKeyboard([
-    [Markup.button.callback("🟢 Bor (Kelgan)", "wiz_status:present"), Markup.button.callback("🔵 Sababli", "wiz_status:excused")],
-    [Markup.button.callback("🔴 Yo'q (Sababsiz)", "wiz_status:unexcused"), Markup.button.callback("🟡 Kechikdi", "wiz_status:late")],
-    [Markup.button.callback("❌ Bekor qilish", "wiz_cancel")]
-  ]);
 
   if (editExisting) {
     try {
@@ -1169,144 +1186,6 @@ cron.schedule('*/30 * * * *', async () => {
   }
 }, {
   timezone: "Asia/Tashkent"
-});
-
-bot.action(/edit_std:(\d+)/, async (ctx) => {
-  try {
-    const idx = parseInt(ctx.match[1], 10);
-    const edit = ctx.session.interactiveEdit;
-    if (!edit || !edit.students[idx]) return ctx.answerCbQuery("Sessiya faol emas.");
-
-    edit.editingIdx = idx;
-    const student = edit.students[idx];
-
-    const kb = Markup.inlineKeyboard([
-      [Markup.button.callback("🟢 Bor (Kelgan)", "edit_wiz_status:present"), Markup.button.callback("🔵 Sababli", "edit_wiz_status:excused")],
-      [Markup.button.callback("🔴 Yo'q (Sababsiz)", "edit_wiz_status:unexcused"), Markup.button.callback("🟡 Kechikdi", "edit_wiz_status:late")],
-      [Markup.button.callback("⬅️ Orqaga", "edit_wiz_back")]
-    ]);
-
-    await ctx.editMessageText(`👤 <b>${student.name}</b> uchun yangi holatni tanlang:`, { parse_mode: 'HTML', ...kb });
-    await ctx.answerCbQuery();
-  } catch (err) {
-    console.error(err);
-  }
-});
-
-bot.action(/edit_wiz_status:(.+)/, async (ctx) => {
-  try {
-    const status = ctx.match[1];
-    const edit = ctx.session.interactiveEdit;
-    if (!edit || edit.editingIdx === undefined) return ctx.answerCbQuery("Sessiya faol emas.");
-
-    const student = edit.students[edit.editingIdx];
-
-    if (status === 'late') {
-      const kb = Markup.inlineKeyboard([
-        [Markup.button.callback("1 soat", "edit_wiz_late:1"), Markup.button.callback("2 soat", "edit_wiz_late:2")],
-        [Markup.button.callback("3 soat", "edit_wiz_late:3"), Markup.button.callback("4 soat", "edit_wiz_late:4")],
-        [Markup.button.callback("5 soat", "edit_wiz_late:5"), Markup.button.callback("6 soat", "edit_wiz_late:6")],
-        [Markup.button.callback("⬅️ Orqaga", "edit_wiz_back")]
-      ]);
-      await ctx.editMessageText(`👤 <b>${student.name}</b> necha soatga kechikdi?`, { parse_mode: 'HTML', ...kb });
-    } else {
-      const tgId = ctx.from.id.toString();
-      const { data: user } = await supabase.from('users').select('id').eq('telegram_id', tgId).single();
-
-      const { error } = await supabase.from('attendance').upsert({
-        lesson_id: edit.lessonId,
-        student_id: student.id,
-        status: status,
-        late_hours: 0,
-        marked_by: user ? user.id : null
-      }, { onConflict: 'lesson_id, student_id' });
-
-      if (error) {
-        ctx.reply("Xatolik: " + error.message);
-      } else {
-        const { data: existingAtt } = await supabase.from('attendance').select('student_id, status, late_hours').eq('lesson_id', edit.lessonId);
-        const { data: students } = await supabase.from('students').select('id, users(full_name)').eq('group_id', edit.groupId).eq('status', 'active');
-        await sendInteractiveEditMenu(ctx, edit.groupId, edit.lessonId, edit.title, students, existingAtt, true);
-      }
-    }
-    await ctx.answerCbQuery();
-  } catch (err) {
-    console.error(err);
-  }
-});
-
-bot.action(/edit_wiz_late:(\d+)/, async (ctx) => {
-  try {
-    const hours = parseInt(ctx.match[1], 10);
-    const edit = ctx.session.interactiveEdit;
-    if (!edit || edit.editingIdx === undefined) return ctx.answerCbQuery("Sessiya faol emas.");
-
-    const student = edit.students[edit.editingIdx];
-    const tgId = ctx.from.id.toString();
-    const { data: user } = await supabase.from('users').select('id').eq('telegram_id', tgId).single();
-
-    const { error } = await supabase.from('attendance').upsert({
-      lesson_id: edit.lessonId,
-      student_id: student.id,
-      status: 'late',
-      late_hours: hours,
-      marked_by: user ? user.id : null
-    }, { onConflict: 'lesson_id, student_id' });
-
-    if (error) {
-      ctx.reply("Xatolik: " + error.message);
-    } else {
-      const { data: existingAtt } = await supabase.from('attendance').select('student_id, status, late_hours').eq('lesson_id', edit.lessonId);
-      const { data: students } = await supabase.from('students').select('id, users(full_name)').eq('group_id', edit.groupId).eq('status', 'active');
-      await sendInteractiveEditMenu(ctx, edit.groupId, edit.lessonId, edit.title, students, existingAtt, true);
-    }
-    await ctx.answerCbQuery();
-  } catch (err) {
-    console.error(err);
-  }
-});
-
-bot.action('edit_wiz_back', async (ctx) => {
-  try {
-    const edit = ctx.session.interactiveEdit;
-    if (!edit) return ctx.answerCbQuery("Sessiya faol emas.");
-
-    const { data: existingAtt } = await supabase.from('attendance').select('student_id, status, late_hours').eq('lesson_id', edit.lessonId);
-    const { data: students } = await supabase.from('students').select('id, users(full_name)').eq('group_id', edit.groupId).eq('status', 'active');
-    await sendInteractiveEditMenu(ctx, edit.groupId, edit.lessonId, edit.title, students, existingAtt, true);
-    await ctx.answerCbQuery();
-  } catch (err) {
-    console.error(err);
-  }
-});
-
-bot.action('edit_restart', async (ctx) => {
-  try {
-    const edit = ctx.session.interactiveEdit;
-    if (!edit) return ctx.answerCbQuery("Sessiya faol emas.");
-
-    ctx.session.attendanceWizard = {
-      lessonId: edit.lessonId,
-      groupId: edit.groupId,
-      students: edit.students,
-      currentIndex: 0,
-      attendance: {}
-    };
-    await sendWizardQuestion(ctx, true);
-    await ctx.answerCbQuery();
-  } catch (err) {
-    console.error(err);
-  }
-});
-
-bot.action('edit_done', async (ctx) => {
-  try {
-    ctx.session.interactiveEdit = null;
-    await ctx.editMessageText("✅ <b>Davomat yakunlandi va muvaffaqiyatli saqlandi!</b>", { parse_mode: 'HTML' });
-    await ctx.answerCbQuery();
-  } catch (err) {
-    console.error(err);
-  }
 });
 
 bot.launch().then(() => {

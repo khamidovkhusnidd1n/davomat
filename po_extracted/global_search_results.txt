@@ -1,0 +1,101 @@
+
+Scanning: c:\Users\Salohiddin Markaz\Desktop\davomat
+
+Scanning: c:\Users\Salohiddin Markaz\Downloads
+Found RAJABOV in Docx: a5ab629b08d94a578fc1fbc89c7650f4.docx -> snippet: 0 10794 1 “BADIIY   TA’LIM   VA   PEDAGOGIKA”   ILMIY   JURNALI “Badiiy ta’lim va pedagogika” ilmiy jurnali O‘zbekiston   Badiiy akademiyasi huzuridagi Badiiy ta’lim yo‘nalishlarida pedagog va mutaxassis kadrlarni qayta tayyorlash hamda ularning malakasini oshirish markazi muassisligida tashkil etil
+Found RAJABOV in Pdf: a5ab629b08d94a578fc1fbc89c7650f4.pdf -> snippet:  1 
+ 
+ 
+ 
+  
+   2 
+ 
+“BADIIY TA’LIM V A PEDAGOGIKA” ILMIY JURNALI  
+“Badiiy ta’lim va pedagogika” ilmiy jurnali O‘zbekiston  Badiiy akademiyasi huzuridagi Badiiy 
+ta’lim yo‘nalishlarida pedagog va mutaxassis kadrlarni qayta tayyorlash hamda ularning malakasini 
+oshirish markazi muassisligida tashkil
+Found QIYOMOV in Excel: Darslar_Shabloni (1).xlsx -> Darslar -> row 2: Rangtasvir 14-guruh 2026-07-27 00:00:00 09:00 14:00:00 Chizmatasvir Qiyomov Zuhriddin
+Found QIYOMOV in Excel: Darslar_Shabloni (5).xlsx -> Darslar -> row 3: Rangtasvir 14-guruh 2026-08-01 00:00:00 09:00:00 15:00:00 Chizmatasvir Qiyomov Zuhriddin
+Found QIYOMOV in Excel: Darslar_Shabloni.xlsx -> Darslar -> row 2: Rangtasvir 14-guruh 2026-07-27 09:00:00 Chizmatasvir Qiyomov Zuhriddin
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 5: 14 2025-10-04 Seshanba 1 14-00 15-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 16 14-гр.16 хафта  
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 6: 14 2025-10-04 Saturday 2 15-30 16-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 16 14-гр.16 хафта  
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 7: 14 2025-10-04 Saturday 3 17-00 18-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 16 14-гр.16 хафта  
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 35: 14 2025-10-25 Shanba 1 14-00 15-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 14 14-гр.14 хафта  
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 36: 14 2025-10-25 Saturday 2 15-30 16-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 14 14-гр.14 хафта  
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 37: 14 2025-10-25 Saturday 3 17-00 18-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 14 14-гр.14 хафта  
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 38: 14 2025-10-27 Dushanba 1 9-00 10-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 15 14-гр.15 хафта 
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 39: 14 2025-10-27 Monday 2 10-30 11-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 15 14-гр.15 хафта 
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 40: 14 2025-10-27 Monday 3 12-30 13-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 15 14-гр.15 хафта 
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 51: 14 2025-10-31 Friday 2 10-30 11-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 15 14-гр.15 хафта 
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 52: 14 2025-10-31 Friday 3 12-30 13-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 15 14-гр.15 хафта 
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 56: 14 2025-11-03 Dushanba 1 9-00 10-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 16 14-гр.16 хафта  
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 59: 14 2025-11-05 Chorshanba 1 9-00 10-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 16 14-гр.16 хафта  
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 60: 14 2025-11-05 Wednesday 2 10-30 11-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 16 14-гр.16 хафта  
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 61: 14 2025-11-05 Wednesday 3 12-30 13-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 16 14-гр.16 хафта  
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 65: 14 2025-11-07 Juma 1 9-00 10-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 16 14-гр.16 хафта  
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 66: 14 2025-11-07 Friday 2 10-30 11-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 16 14-гр.16 хафта  
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 67: 14 2025-11-07 Friday 3 12-30 13-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 16 14-гр.16 хафта  
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 68: 14 2025-11-08 Shanba 1 14-00 15-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 16 14-гр.16 хафта  
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 69: 14 2025-11-08 Saturday 2 15-30 16-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 16 14-гр.16 хафта  
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 73: 14 2025-11-10 Monday 3 12-30 13-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov davomi
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 74: 14 2025-11-11 Seshanba 1 14-00 15-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov davomi
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 75: 14 2025-11-11 Tuesday 2 15-30 16-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov davomi
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 76: 14 2025-11-11 Tuesday 3 17-00 18-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov davomi
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 104: 14 2025-11-22 Shanba 1 9-00 10-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 18 14-гр.18 ҳафта
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 105: 14 2025-11-22 Saturday 2 10-30 11-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 18 14-гр.18 ҳафта
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 106: 14 2025-11-22 Saturday 3 12-30 13-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 18 14-гр.18 ҳафта
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 107: 14 2025-11-24 Dushanba 1 14-00 15-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 19 14- гр. 19-ҳафта
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 108: 14 2025-11-24 Monday 2 15-30 16-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 19 14- гр. 19-ҳафта
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 109: 14 2025-11-24 Monday 3 17-00 18-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 19 14- гр. 19-ҳафта
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 120: 14 2025-11-28 Friday 2 15-30 16-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 19 14- гр. 19-ҳафта
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 121: 14 2025-11-28 Friday 3 17-00 18-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 19 14- гр. 19-ҳафта
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 125: 14 2025-12-01 Dushanba 1 14-00 15-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 20 14-гр. 20-ҳафта
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 128: 14 2025-12-02 Seshanba 1 9-00 10-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 20 14-гр. 20-ҳафта
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 129: 14 2025-12-02 Tuesday 2 10-30 11-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 20 14-гр. 20-ҳафта
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 130: 14 2025-12-02 Tuesday 3 12-30 13-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 20 14-гр. 20-ҳафта
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 131: 14 2025-12-03 Chorshanba 1 14-00 15-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 20 14-гр. 20-ҳафта
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 132: 14 2025-12-03 Wednesday 2 15-30 16-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 20 14-гр. 20-ҳафта
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 133: 14 2025-12-03 Wednesday 3 17-00 18-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 20 14-гр. 20-ҳафта
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 137: 14 2025-12-05 Juma 1 14-00 15-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 20 14-гр. 20-ҳафта
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 138: 14 2025-12-05 Friday 2 15-30 16-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 20 14-гр. 20-ҳафта
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 139: 14 2025-12-05 Friday 3 17-00 18-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 20 14-гр. 20-ҳафта
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 140: 14 2025-12-06 Shanba 1 9-00 10-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 20 14-гр. 20-ҳафта
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 141: 14 2025-12-06 Saturday 2 10-30 11-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 20 14-гр. 20-ҳафта
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 146: 14 2025-12-10 Chorshanba 1 9-00 10-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov davom
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 147: 14 2025-12-10 Wednesday 2 10-30 11-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov davom
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 148: 14 2025-12-10 Wednesday 3 12-30 13-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov davom
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 152: 14 2025-12-12 Juma 1 14-00 15-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 21 14-gr.21 hafta
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 153: 14 2025-12-12 Friday 2 15-30 16-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 21 14-gr.21 hafta
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 154: 14 2025-12-12 Friday 3 17-00 18-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 21 14-gr.21 hafta
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 158: 14 2025-12-15 Dushanba 1 9-00 10-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 22 14-gr.22 hafta
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 159: 14 2025-12-15 Monday 2 10-30 11-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 22 14-gr.22 hafta
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 160: 14 2025-12-15 Monday 3 12-30 13-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 22 14-gr.22 hafta
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 164: 14 2025-12-17 Chorshanba 1 9-00 10-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 22 14-gr.22 hafta
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 165: 14 2025-12-17 Wednesday 2 10-30 11-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 22 14-gr.22 hafta
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 166: 14 2025-12-17 Wednesday 3 12-30 13-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 22 14-gr.22 hafta
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 185: 14 2026-01-05 Dushanba 1 9-00 10-20 4-xona 3.01 Chizmatasvir amaliy Z.Qiyomov 25 14-gr.25 hafta
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 186: 14 2026-01-05 Monday 2 10-30 11-50 4-xona 3.01 Chizmatasvir amaliy Z.Qiyomov 25 14-gr.25 hafta
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 187: 14 2026-01-05 Monday 3 12-30 13-50 4-xona 3.01 Chizmatasvir amaliy Z.Qiyomov 25 14-gr.25 hafta
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 188: 14 2026-01-06 Seshanba 1 14-00 15-20 4-xona 3.01 Chizmatasvir amaliy Z.Qiyomov 25 14-gr.25 hafta
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 189: 14 2026-01-06 Tuesday 2 15-30 16-50 4-xona 3.01 Chizmatasvir amaliy Z.Qiyomov 25 14-gr.25 hafta
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 190: 14 2026-01-06 Tuesday 3 17-00 18-20 4-xona 3.01 Chizmatasvir amaliy Z.Qiyomov 25 14-gr.25 hafta
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 197: 14 2026-01-09 Juma 1 14-00 15-20 4-xona 3.01 Chizmatasvir amaliy Z.Qiyomov 25 14-gr.25 hafta
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 198: 14 2026-01-09 Friday 2 15-30 16-50 4-xona 3.01 Chizmatasvir amaliy Z.Qiyomov 25 14-gr.25 hafta
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 199: 14 2026-01-09 Friday 3 17-00 18-20 4-xona 3.01 Chizmatasvir amaliy Z.Qiyomov 25 14-gr.25 hafta
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 224: 14 2026-02-17 Seshanba 1 14-00 15-20 Markaz binosi 3.01 Chizmatasvir amaliy Z.Qiyomov 1 14-гр. 1-хафта
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 225: 14 2026-02-17 Tuesday 2 15-30 16-50 Markaz binosi 3,01 Chizmatasvir amaliy Z.Qiyomov 1 14-гр. 1-хафта
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 226: 14 2026-02-17 Tuesday 3 17-00 18-20 Markaz binosi 3.01 Chizmatasvir amaliy Z.Qiyomov 1 14-гр. 1-хафта
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 227: 14 2026-02-18 Chorshanba 1 9-00 10-20 Markaz binosi 3.01 Chizmatasvir amaliy Z.Qiyomov 1 14-гр. 1-хафта
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 228: 14 2026-02-18 Wednesday 2 10-30 11-50 Markaz binosi 3.01 Chizmatasvir amaliy Z.Qiyomov 1 14-гр. 1-хафта
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 229: 14 2026-02-18 Wednesday 3 12-30 13-50 Markaz binosi 3.01 Chizmatasvir amaliy Z.Qiyomov 1 14-гр. 1-хафта
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 245: 14 2026-02-25 Chorshanba 1 9-00 10-20 Markaz binosi 3.01 Chizmatasvir amaliy Z.Qiyomov 2 14-гр. 2-хафта
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 246: 14 2026-02-25 Wednesday 2 10-30 11-50 Markaz binosi 3.01 Chizmatasvir amaliy Z.Qiyomov 2 14-гр. 2-хафта
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 247: 14 2026-02-25 Wednesday 3 12-30 13-50 Markaz binosi 3.01 Chizmatasvir amaliy Z.Qiyomov 2 14-гр. 2-хафта
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 291: 14 2026-03-17 Seshanba 1 14-00 15-20 Onlayn chat 3.01 Chizmatasvir  amaliy Z.Qiyomov 5 14-гр. 5-хафта  
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 292: 14 2026-03-17 Tuesday 2 15-30 16-50 Onlayn chat 3.01 Chizmatasvir  amaliy Z.Qiyomov 5 14-гр. 5-хафта  
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 293: 14 2026-03-17 Tuesday 3 17-00 18-20 Onlayn chat 3.01 Chizmatasvir  amaliy Z.Qiyomov 5 14-гр. 5-хафта  
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 309: 14 2026-03-24 Seshanba 1 14-00 15-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 6 14-гр. 6-хафта   
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 310: 14 2026-03-24 Tuesday 2 15-30 16-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 6 14-гр. 6-хафта   
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 311: 14 2026-03-24 Tuesday 3 17-00 18-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 6 14-гр. 6-хафта   
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 321: 14 2026-03-28 Shanba 1 14-00 15-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 6 14-гр. 6-хафта   
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 322: 14 2026-03-28 Saturday 2 15-30 16-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 6 14-гр. 6-хафта   

@@ -1,0 +1,60 @@
+doc_text_results.txt
+extracted_teachers.txt
+file_list.txt
+parsed_teacher_names.txt
+PO xujjatlar\A.Nuridinov\photo_2022-03-17_17-30-22.jpg
+PO xujjatlar\A.Nuridinov\photo_2022-03-17_17-30-48.jpg
+PO xujjatlar\A.Nuridinov\photo_2022-03-17_17-30-49.jpg
+PO xujjatlar\A.Nuridinov\photo_2022-03-17_17-30-51.jpg
+PO xujjatlar\A.Nuridinov\photo_2022-03-17_17-30-52.jpg
+PO xujjatlar\A.Nuridinov\photo_2022-03-17_17-30-53.jpg
+PO xujjatlar\A.Nuridinov\photo_2022-03-17_17-30-54.jpg
+PO xujjatlar\A.Nuridinov\Документ Microsoft Word.docx
+PO xujjatlar\A.Nuridinov\Раис янги паспорт ID.pdf
+PO xujjatlar\A.Nuridinov\Раис янги паспорт.pdf
+PO xujjatlar\D.Alimkulova\photo_2026-01-20_10-29-18.jpg
+PO xujjatlar\D.Alimkulova\photo_2026-01-20_10-39-38.jpg
+PO xujjatlar\D.Alimkulova\photo_2026-01-20_10-39-39.jpg
+PO xujjatlar\D.Alimkulova\ДИПЛОМ PhD.pdf
+PO xujjatlar\D.Alimkulova\ДИПЛОМ МАГИСТР.pdf
+PO xujjatlar\D.Alimkulova\Маълумотнома Алимкулова.doc
+PO xujjatlar\F.Axmadaliyev\photo_2022-09-15_08-22-48.jpg
+PO xujjatlar\F.Axmadaliyev\photo_2022-09-15_08-23-06.jpg
+PO xujjatlar\F.Axmadaliyev\photo_2023-07-24_17-01-44.jpg
+PO xujjatlar\F.Axmadaliyev\photo_2023-07-24_17-02-13.jpg
+PO xujjatlar\F.Axmadaliyev\photo_2023-11-11_19-12-27.jpg
+PO xujjatlar\L.Inagamova\Lola opa (5).pdf
+PO xujjatlar\L.Inagamova\Passport (3).pdf
+PO xujjatlar\L.Inagamova\photo_2019-10-17_20-40-30.jpg
+PO xujjatlar\L.Inagamova\photo_2019-10-17_20-40-31.jpg
+PO xujjatlar\L.Inagamova\Маълумотнома (4).doc
+PO xujjatlar\L.Inagamova\Таклифлар 2023 (5).docx
+PO xujjatlar\L.Inagamova\ТТА ТМ (5).docx
+PO xujjatlar\Qiyomov Z\111037 (5).jpg
+PO xujjatlar\Qiyomov Z\111038.jpg
+PO xujjatlar\Qiyomov Z\photo_2022-11-29_19-10-13.jpg
+PO xujjatlar\S.Sabirbayev\photo_2026-01-08_16-47-04.jpg
+PO xujjatlar\S.Sabirbayev\photo_2026-01-08_19-16-38.jpg
+PO xujjatlar\S.Sabirbayev\photo_2026-01-11_11-04-43.jpg
+PO xujjatlar\Sh.Baymuradov\Баймурадов Ш. Илмий даража.pdf
+PO xujjatlar\Sh.Baymuradov\Баймурадов Шохрух Махмудович (3).doc
+PO xujjatlar\Sh.Baymuradov\Паспорт.pdf
+PO xujjatlar\Sh.Baymuradov\Халқаро МО 21.pdf
+PO xujjatlar\Sh.Baymuradov\Халқаро МО сертификат.jpg
+PO xujjatlar\Sh.Sultanov\20250511_120635.pdf
+PO xujjatlar\Sh.Sultanov\20250511_120653.pdf
+PO xujjatlar\Sh.Sultanov\20250511_120707.pdf
+PO xujjatlar\Sh.Sultanov\photo_2023-06-09_12-25-09.jpg
+PO xujjatlar\Sh.Sultanov\photo_2023-12-26_18-53-54.jpg
+PO xujjatlar\Sh.Sultanov\photo_2026-01-08_11-46-15.jpg
+PO xujjatlar\Sh.Sultanov\Султанов Ш.Ф. маълумотнома 2026.doc
+PO xujjatlar\U.Rajabov\IMG_0001.jpg
+PO xujjatlar\U.Rajabov\IMG_0002.jpg
+PO xujjatlar\U.Rajabov\IMG_0003.jpg
+PO xujjatlar\U.Rajabov\IMG_0004.jpg
+PO xujjatlar\U.Rajabov\IMG_0005.jpg
+PO xujjatlar\Y.Kulmanov\img021.jpg
+PO xujjatlar\Y.Kulmanov\img022.jpg
+PO xujjatlar\Y.Kulmanov\img023.jpg
+PO xujjatlar\Y.Kulmanov\photo_2025-10-24_13-29-38.jpg
+PO xujjatlar\Y.Kulmanov\Кулманов Е.Н Объективка.doc

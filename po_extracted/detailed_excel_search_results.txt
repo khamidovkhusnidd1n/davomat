@@ -1,0 +1,30 @@
+Searching inside ҚТ.ОТМ.Тас.сан 14-гр 2025.xlsx...
+
+Sheet: қайта тайёрлаш умумий
+  Row 68: 61 | Rajabov Ro'ziboy Egamberdiyevich  | Erkak | 1963-02-13 00:00:00 | AB1502973 | 31302631851403 | Oliy | Toshkent davlat Pedagogika instituti | 1985 | Chizmachilik va rasm | Dastgohli rangtasvir  | 36 | Surxondaryo  | Termiz shahar | Ro'zi Choriyev nomidagi Surxondaryo ISMI | .+998937608063 | Dastgohli rangtasvir rassomi  | Tasviriy san'at
+
+Sheet: ОТМ.Тас.сан.14-гр
+  Row 53: 61 | Rajabov Ro'ziboy Egamberdiyevich  | Erkak | 1963-02-13 00:00:00 | AB1502973 | 31302631851403 | Oliy | Toshkent davlat Pedagogika instituti | 1985 | Chizmachilik va rasm | Dastgohli rangtasvir  | 36 | Surxondaryo  | Termiz shahar | Ro'zi Choriyev nomidagi Surxondaryo ISMI | .+998937608063 | Dastgohli rangtasvir rassomi 
+  Row 158: 3. | Sabirova Dinara Atabayevna | Ayol | 1991-09-17 00:00:00 | AD9162685 | 4179913100049 | Oliy | Urganch davlat unversiteti | 2024 | Tasviriy san’at va muhandislik grafikasi | Tasviriy san'at  | 4 | Xorazm | Urganch shahar | Xorazm ixtisoslashtirilgan
+san’at maktab-internati  | 91 423 35 33  | Dastgohlik rang tasvir rassomi | гуруҳда бор
+
+Sheet: Лист1
+  Row 3: Sabirova Dinara Atabayevna | 91 423 35 33 
+
+Sheet: Проф.Тас.сан.
+  Row 53: 61 | Rajabov Ro'ziboy Egamberdiyevich  | Erkak | 1963-02-13 00:00:00 | AB1502973 | 31302631851403 | Oliy | Toshkent davlat Pedagogika instituti | 1985 | Chizmachilik va rasm | Dastgohli rangtasvir  | 36 | Surxondaryo  | Termiz shahar | Ro'zi Choriyev nomidagi Surxondaryo ISMI | .+998937608063 | Dastgohli rangtasvir rassomi 
+
+Sheet: ОТМ.Наққошлик.14-гр (2)
+  Row 53: 61 | Rajabov Ro'ziboy Egamberdiyevich  | Erkak | 1963-02-13 00:00:00 | AB1502973 | 31302631851403 | Oliy | Toshkent davlat Pedagogika instituti | 1985 | Chizmachilik va rasm | Dastgohli rangtasvir  | 36 | Surxondaryo  | Termiz shahar | Ro'zi Choriyev nomidagi Surxondaryo ISMI | .+998937608063 | Dastgohli rangtasvir rassomi 
+
+Sheet: gender
+
+Sheet: position
+
+Sheet: edutype
+
+Sheet: area
+
+Sheet: region
+
+Sheet: org

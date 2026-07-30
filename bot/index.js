@@ -13,6 +13,36 @@ bot.use((ctx, next) => {
   return next();
 });
 
+function getTashkentTime() {
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Tashkent',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hour12: false
+  });
+  const parts = formatter.formatToParts(new Date());
+  const partMap = {};
+  parts.forEach(p => partMap[p.type] = p.value);
+  
+  const year = partMap.year;
+  const month = partMap.month;
+  const day = partMap.day;
+  const hour = parseInt(partMap.hour, 10);
+  const minute = parseInt(partMap.minute, 10);
+  
+  const tempDate = new Date(`${year}-${month}-${day}T12:00:00+05:00`);
+  let dayOfWeek = tempDate.getDay();
+  if (dayOfWeek === 0) dayOfWeek = 7;
+  
+  return {
+    dateStr: `${year}-${month}-${day}`,
+    hour,
+    minute,
+    minutesFromMidnight: hour * 60 + minute,
+    dayOfWeek
+  };
+}
+
 bot.start((ctx) => {
   ctx.reply(
     "Assalomu alaykum! Davomat tizimi botiga xush kelibsiz.\n\nIltimos, tizimga kirish uchun quyidagi tugma orqali telefon raqamingizni yuboring:",
@@ -551,10 +581,9 @@ bot.hears('📅 Mening darslarim', async (ctx) => {
     const { data: user } = await supabase.from('users').select('id, role').eq('telegram_id', tgId).single();
     if (!user || user.role !== 'teacher') return ctx.reply("Siz o'qituvchi roliga ega emassiz.");
 
-    const tzDate = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Tashkent"}));
-    let dayOfWeek = tzDate.getDay();
-    if (dayOfWeek === 0) dayOfWeek = 7;
-    const todayStr = tzDate.toISOString().split('T')[0];
+    const tz = getTashkentTime();
+    let dayOfWeek = tz.dayOfWeek;
+    const todayStr = tz.dateStr;
 
     const { data: groups } = await supabase.from('groups').select('id, name').eq('teacher_id', user.id);
     if (!groups || groups.length === 0) return ctx.reply("Sizga biriktirilgan guruhlar topilmadi.");
@@ -1056,28 +1085,24 @@ function timeToMinutes(tStr) {
 // 1. Dars boshlanishi haqida eslatma (har 5 daqiqada ishlaydi)
 cron.schedule('*/5 * * * *', async () => {
   try {
-    const now = new Date();
-    const tzDate = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Tashkent"}));
-    let dayOfWeek = tzDate.getDay();
-    if (dayOfWeek === 0) dayOfWeek = 7;
+    const tz = getTashkentTime();
+    if (tz.dayOfWeek === 7) return; // Sunday no lessons
     
-    if (dayOfWeek === 7) return; // Sunday no lessons
-    
-    const todayStr = tzDate.toISOString().split('T')[0];
-    const curMinutes = tzDate.getHours() * 60 + tzDate.getMinutes();
+    const todayStr = tz.dateStr;
+    const curMinutes = tz.minutesFromMidnight;
 
     const { data: schedules } = await supabase
       .from('schedules')
       .select('*, groups(name, teacher_id, users!groups_teacher_id_fkey(telegram_id, full_name))')
-      .eq('day_of_week', dayOfWeek);
+      .eq('day_of_week', tz.dayOfWeek);
       
     if (schedules) {
       for (const s of schedules) {
         const schMinutes = timeToMinutes(s.start_time);
         const diff = curMinutes - schMinutes;
         
-        // Agar dars boshlanganiga 15-25 daqiqa bo'lgan bo'lsa
-        if (diff >= 15 && diff <= 25) {
+        // Agar dars boshlanganiga 15-19 daqiqa bo'lgan bo'lsa (exact 15-minute window)
+        if (diff >= 15 && diff <= 19) {
           const { data: existing } = await supabase
             .from('lessons')
             .select('id')
@@ -1108,17 +1133,26 @@ cron.schedule('*/5 * * * *', async () => {
 // 2. Davomat topshirmaganlik uchun ogohlantirishlar (12, 24, 36 soat) (har 30 daqiqada ishlaydi)
 cron.schedule('*/30 * * * *', async () => {
   try {
-    const now = new Date();
-    const tzDate = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Tashkent"}));
+    const tz = getTashkentTime();
+    const todayStr = tz.dateStr;
+    let todayDay = tz.dayOfWeek;
     
-    const todayStr = tzDate.toISOString().split('T')[0];
-    let todayDay = tzDate.getDay();
-    if (todayDay === 0) todayDay = 7;
+    // Calculate yesterday's date
+    const parts = todayStr.split('-');
+    const todayDateObj = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    todayDateObj.setDate(todayDateObj.getDate() - 1);
     
-    const yesterday = new Date(tzDate);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
-    let yesterdayDay = yesterday.getDay();
+    const yesterdayFormatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Tashkent',
+      year: 'numeric', month: '2-digit', day: '2-digit'
+    });
+    const yParts = yesterdayFormatter.formatToParts(todayDateObj);
+    const yMap = {};
+    yParts.forEach(p => yMap[p.type] = p.value);
+    const yesterdayStr = `${yMap.year}-${yMap.month}-${yMap.day}`;
+    
+    const tempYesterdayDate = new Date(`${yesterdayStr}T12:00:00+05:00`);
+    let yesterdayDay = tempYesterdayDate.getDay();
     if (yesterdayDay === 0) yesterdayDay = 7;
 
     const checkDays = [
@@ -1151,7 +1185,7 @@ cron.schedule('*/30 * * * *', async () => {
         const startMin = parseInt(startParts[1], 10);
 
         const startDateTime = new Date(`${d.dateStr}T${startHour.toString().padStart(2, '0')}:${startMin.toString().padStart(2, '0')}:00+05:00`);
-        const diffMs = tzDate - startDateTime;
+        const diffMs = new Date() - startDateTime;
         const diffHours = diffMs / (1000 * 60 * 60);
 
         const teacher = s.groups?.users;

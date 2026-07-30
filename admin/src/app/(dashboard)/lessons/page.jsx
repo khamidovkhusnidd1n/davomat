@@ -21,22 +21,35 @@ export default function LessonsPage() {
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
   const [userRole, setUserRole] = useState(null);
+  const [schedules, setSchedules] = useState([]);
   const [formData, setFormData] = useState({
     group_id: '',
     lesson_date: new Date().toISOString().split('T')[0],
-    title: ''
+    title: '',
+    schedule_id: ''
   });
   const [editFormData, setEditFormData] = useState({
     id: '',
     group_id: '',
     lesson_date: '',
-    title: ''
+    title: '',
+    schedule_id: ''
   });
 
   useEffect(() => {
     fetchLessons();
     fetchGroups();
+    fetchSchedules();
   }, []);
+
+  async function fetchSchedules() {
+    const { data } = await supabase
+      .from('schedules')
+      .select('id, group_id, day_of_week, start_time, end_time')
+      .order('day_of_week')
+      .order('start_time');
+    if (data) setSchedules(data);
+  }
 
   async function fetchGroups() {
     const { data } = await supabase.from('groups').select('id, name').order('name');
@@ -60,6 +73,8 @@ export default function LessonsPage() {
           id,
           title,
           lesson_date,
+          group_id,
+          schedule_id,
           groups ( name, course_name ),
           users!lessons_created_by_fkey ( full_name ),
           attendance ( status )
@@ -90,17 +105,18 @@ export default function LessonsPage() {
         group_id: formData.group_id,
         lesson_date: formData.lesson_date,
         title: formData.title,
+        schedule_id: formData.schedule_id || null,
         created_by: null // Tizim
       });
       
       if (error) throw error;
       
       setShowModal(false);
-      setFormData({ group_id: '', lesson_date: new Date().toISOString().split('T')[0], title: '' });
+      setFormData({ group_id: '', lesson_date: new Date().toISOString().split('T')[0], title: '', schedule_id: '' });
       fetchLessons();
     } catch (err) {
       console.error(err);
-      alert('Xatolik yuz berdi');
+      alert('Xatolik yuz berdi: ' + err.message);
     } finally {
       setSaving(false);
     }
@@ -111,7 +127,8 @@ export default function LessonsPage() {
       id: lesson.id,
       group_id: lesson.group_id || '',
       lesson_date: lesson.lesson_date || '',
-      title: lesson.title || ''
+      title: lesson.title || '',
+      schedule_id: lesson.schedule_id || ''
     });
     setShowEditModal(true);
   };
@@ -126,7 +143,8 @@ export default function LessonsPage() {
         .update({
           group_id: editFormData.group_id,
           lesson_date: editFormData.lesson_date,
-          title: editFormData.title
+          title: editFormData.title,
+          schedule_id: editFormData.schedule_id || null
         })
         .eq('id', editFormData.id);
       
@@ -284,13 +302,32 @@ export default function LessonsPage() {
             <select 
               className="input" 
               value={formData.group_id}
-              onChange={(e) => setFormData({...formData, group_id: e.target.value})}
+              onChange={(e) => setFormData({...formData, group_id: e.target.value, schedule_id: ''})}
               required
             >
               <option value="">Guruhni tanlang</option>
               {groups.map(g => (
                 <option key={g.id} value={g.id}>{g.name}</option>
               ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Dars soati (Jadval)</label>
+            <select 
+              className="input" 
+              value={formData.schedule_id}
+              onChange={(e) => setFormData({...formData, schedule_id: e.target.value})}
+            >
+              <option value="">— Biriktirilmagan (Ad-hoc) —</option>
+              {schedules.filter(s => s.group_id === formData.group_id).map(s => {
+                const days = { 1: 'Dushanba', 2: 'Seshanba', 3: 'Chorshanba', 4: 'Payshanba', 5: 'Juma', 6: 'Shanba', 7: 'Yakshanba' };
+                return (
+                  <option key={s.id} value={s.id}>
+                    {days[s.day_of_week]} ({s.start_time.substring(0, 5)} - {s.end_time.substring(0, 5)})
+                  </option>
+                );
+              })}
             </select>
           </div>
 
@@ -339,13 +376,32 @@ export default function LessonsPage() {
             <select 
               className="input" 
               value={editFormData.group_id}
-              onChange={(e) => setEditFormData({...editFormData, group_id: e.target.value})}
+              onChange={(e) => setEditFormData({...editFormData, group_id: e.target.value, schedule_id: ''})}
               required
             >
               <option value="">Guruhni tanlang</option>
               {groups.map(g => (
                 <option key={g.id} value={g.id}>{g.name}</option>
               ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Dars soati (Jadval)</label>
+            <select 
+              className="input" 
+              value={editFormData.schedule_id}
+              onChange={(e) => setEditFormData({...editFormData, schedule_id: e.target.value})}
+            >
+              <option value="">— Biriktirilmagan (Ad-hoc) —</option>
+              {schedules.filter(s => s.group_id === editFormData.group_id).map(s => {
+                const days = { 1: 'Dushanba', 2: 'Seshanba', 3: 'Chorshanba', 4: 'Payshanba', 5: 'Juma', 6: 'Shanba', 7: 'Yakshanba' };
+                return (
+                  <option key={s.id} value={s.id}>
+                    {days[s.day_of_week]} ({s.start_time.substring(0, 5)} - {s.end_time.substring(0, 5)})
+                  </option>
+                );
+              })}
             </select>
           </div>
 

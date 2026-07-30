@@ -52,6 +52,14 @@ bot.start((ctx) => {
   );
 });
 
+bot.command('test_reminder', async (ctx) => {
+  const text = `🔔 <b>ESLATMA (TEST):</b> Hurmatli <b>${ctx.from.first_name || 'Ustoz'}</b>, sizning <b>Rangtasvir 14-guruh</b> guruhingizda dars boshlanganiga <b>15 daqiqa</b> bo'ldi. Iltimos, dars davomatini belgilang.`;
+  const kb = Markup.inlineKeyboard([
+    [Markup.button.callback("🟢 Davomat belgilash", `wiz_start:dummy-id`)]
+  ]);
+  await ctx.replyWithHTML(text, kb);
+});
+
 const handlePhoneSubmit = async (ctx, phoneStr) => {
   let phone = phoneStr.replace(/\\s+/g, ''); // Remove spaces
   if (!phone.startsWith('+')) {

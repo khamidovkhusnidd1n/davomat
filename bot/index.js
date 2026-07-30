@@ -8,6 +8,10 @@ const cron = require('node-cron');
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 const bot = new Telegraf(process.env.BOT_TOKEN);
 bot.use(session());
+bot.use((ctx, next) => {
+  ctx.session = ctx.session || {};
+  return next();
+});
 
 bot.start((ctx) => {
   ctx.reply(

@@ -846,7 +846,7 @@ async function saveAttendance(ctx) {
     };
   });
   
-  const { error } = await supabase.from('attendance').insert(insertRows);
+  const { error } = await supabase.from('attendance').upsert(insertRows, { onConflict: 'lesson_id, student_id' });
   
   if (error) {
     await ctx.reply(`Davomatni saqlashda xatolik yuz berdi: ${error.message}`);

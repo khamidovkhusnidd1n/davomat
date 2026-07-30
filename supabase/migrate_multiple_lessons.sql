@@ -19,10 +19,12 @@ ON public.lessons (group_id, lesson_date)
 WHERE schedule_id IS NULL;
 
 -- 6) get_or_create_today_lesson funksiyasini yangilash (overload va race condition'larni istisno qilish bilan)
+DROP FUNCTION IF EXISTS public.get_or_create_today_lesson(uuid, text, uuid);
+
 CREATE OR REPLACE FUNCTION public.get_or_create_today_lesson(
     p_group_id UUID, 
     p_lesson_title TEXT,
-    p_schedule_id UUID DEFAULT NULL
+    p_schedule_id UUID
 )
 RETURNS UUID
 LANGUAGE plpgsql

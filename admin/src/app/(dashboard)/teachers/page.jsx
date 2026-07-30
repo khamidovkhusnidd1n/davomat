@@ -1,7 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Search, Plus, Upload, ChevronDown, ChevronUp, Edit } from 'lucide-react';
+import { Search, Plus, Upload, ChevronDown, ChevronUp, Edit, LayoutGrid, TableProperties, Download } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import TeacherImportModal from './TeacherImportModal';
 import TeacherModal from './TeacherModal';
 import styles from './page.module.css';
@@ -17,6 +18,7 @@ export default function TeachersPage() {
   const [expandedId, setExpandedId] = useState(null);
   const [userRole, setUserRole] = useState(null);
   const [academicYear, setAcademicYear] = useState('2025-2026');
+  const [viewMode, setViewMode] = useState('cards'); // 'cards' or 'table'
 
   useEffect(() => {
     fetchData();
@@ -79,6 +81,36 @@ export default function TeachersPage() {
     }
   }
 
+  const handleExportExcel = () => {
+    const dataToExport = filtered.map((t, idx) => ({
+      "№": idx + 1,
+      "O'qituvchi": t.full_name,
+      "Ta'lim turi": t.education_type === 'malaka_oshirish' ? 'Malaka oshirish' : 'Qayta tayyorlov',
+      "Telefon": t.phone || 'Kiritilmagan',
+      "Fanlar": t.teacher_subjects.map(ts => ts.subjects?.name).filter(Boolean).join(', ') || 'Fan biriktirilmagan',
+      "Ajratilgan soat": t.total_allocated,
+      "O'tilgan soat": t.completed_hours,
+      "Qoldiq soat": t.remaining_hours,
+      "Bajarilishi (%)": t.total_allocated > 0 ? Math.round((t.completed_hours / t.total_allocated) * 100) : 0
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "O'qituvchilar Hisoboti");
+
+    // Auto-fit column widths
+    const max_len = dataToExport.reduce((acc, row) => {
+      Object.keys(row).forEach((key, col_idx) => {
+        const val_len = String(row[key] || '').length;
+        acc[col_idx] = Math.max(acc[col_idx] || 10, val_len + 2);
+      });
+      return acc;
+    }, []);
+    worksheet['!cols'] = max_len.map(w => ({ wshpt: w * 6 }));
+
+    XLSX.writeFile(workbook, `O'qituvchilar_Hisoboti_${academicYear}.xlsx`);
+  };
+
   const filtered = teachers.filter(t => {
     const matchSearch = t.full_name.toLowerCase().includes(search.toLowerCase());
     const matchType = filterType === 'all' || t.education_type === filterType;
@@ -123,16 +155,39 @@ export default function TeachersPage() {
             <option value="2026-2027">2026-2027</option>
           </select>
         </div>
-        {canWrite && (
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <button className="btn btn-secondary" style={{ backgroundColor: '#e0e7ff', color: '#4f46e5' }} onClick={() => setShowImport(true)}>
-              <Upload size={18} /> Excel yuklash
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div className={styles.toggleGroup}>
+            <button 
+              className={`${styles.toggleBtn} ${viewMode === 'cards' ? styles.activeToggle : ''}`} 
+              onClick={() => setViewMode('cards')}
+              title="Kartalar ko'rinishi"
+            >
+              <LayoutGrid size={18} />
             </button>
-            <button className="btn btn-primary" onClick={() => { setSelectedTeacher(null); setShowAddModal(true); }}>
-              <Plus size={18} /> O'qituvchi qo'shish
+            <button 
+              className={`${styles.toggleBtn} ${viewMode === 'table' ? styles.activeToggle : ''}`} 
+              onClick={() => setViewMode('table')}
+              title="Jadval hisoboti ko'rinishi"
+            >
+              <TableProperties size={18} />
             </button>
           </div>
-        )}
+          {viewMode === 'table' && (
+            <button className="btn btn-secondary" style={{ backgroundColor: '#ecfdf5', color: '#10b981', borderColor: '#a7f3d0' }} onClick={handleExportExcel}>
+              <Download size={18} /> Excel hisobot
+            </button>
+          )}
+          {canWrite && (
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button className="btn btn-secondary" style={{ backgroundColor: '#e0e7ff', color: '#4f46e5' }} onClick={() => setShowImport(true)}>
+                <Upload size={18} /> Excel yuklash
+              </button>
+              <button className="btn btn-primary" onClick={() => { setSelectedTeacher(null); setShowAddModal(true); }}>
+                <Plus size={18} /> O'qituvchi qo'shish
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Stats summary */}
@@ -172,7 +227,7 @@ export default function TeachersPage() {
             </div>
           )}
         </div>
-      ) : (
+      ) : viewMode === 'cards' ? (
         <div className={styles.cardsGrid}>
           {filtered.map(teacher => {
             const isExpanded = expandedId === teacher.id;
@@ -266,6 +321,80 @@ export default function TeachersPage() {
               </div>
             );
           })}
+        </div>
+      ) : (
+        <div className={`card ${styles.tableCard}`}>
+          <div className={styles.tableResponsive}>
+            <table className={styles.reportTable}>
+              <thead>
+                <tr>
+                  <th>№</th>
+                  <th>O'qituvchi (F.I.Sh.)</th>
+                  <th>Ta'lim turi</th>
+                  <th>Biriktirilgan fanlar</th>
+                  <th>Ajratilgan soat</th>
+                  <th>O'tilgan soat</th>
+                  <th>Qoldiq soat</th>
+                  <th>Bajarilishi (%)</th>
+                  {canWrite && <th>Amal</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((teacher, idx) => {
+                  const pct = teacher.total_allocated > 0
+                    ? Math.min(100, Math.round((teacher.completed_hours / teacher.total_allocated) * 100))
+                    : 0;
+                  return (
+                    <tr key={teacher.id}>
+                      <td>{idx + 1}</td>
+                      <td style={{ fontWeight: '600' }}>{teacher.full_name}</td>
+                      <td>
+                        <span className={`${styles.typeBadge} ${teacher.education_type === 'malaka_oshirish' ? styles.malaka : styles.qayta}`}>
+                          {teacher.education_type === 'malaka_oshirish' ? 'Malaka oshirish' : 'Qayta tayyorlov'}
+                        </span>
+                      </td>
+                      <td style={{ maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {teacher.teacher_subjects.map(ts => ts.subjects?.name).filter(Boolean).join(', ') || '—'}
+                      </td>
+                      <td style={{ fontWeight: '500' }}>{teacher.total_allocated} soat</td>
+                      <td style={{ color: 'var(--primary)', fontWeight: '500' }}>{teacher.completed_hours} soat</td>
+                      <td style={{ color: teacher.remaining_hours > 0 ? '#f59e0b' : 'var(--text-muted)' }}>{teacher.remaining_hours} soat</td>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div className={styles.tableProgressBar}>
+                            <div
+                              className={styles.tableProgressFill}
+                              style={{
+                                width: `${pct}%`,
+                                background: pct >= 90 ? '#ef4444' : pct >= 60 ? '#f59e0b' : '#22c55e',
+                                height: '100%',
+                                borderRadius: '4px'
+                              }}
+                            />
+                          </div>
+                          <span style={{ fontSize: '0.85rem', fontWeight: '600' }}>{pct}%</span>
+                        </div>
+                      </td>
+                      {canWrite && (
+                        <td>
+                          <button
+                            className={styles.actionBtn}
+                            onClick={() => {
+                              setSelectedTeacher(teacher);
+                              setShowAddModal(true);
+                            }}
+                            title="Tahrirlash"
+                          >
+                            <Edit size={16} />
+                          </button>
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

@@ -1,8 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Search, Plus, Upload, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, Plus, Upload, ChevronDown, ChevronUp, Edit } from 'lucide-react';
 import TeacherImportModal from './TeacherImportModal';
+import TeacherModal from './TeacherModal';
 import styles from './page.module.css';
 
 export default function TeachersPage() {
@@ -11,6 +12,8 @@ export default function TeachersPage() {
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [showImport, setShowImport] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
   const [userRole, setUserRole] = useState(null);
   const [academicYear, setAcademicYear] = useState('2025-2026');
@@ -121,9 +124,14 @@ export default function TeachersPage() {
           </select>
         </div>
         {canWrite && (
-          <button className="btn btn-primary" onClick={() => setShowImport(true)}>
-            <Upload size={18} /> Excel yuklash
-          </button>
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <button className="btn btn-secondary" style={{ backgroundColor: '#e0e7ff', color: '#4f46e5' }} onClick={() => setShowImport(true)}>
+              <Upload size={18} /> Excel yuklash
+            </button>
+            <button className="btn btn-primary" onClick={() => { setSelectedTeacher(null); setShowAddModal(true); }}>
+              <Plus size={18} /> O'qituvchi qo'shish
+            </button>
+          </div>
         )}
       </div>
 
@@ -154,9 +162,14 @@ export default function TeachersPage() {
         <div className={styles.empty}>
           <p>O'qituvchilar topilmadi</p>
           {canWrite && (
-            <button className="btn btn-primary" onClick={() => setShowImport(true)}>
-              <Upload size={18} /> Excel orqali qo'shish
-            </button>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button className="btn btn-secondary" style={{ backgroundColor: '#e0e7ff', color: '#4f46e5' }} onClick={() => setShowImport(true)}>
+                <Upload size={18} /> Excel orqali qo'shish
+              </button>
+              <button className="btn btn-primary" onClick={() => { setSelectedTeacher(null); setShowAddModal(true); }}>
+                <Plus size={18} /> O'qituvchi qo'shish
+              </button>
+            </div>
           )}
         </div>
       ) : (
@@ -180,12 +193,27 @@ export default function TeachersPage() {
                       {teacher.education_type === 'malaka_oshirish' ? 'Malaka oshirish' : 'Qayta tayyorlov'}
                     </span>
                   </div>
-                  <button
-                    className={styles.expandBtn}
-                    onClick={() => setExpandedId(isExpanded ? null : teacher.id)}
-                  >
-                    {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                  </button>
+                  <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                    {canWrite && (
+                      <button
+                        className={styles.editBtn}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedTeacher(teacher);
+                          setShowAddModal(true);
+                        }}
+                        title="O'qituvchini tahrirlash"
+                      >
+                        <Edit size={16} />
+                      </button>
+                    )}
+                    <button
+                      className={styles.expandBtn}
+                      onClick={() => setExpandedId(isExpanded ? null : teacher.id)}
+                    >
+                      {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                    </button>
+                  </div>
                 </div>
 
                 {/* Progress Bar */}
@@ -246,6 +274,14 @@ export default function TeachersPage() {
         onClose={() => setShowImport(false)}
         onSuccess={fetchData}
         academicYear={academicYear}
+      />
+
+      <TeacherModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        teacher={selectedTeacher}
+        academicYear={academicYear}
+        onSuccess={fetchData}
       />
     </div>
   );

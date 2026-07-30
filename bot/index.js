@@ -955,19 +955,27 @@ async function sendInteractiveWizardMenu(ctx, editExisting = false) {
     text += `${i + 1}. <b>${s.name}</b> - ${statusText}\n`;
   });
 
+  const getShortName = (fullName) => {
+    const parts = fullName.trim().split(/\s+/);
+    if (parts.length > 1) {
+      return `${parts[0]} ${parts[1]}`;
+    }
+    return parts[0];
+  };
+
   const buttons = [];
   for (let i = 0; i < wizard.students.length; i += 2) {
     const row = [];
     const s1 = wizard.students[i];
     const att1 = wizard.attendance[s1.id];
     const emoji1 = att1 ? (att1.status === 'present' ? '🟢' : att1.status === 'late' ? '🟡' : att1.status === 'excused' ? '🔵' : '🔴') : '⚪';
-    row.push(Markup.button.callback(`${emoji1} ${s1.name.split(' ')[0]}`, `wiz_edit_std:${i}`));
+    row.push(Markup.button.callback(`${emoji1} ${getShortName(s1.name)}`, `wiz_edit_std:${i}`));
     
     if (i + 1 < wizard.students.length) {
       const s2 = wizard.students[i + 1];
       const att2 = wizard.attendance[s2.id];
       const emoji2 = att2 ? (att2.status === 'present' ? '🟢' : att2.status === 'late' ? '🟡' : att2.status === 'excused' ? '🔵' : '🔴') : '⚪';
-      row.push(Markup.button.callback(`${emoji2} ${s2.name.split(' ')[0]}`, `wiz_edit_std:${i + 1}`));
+      row.push(Markup.button.callback(`${emoji2} ${getShortName(s2.name)}`, `wiz_edit_std:${i + 1}`));
     }
     buttons.push(row);
   }

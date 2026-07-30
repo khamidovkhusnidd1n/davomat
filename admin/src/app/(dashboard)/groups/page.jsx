@@ -110,14 +110,16 @@ export default function GroupsPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <button className="btn btn-secondary" onClick={() => setShowGroupsImport(true)}>
-            <FileSpreadsheet size={18} /> Excel yuklash
-          </button>
-          <button className="btn btn-primary" onClick={() => { setEditingGroup(null); setShowModal(true); }}>
-            <Plus size={18} /> Yangi Guruh
-          </button>
-        </div>
+        {(userRole === 'sysadmin' || userRole === 'admin') && (
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button className="btn btn-secondary" onClick={() => setShowGroupsImport(true)}>
+              <FileSpreadsheet size={18} /> Excel yuklash
+            </button>
+            <button className="btn btn-primary" onClick={() => { setEditingGroup(null); setShowModal(true); }}>
+              <Plus size={18} /> Yangi Guruh
+            </button>
+          </div>
+        )}
       </div>
 
       <div className={styles.tabs} style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
@@ -181,20 +183,24 @@ export default function GroupsPage() {
                           <button className={styles.actionBtn} title="Dars dasturi" onClick={() => { setEditingGroup(group); setShowSyllabus(true); }}>
                             <BookOpen size={16} />
                           </button>
-                          <button className={styles.actionBtn} title="Tahrirlash" onClick={() => { setEditingGroup(group); setShowModal(true); }}>
-                            <Edit2 size={16} />
-                          </button>
-                          <button 
-                            className={styles.actionBtn} 
-                            style={{ color: group.status === 'archived' ? '#10B981' : '#F59E0B' }}
-                            title={group.status === 'archived' ? 'Faollashtirish' : 'Arxivlash'} 
-                            onClick={() => toggleArchive(group.id, group.status)}
-                          >
-                            {group.status === 'archived' ? '♻️' : '📦'}
-                          </button>
-                          <button className={`${styles.actionBtn} ${styles.danger}`} title="O'chirish" onClick={() => handleDelete(group.id)}>
-                            <Trash2 size={16} />
-                          </button>
+                          {(userRole === 'sysadmin' || userRole === 'admin') && (
+                            <>
+                              <button className={styles.actionBtn} title="Tahrirlash" onClick={() => { setEditingGroup(group); setShowModal(true); }}>
+                                <Edit2 size={16} />
+                              </button>
+                              <button 
+                                className={styles.actionBtn} 
+                                style={{ color: group.status === 'archived' ? '#10B981' : '#F59E0B' }}
+                                title={group.status === 'archived' ? 'Faollashtirish' : 'Arxivlash'} 
+                                onClick={() => toggleArchive(group.id, group.status)}
+                              >
+                                {group.status === 'archived' ? '♻️' : '📦'}
+                              </button>
+                              <button className={`${styles.actionBtn} ${styles.danger}`} title="O'chirish" onClick={() => handleDelete(group.id)}>
+                                <Trash2 size={16} />
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>

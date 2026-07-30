@@ -30,8 +30,9 @@ export async function checkAdminAuth(request) {
     .eq('id', user.id)
     .single();
 
-  if (userError || !userData || userData.role !== 'admin') {
-    return { error: 'Unauthorized: Admin role required', status: 403 };
+  const allowedRoles = ['sysadmin', 'admin', 'academic'];
+  if (userError || !userData || !allowedRoles.includes(userData.role)) {
+    return { error: 'Unauthorized: Write permissions required', status: 403 };
   }
 
   return { user, status: 200 };

@@ -13,6 +13,7 @@ export default function SettingsPage() {
   const [editingAdmin, setEditingAdmin] = useState(null);
   const [organizationId, setOrganizationId] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [userRole, setUserRole] = useState(null);
 
   useEffect(() => {
     fetchAdmins();
@@ -24,8 +25,11 @@ export default function SettingsPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setCurrentUserId(user.id);
-        const { data: userData } = await supabase.from('users').select('organization_id').eq('id', user.id).single();
-        if (userData) setOrganizationId(userData.organization_id);
+        const { data: userData } = await supabase.from('users').select('organization_id, role').eq('id', user.id).single();
+        if (userData) {
+          setOrganizationId(userData.organization_id);
+          setUserRole(userData.role);
+        }
       }
       
       const { data, error } = await supabase
@@ -35,9 +39,10 @@ export default function SettingsPage() {
           full_name,
           phone,
           email,
+          role,
           created_at
         `)
-        .eq('role', 'admin');
+        .in('role', ['sysadmin', 'admin', 'director', 'academic']);
       
       if (error) throw error;
       setAdmins(data || []);
@@ -79,6 +84,17 @@ export default function SettingsPage() {
     a.email?.toLowerCase().includes(search.toLowerCase())
   );
 
+  if (userRole && userRole !== 'sysadmin') {
+    return <div style={{ padding: '2rem', textAlign: 'center' }}>Sizda ushbu sahifaga kirish huquqi yo'q (Faqat SYSADMIN uchun).</div>;
+  }
+
+  const ROLE_LABELS = {
+    sysadmin: 'SYSADMIN',
+    admin: 'Admin',
+    director: 'Direktor',
+    academic: 'O\'quv Admini'
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -107,6 +123,7 @@ export default function SettingsPage() {
                 <tr>
                   <th>F.I.Sh</th>
                   <th>Login / Email</th>
+                  <th>Roli</th>
                   <th>Telefon</th>
                   <th>Qo'shilgan sana</th>
                   <th>Amallar</th>
@@ -115,13 +132,25 @@ export default function SettingsPage() {
               <tbody>
                 {filteredAdmins.length === 0 ? (
                   <tr>
-                    <td colSpan="5" className={styles.emptyText}>Adminlar topilmadi</td>
+                    <td colSpan="6" className={styles.emptyText}>Adminlar topilmadi</td>
                   </tr>
                 ) : (
                   filteredAdmins.map(admin => (
                     <tr key={admin.id}>
                       <td>{admin.full_name || '-'} {admin.id === currentUserId ? '(Siz)' : ''}</td>
                       <td>{admin.email || '-'}</td>
+                      <td>
+                        <span style={{ 
+                          padding: '3px 8px', 
+                          borderRadius: '4px', 
+                          fontSize: '12px',
+                          fontWeight: 'bold',
+                          background: admin.role === 'sysadmin' ? '#FEE2E2' : admin.role === 'admin' ? '#E0F2FE' : admin.role === 'director' ? '#FEF3C7' : '#D1FAE5',
+                          color: admin.role === 'sysadmin' ? '#991B1B' : admin.role === 'admin' ? '#075985' : admin.role === 'director' ? '#92400E' : '#065F46'
+                        }}>
+                          {ROLE_LABELS[admin.role] || admin.role}
+                        </span>
+                      </td>
                       <td>{admin.phone || '-'}</td>
                       <td>{new Date(admin.created_at).toLocaleDateString('uz-UZ')}</td>
                       <td>

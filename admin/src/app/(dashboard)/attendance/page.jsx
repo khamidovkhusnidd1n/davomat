@@ -13,6 +13,7 @@ export default function AttendancePage() {
   const [editingId, setEditingId] = useState(null);
   const [editStatus, setEditStatus] = useState('');
   const [editLateHours, setEditLateHours] = useState('');
+  const [userRole, setUserRole] = useState(null);
 
   const handleUpdateRecord = async (id) => {
     try {
@@ -48,6 +49,13 @@ export default function AttendancePage() {
   async function fetchAttendance() {
     try {
       setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: userData } = await supabase.from('users').select('role').eq('id', user.id).single();
+        if (userData) {
+          setUserRole(userData.role);
+        }
+      }
       
       const { data, error } = await supabase
         .from('attendance')
@@ -138,7 +146,7 @@ export default function AttendancePage() {
                   <th>Status</th>
                   <th>Kech qolgan soat</th>
                   <th>Belgiladi</th>
-                  <th>Harakat</th>
+                  {(userRole === 'sysadmin' || userRole === 'admin' || userRole === 'academic') && <th>Harakat</th>}
                 </tr>
               </thead>
               <tbody>
@@ -183,22 +191,24 @@ export default function AttendancePage() {
                           )}
                         </td>
                         <td className={styles.textSmall}>{record.users?.full_name || 'Tizim'}</td>
-                        <td>
-                          {editingId === record.id ? (
-                            <div style={{ display: 'flex', gap: '5px' }}>
-                              <button className="btn btn-primary" style={{ padding: '4px 8px' }} onClick={() => handleUpdateRecord(record.id)}>OK</button>
-                              <button className="btn btn-secondary" style={{ padding: '4px 8px' }} onClick={() => setEditingId(null)}>X</button>
-                            </div>
-                          ) : (
-                            <button className={styles.actionBtn} onClick={() => { 
-                              setEditingId(record.id); 
-                              setEditStatus(record.status); 
-                              setEditLateHours(record.late_hours?.toString() || '0'); 
-                            }}>
-                              <Edit2 size={16} />
-                            </button>
-                          )}
-                        </td>
+                        {(userRole === 'sysadmin' || userRole === 'admin' || userRole === 'academic') && (
+                          <td>
+                            {editingId === record.id ? (
+                              <div style={{ display: 'flex', gap: '5px' }}>
+                                <button className="btn btn-primary" style={{ padding: '4px 8px' }} onClick={() => handleUpdateRecord(record.id)}>OK</button>
+                                <button className="btn btn-secondary" style={{ padding: '4px 8px' }} onClick={() => setEditingId(null)}>X</button>
+                              </div>
+                            ) : (
+                              <button className={styles.actionBtn} onClick={() => { 
+                                setEditingId(record.id); 
+                                setEditStatus(record.status); 
+                                setEditLateHours(record.late_hours?.toString() || '0'); 
+                              }}>
+                                <Edit2 size={16} />
+                              </button>
+                            )}
+                          </td>
+                        )}
                       </tr>
                     );
                   })

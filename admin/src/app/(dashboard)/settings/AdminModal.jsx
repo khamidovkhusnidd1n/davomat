@@ -11,6 +11,7 @@ export default function AdminModal({ isOpen, onClose, admin, organizationId, onS
     phone: '',
     email: '',
     password: '',
+    role: 'admin'
   });
   const [loading, setLoading] = useState(false);
 
@@ -23,9 +24,10 @@ export default function AdminModal({ isOpen, onClose, admin, organizationId, onS
           phone: admin.phone || '',
           email: admin.email || '',
           password: '',
+          role: admin.role || 'admin'
         });
       } else {
-        setFormData({ full_name: '', phone: '', email: '', password: '' });
+        setFormData({ full_name: '', phone: '', email: '', password: '', role: 'admin' });
       }
     }
   }, [isOpen, admin]);
@@ -37,7 +39,6 @@ export default function AdminModal({ isOpen, onClose, admin, organizationId, onS
     try {
       const payload = {
         ...formData,
-        role: 'admin',
         organization_id: organizationId,
       };
 
@@ -93,6 +94,21 @@ export default function AdminModal({ isOpen, onClose, admin, organizationId, onS
             required
             autoFocus
           />
+        </div>
+        
+        <div className="form-group">
+          <label>Roli *</label>
+          <select 
+            className="input" 
+            value={formData.role}
+            onChange={e => setFormData({...formData, role: e.target.value})}
+            required
+          >
+            <option value="sysadmin">SYSADMIN</option>
+            <option value="admin">Admin</option>
+            <option value="director">Direktor</option>
+            <option value="academic">O'quv Admini</option>
+          </select>
         </div>
         
         <div className={styles.row}>

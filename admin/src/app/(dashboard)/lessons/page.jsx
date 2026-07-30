@@ -17,6 +17,7 @@ export default function LessonsPage() {
   const [showModal, setShowModal] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [userRole, setUserRole] = useState(null);
   const [formData, setFormData] = useState({
     group_id: '',
     lesson_date: new Date().toISOString().split('T')[0],
@@ -36,6 +37,13 @@ export default function LessonsPage() {
   async function fetchLessons() {
     try {
       setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: userData } = await supabase.from('users').select('role').eq('id', user.id).single();
+        if (userData) {
+          setUserRole(userData.role);
+        }
+      }
       
       const { data, error } = await supabase
         .from('lessons')
@@ -89,6 +97,12 @@ export default function LessonsPage() {
     }
   }
 
+  if (userRole === 'director') {
+    return <div style={{ padding: '2rem', textAlign: 'center' }}>Sizda ushbu sahifaga kirish huquqi yo'q.</div>;
+  }
+
+  const isWriteEnabled = userRole === 'sysadmin' || userRole === 'admin' || userRole === 'academic';
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -102,15 +116,17 @@ export default function LessonsPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button className="btn btn-secondary" style={{backgroundColor: '#e0e7ff', color: '#4f46e5'}} onClick={() => setShowImport(true)}>
-            <FileSpreadsheet size={18} /> Excel Import
-          </button>
-          <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-            <Plus size={20} />
-            <span>Dars qo'shish</span>
-          </button>
-        </div>
+        {isWriteEnabled && (
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button className="btn btn-secondary" style={{backgroundColor: '#e0e7ff', color: '#4f46e5'}} onClick={() => setShowImport(true)}>
+              <FileSpreadsheet size={18} /> Excel Import
+            </button>
+            <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+              <Plus size={20} />
+              <span>Dars qo'shish</span>
+            </button>
+          </div>
+        )}
       </div>
 
       <div className={`card ${styles.tableCard}`}>

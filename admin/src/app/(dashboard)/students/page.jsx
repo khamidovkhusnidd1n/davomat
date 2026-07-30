@@ -17,6 +17,7 @@ export default function StudentsPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
   const [organizationId, setOrganizationId] = useState(null);
+  const [userRole, setUserRole] = useState(null);
 
   useEffect(() => {
     fetchAll();
@@ -27,8 +28,11 @@ export default function StudentsPage() {
       setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data: userData } = await supabase.from('users').select('organization_id').eq('id', user.id).single();
-        if (userData) setOrganizationId(userData.organization_id);
+        const { data: userData } = await supabase.from('users').select('organization_id, role').eq('id', user.id).single();
+        if (userData) {
+          setOrganizationId(userData.organization_id);
+          setUserRole(userData.role);
+        }
       }
 
       const [studentsRes, groupsRes] = await Promise.all([
@@ -127,14 +131,16 @@ export default function StudentsPage() {
           </select>
         </div>
 
-        <div className={styles.btnGroup}>
-          <button className="btn btn-secondary" onClick={() => setShowImport(true)}>
-            <FileSpreadsheet size={18} /> Excel Import
-          </button>
-          <button className="btn btn-primary" onClick={() => { setEditingStudent(null); setShowModal(true); }}>
-            <Plus size={18} /> Yangi Tinglovchi
-          </button>
-        </div>
+        {(userRole === 'sysadmin' || userRole === 'admin') && (
+          <div className={styles.btnGroup}>
+            <button className="btn btn-secondary" onClick={() => setShowImport(true)}>
+              <FileSpreadsheet size={18} /> Excel Import
+            </button>
+            <button className="btn btn-primary" onClick={() => { setEditingStudent(null); setShowModal(true); }}>
+              <Plus size={18} /> Yangi Tinglovchi
+            </button>
+          </div>
+        )}
       </div>
 
       <div className={`card ${styles.tableCard}`}>
@@ -153,7 +159,7 @@ export default function StudentsPage() {
                   <th>Bot</th>
                   <th>Status</th>
                   <th>Qo'shilgan sana</th>
-                  <th>Amallar</th>
+                  {(userRole === 'sysadmin' || userRole === 'admin') && <th>Amallar</th>}
                 </tr>
               </thead>
               <tbody>
@@ -182,16 +188,18 @@ export default function StudentsPage() {
                         </span>
                       </td>
                       <td>{new Date(student.joined_at).toLocaleDateString('uz-UZ')}</td>
-                      <td>
-                        <div className={styles.actions}>
-                          <button className={styles.actionBtn} onClick={() => { setEditingStudent(student); setShowModal(true); }}>
-                            <Edit2 size={16} />
-                          </button>
-                          <button className={`${styles.actionBtn} ${styles.danger}`} onClick={() => handleDelete(student.user_id)}>
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
+                      {(userRole === 'sysadmin' || userRole === 'admin') && (
+                        <td>
+                          <div className={styles.actions}>
+                            <button className={styles.actionBtn} onClick={() => { setEditingStudent(student); setShowModal(true); }}>
+                              <Edit2 size={16} />
+                            </button>
+                            <button className={`${styles.actionBtn} ${styles.danger}`} onClick={() => handleDelete(student.user_id)}>
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   ))
                 )}

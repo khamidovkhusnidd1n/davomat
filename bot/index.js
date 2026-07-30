@@ -44,16 +44,27 @@ const handlePhoneSubmit = async (ctx, phoneStr) => {
 
     await supabase.from('users').update({ telegram_id: tgId }).eq('id', user.id);
 
-    let kb = [
-      ['📅 Mening davomatim', '📅 Dars jadvali'],
-      ['🏆 Oylik reyting']
-    ];
-    if (user.role === 'admin') {
-      kb.push(['📢 Xabar tarqatish']);
+    let kb = [];
+    if (user.role === 'teacher') {
+      kb = [
+        ['📅 Mening darslarim', '📋 Guruhlarim ro\'yxati'],
+        ['📊 Davomat hisobotlari']
+      ];
+    } else if (user.role === 'admin' || user.role === 'tutor') {
+      kb = [
+        ['📅 Mening davomatim', '📅 Dars jadvali'],
+        ['🏆 Oylik reyting'],
+        ['📢 Xabar tarqatish']
+      ];
+    } else {
+      kb = [
+        ['📅 Mening davomatim', '📅 Dars jadvali'],
+        ['🏆 Oylik reyting']
+      ];
     }
 
     ctx.reply(
-      `Xush kelibsiz, ${user.full_name}!\n\nSiz tizimga muvaffaqiyatli kirdingiz. Endi davomat va dars jadvalini ko'rishingiz mumkin.`,
+      `Xush kelibsiz, ${user.full_name}!\n\nSiz tizimga muvaffaqiyatli kirdingiz.`,
       Markup.keyboard(kb).resize()
     );
 
@@ -78,20 +89,44 @@ bot.hears('📢 Xabar tarqatish', async (ctx) => {
 });
 
 bot.hears('❌ Bekor qilish', async (ctx) => {
-  if (ctx.session) ctx.session.awaitingBroadcast = false;
+  if (ctx.session) {
+    ctx.session.awaitingBroadcast = false;
+    ctx.session.awaitingAdhocTitle = null;
+  }
   const tgId = ctx.from.id.toString();
   const { data: user } = await supabase.from('users').select('full_name, role').eq('telegram_id', tgId).single();
   
-  let kb = [
-    ['📅 Mening davomatim', '📅 Dars jadvali'],
-    ['🏆 Oylik reyting']
-  ];
-  if (user && user.role === 'admin') kb.push(['📢 Xabar tarqatish']);
+  let kb = [];
+  if (user && user.role === 'teacher') {
+    kb = [
+      ['📅 Mening darslarim', '📋 Guruhlarim ro\'yxati'],
+      ['📊 Davomat hisobotlari']
+    ];
+  } else if (user && (user.role === 'admin' || user.role === 'tutor')) {
+    kb = [
+      ['📅 Mening davomatim', '📅 Dars jadvali'],
+      ['🏆 Oylik reyting'],
+      ['📢 Xabar tarqatish']
+    ];
+  } else {
+    kb = [
+      ['📅 Mening davomatim', '📅 Dars jadvali'],
+      ['🏆 Oylik reyting']
+    ];
+  }
   
-  ctx.reply("Xabar yuborish bekor qilindi.", Markup.keyboard(kb).resize());
+  ctx.reply("Bekor qilindi.", Markup.keyboard(kb).resize());
 });
 
 bot.on('message', async (ctx, next) => {
+  if (ctx.session && ctx.session.awaitingAdhocTitle) {
+    const title = ctx.message.text;
+    const { groupId } = ctx.session.awaitingAdhocTitle;
+    ctx.session.awaitingAdhocTitle = null;
+    await startAdhocLesson(ctx, groupId, title);
+    return;
+  }
+
   if (ctx.session && ctx.session.awaitingBroadcast) {
     ctx.session.awaitingBroadcast = false;
     
@@ -110,11 +145,24 @@ bot.on('message', async (ctx, next) => {
     
     const tgId = ctx.from.id.toString();
     const { data: user } = await supabase.from('users').select('full_name, role').eq('telegram_id', tgId).single();
-    let kb = [
-      ['📅 Mening davomatim', '📅 Dars jadvali'],
-      ['🏆 Oylik reyting']
-    ];
-    if (user && user.role === 'admin') kb.push(['📢 Xabar tarqatish']);
+    let kb = [];
+    if (user && user.role === 'teacher') {
+      kb = [
+        ['📅 Mening darslarim', '📋 Guruhlarim ro\'yxati'],
+        ['📊 Davomat hisobotlari']
+      ];
+    } else if (user && (user.role === 'admin' || user.role === 'tutor')) {
+      kb = [
+        ['📅 Mening davomatim', '📅 Dars jadvali'],
+        ['🏆 Oylik reyting'],
+        ['📢 Xabar tarqatish']
+      ];
+    } else {
+      kb = [
+        ['📅 Mening davomatim', '📅 Dars jadvali'],
+        ['🏆 Oylik reyting']
+      ];
+    }
     
     return ctx.reply(`Xabar ${count} ta foydalanuvchiga muvaffaqiyatli yuborildi!`, Markup.keyboard(kb).resize());
   }
@@ -486,6 +534,492 @@ cron.schedule('0 15 * * *', async () => {
         }
       }
     }
+  }
+}, {
+  timezone: "Asia/Tashkent"
+});
+
+// --- O'qituvchi funksiyalari (Telegram Bot) ---
+
+bot.hears('📅 Mening darslarim', async (ctx) => {
+  try {
+    const tgId = ctx.from.id.toString();
+    const { data: user } = await supabase.from('users').select('id, role').eq('telegram_id', tgId).single();
+    if (!user || user.role !== 'teacher') return ctx.reply("Siz o'qituvchi roliga ega emassiz.");
+
+    const tzDate = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Tashkent"}));
+    let dayOfWeek = tzDate.getDay();
+    if (dayOfWeek === 0) dayOfWeek = 7;
+    const todayStr = tzDate.toISOString().split('T')[0];
+
+    const { data: groups } = await supabase.from('groups').select('id, name').eq('teacher_id', user.id);
+    if (!groups || groups.length === 0) return ctx.reply("Sizga biriktirilgan guruhlar topilmadi.");
+
+    const groupIds = groups.map(g => g.id);
+
+    const { data: schedules } = await supabase
+      .from('schedules')
+      .select('*, groups(id, name, course_name)')
+      .in('group_id', groupIds)
+      .eq('day_of_week', dayOfWeek)
+      .order('start_time', { ascending: true });
+
+    if (!schedules || schedules.length === 0) {
+      return ctx.reply("Bugun guruhlaringizda darslar rejalashtirilmagan.");
+    }
+
+    ctx.session.todaySchedules = schedules;
+
+    const buttons = schedules.map((s, idx) => [
+      Markup.button.callback(
+        `🏫 ${s.groups.name} (${s.start_time.substring(0, 5)}-${s.end_time.substring(0, 5)})`, 
+        `start_lesson_sch:${idx}`
+      )
+    ]);
+
+    ctx.reply("Bugungi darslaringiz. Davomatni boshlash uchun darsni tanlang:", Markup.inlineKeyboard(buttons));
+  } catch (e) {
+    console.error(e);
+    ctx.reply("Xatolik yuz berdi.");
+  }
+});
+
+bot.action(/start_lesson_sch:(\d+)/, async (ctx) => {
+  try {
+    const idx = parseInt(ctx.match[1], 10);
+    const schedules = ctx.session.todaySchedules;
+    if (!schedules || !schedules[idx]) {
+      return ctx.answerCbQuery("Dars ma'lumotlari topilmadi, iltimos qaytadan darslar ro'yxatini oching.");
+    }
+
+    const sch = schedules[idx];
+    const title = `${sch.groups.course_name || sch.groups.name} (${sch.start_time.substring(0, 5)} - ${sch.end_time.substring(0, 5)})`;
+    
+    const lessonIdResponse = await supabase.rpc('get_or_create_today_lesson', {
+      p_group_id: sch.group_id,
+      p_lesson_title: title,
+      p_schedule_id: sch.id
+    });
+    
+    const lessonId = lessonIdResponse.toString();
+
+    await startAttendanceWizard(ctx, sch.group_id, lessonId, title);
+    await ctx.answerCbQuery();
+  } catch (err) {
+    console.error(err);
+    ctx.reply("Xatolik yuz berdi: " + err.message);
+  }
+});
+
+bot.hears('📋 Guruhlarim ro\'yxati', async (ctx) => {
+  try {
+    const tgId = ctx.from.id.toString();
+    const { data: user } = await supabase.from('users').select('id, role').eq('telegram_id', tgId).single();
+    if (!user || user.role !== 'teacher') return ctx.reply("Siz o'qituvchi roliga ega emassiz.");
+
+    const { data: groups } = await supabase.from('groups').select('id, name, course_name').eq('teacher_id', user.id);
+    if (!groups || groups.length === 0) return ctx.reply("Sizga biriktirilgan guruhlar topilmadi.");
+
+    ctx.session.myGroups = groups;
+
+    const buttons = groups.map((g, idx) => [
+      Markup.button.callback(`🏫 ${g.name}`, `select_group_adhoc:${idx}`)
+    ]);
+
+    ctx.reply("Guruhlaringiz ro'yxati. Qo'shimcha dars boshlash uchun guruhni tanlang:", Markup.inlineKeyboard(buttons));
+  } catch (e) {
+    console.error(e);
+    ctx.reply("Xatolik yuz berdi.");
+  }
+});
+
+bot.action(/select_group_adhoc:(\d+)/, async (ctx) => {
+  try {
+    const idx = parseInt(ctx.match[1], 10);
+    const groups = ctx.session.myGroups;
+    if (!groups || !groups[idx]) {
+      return ctx.answerCbQuery("Guruh topilmadi.");
+    }
+
+    const group = groups[idx];
+    ctx.session.awaitingAdhocTitle = { groupId: group.id };
+
+    await ctx.reply(`Siz <b>${group.name}</b> guruhini tanladingiz.\n\nIltimos, dars mavzusini kiriting (masalan: Rangtasvir asoslari):`, { parse_mode: 'HTML' });
+    await ctx.answerCbQuery();
+  } catch (err) {
+    console.error(err);
+    ctx.reply("Xatolik: " + err.message);
+  }
+});
+
+bot.hears('📊 Davomat hisobotlari', async (ctx) => {
+  try {
+    const tgId = ctx.from.id.toString();
+    const { data: user } = await supabase.from('users').select('id, role').eq('telegram_id', tgId).single();
+    if (!user || user.role !== 'teacher') return ctx.reply("Siz o'qituvchi roliga ega emassiz.");
+
+    const { data: groups } = await supabase.from('groups').select('id, name').eq('teacher_id', user.id);
+    if (!groups || groups.length === 0) return ctx.reply("Sizga biriktirilgan guruhlar topilmadi.");
+
+    const groupStats = [];
+    for (const g of groups) {
+       const { data: students } = await supabase.from('students').select('id').eq('group_id', g.id);
+       const studentIds = students.map(s => s.id);
+       if (studentIds.length === 0) {
+          groupStats.push(`🏫 <b>${g.name}</b>: O'quvchilar yo'q`);
+          continue;
+       }
+       
+       const { data: atts } = await supabase
+         .from('attendance')
+         .select('status')
+         .in('student_id', studentIds);
+         
+       let total = atts ? atts.length : 0;
+       let present = atts ? atts.filter(a => a.status === 'present' || a.status === 'late').length : 0;
+       let pct = total > 0 ? Math.round((present / total) * 100) : 100;
+       groupStats.push(`🏫 <b>${g.name}</b>: <b>${pct}%</b> davomat (${present}/${total})`);
+    }
+    ctx.replyWithHTML(`📊 <b>Guruhlaringiz davomat foizlari:</b>\n\n` + groupStats.join('\n'));
+  } catch (e) {
+    console.error(e);
+    ctx.reply("Xatolik yuz berdi.");
+  }
+});
+
+bot.action(/wiz_status:(.+)/, async (ctx) => {
+  try {
+    const status = ctx.match[1];
+    const wizard = ctx.session.attendanceWizard;
+    if (!wizard) return ctx.answerCbQuery("Davomat sessiyasi faol emas.");
+
+    const student = wizard.students[wizard.currentIndex];
+
+    if (status === 'late') {
+      const kb = Markup.inlineKeyboard([
+        [Markup.button.callback("1 soat", "wiz_late:1"), Markup.button.callback("2 soat", "wiz_late:2")],
+        [Markup.button.callback("3 soat", "wiz_late:3"), Markup.button.callback("4 soat", "wiz_late:4")],
+        [Markup.button.callback("5 soat", "wiz_late:5"), Markup.button.callback("6 soat", "wiz_late:6")],
+        [Markup.button.callback("❌ Bekor qilish", "wiz_cancel")]
+      ]);
+      await ctx.editMessageText(`👤 <b>${student.name}</b> necha soatga kechikdi?`, { parse_mode: 'HTML', ...kb });
+    } else {
+      wizard.attendance[student.id] = { status, late_hours: 0 };
+      wizard.currentIndex++;
+      
+      if (wizard.currentIndex < wizard.students.length) {
+        await sendWizardQuestion(ctx, true);
+      } else {
+        await saveAttendance(ctx);
+      }
+    }
+    await ctx.answerCbQuery();
+  } catch (err) {
+    console.error(err);
+  }
+});
+
+bot.action(/wiz_late:(\d+)/, async (ctx) => {
+  try {
+    const hours = parseInt(ctx.match[1], 10);
+    const wizard = ctx.session.attendanceWizard;
+    if (!wizard) return ctx.answerCbQuery("Davomat sessiyasi faol emas.");
+
+    const student = wizard.students[wizard.currentIndex];
+    wizard.attendance[student.id] = { status: 'late', late_hours: hours };
+    wizard.currentIndex++;
+
+    if (wizard.currentIndex < wizard.students.length) {
+      await sendWizardQuestion(ctx, true);
+    } else {
+      await saveAttendance(ctx);
+    }
+    await ctx.answerCbQuery();
+  } catch (err) {
+    console.error(err);
+  }
+});
+
+bot.action('wiz_cancel', async (ctx) => {
+  try {
+    ctx.session.attendanceWizard = null;
+    await ctx.editMessageText("❌ Davomat bekor qilindi. Kiritilgan ma'lumotlar saqlanmadi.");
+    await ctx.answerCbQuery();
+  } catch(e) {
+    console.error(e);
+  }
+});
+
+bot.action(/wiz_start:(.+)/, async (ctx) => {
+  try {
+    const scheduleId = ctx.match[1];
+    
+    const { data: sch, error } = await supabase
+      .from('schedules')
+      .select('*, groups(id, name, course_name)')
+      .eq('id', scheduleId)
+      .single();
+
+    if (error || !sch) {
+      return ctx.answerCbQuery("Dars jadvali topilmadi.");
+    }
+
+    const title = `${sch.groups.course_name || sch.groups.name} (${sch.start_time.substring(0, 5)} - ${sch.end_time.substring(0, 5)})`;
+    
+    const lessonIdResponse = await supabase.rpc('get_or_create_today_lesson', {
+      p_group_id: sch.group_id,
+      p_lesson_title: title,
+      p_schedule_id: sch.id
+    });
+    
+    const lessonId = lessonIdResponse.toString();
+
+    await startAttendanceWizard(ctx, sch.group_id, lessonId, title);
+    await ctx.answerCbQuery();
+  } catch (err) {
+    console.error(err);
+    ctx.reply("Xatolik yuz berdi: " + err.message);
+  }
+});
+
+async function startAttendanceWizard(ctx, groupId, lessonId, title) {
+  const { data: students, error } = await supabase
+    .from('students')
+    .select('id, users(full_name)')
+    .eq('group_id', groupId)
+    .eq('status', 'active');
+
+  if (error || !students || students.length === 0) {
+    return ctx.reply("Ushbu guruhda faol talabalar topilmadi.");
+  }
+
+  ctx.session.attendanceWizard = {
+    lessonId,
+    students: students.map(s => ({ id: s.id, name: s.users.full_name })),
+    currentIndex: 0,
+    attendance: {}
+  };
+
+  await sendWizardQuestion(ctx, false);
+}
+
+async function sendWizardQuestion(ctx, editExisting = false) {
+  const wizard = ctx.session.attendanceWizard;
+  if (!wizard) return;
+  const student = wizard.students[wizard.currentIndex];
+  const progress = `${wizard.currentIndex + 1}/${wizard.students.length}`;
+  const text = `<b>[${progress}]</b> 👤 <b>${student.name}</b> darsdami?`;
+  const keyboard = Markup.inlineKeyboard([
+    [Markup.button.callback("🟢 Bor (Kelgan)", "wiz_status:present"), Markup.button.callback("🔵 Sababli", "wiz_status:excused")],
+    [Markup.button.callback("🔴 Yo'q (Sababsiz)", "wiz_status:unexcused"), Markup.button.callback("🟡 Kechikdi", "wiz_status:late")],
+    [Markup.button.callback("❌ Bekor qilish", "wiz_cancel")]
+  ]);
+
+  if (editExisting) {
+    try {
+      await ctx.editMessageText(text, { parse_mode: 'HTML', ...keyboard });
+    } catch (e) {
+      await ctx.replyWithHTML(text, keyboard);
+    }
+  } else {
+    await ctx.replyWithHTML(text, keyboard);
+  }
+}
+
+async function saveAttendance(ctx) {
+  const wizard = ctx.session.attendanceWizard;
+  if (!wizard) return;
+  
+  const tgId = ctx.from.id.toString();
+  const { data: user } = await supabase.from('users').select('id').eq('telegram_id', tgId).single();
+  
+  const insertRows = wizard.students.map(s => {
+    const att = wizard.attendance[s.id] || { status: 'present', late_hours: 0 };
+    return {
+      lesson_id: wizard.lessonId,
+      student_id: s.id,
+      status: att.status,
+      late_hours: att.late_hours,
+      marked_by: user ? user.id : null
+    };
+  });
+  
+  const { error } = await supabase.from('attendance').insert(insertRows);
+  
+  if (error) {
+    await ctx.reply(`Davomatni saqlashda xatolik yuz berdi: ${error.message}`);
+  } else {
+    const msg = `✅ <b>Davomat muvaffaqiyatli saqlandi!</b>\n\nBarcha o'quvchilar belgilandi.`;
+    try {
+      await ctx.editMessageText(msg, { parse_mode: 'HTML' });
+    } catch(e) {
+      await ctx.replyWithHTML(msg);
+    }
+  }
+  
+  ctx.session.attendanceWizard = null;
+}
+
+async function startAdhocLesson(ctx, groupId, title) {
+  try {
+    const lessonIdResponse = await supabase.rpc('get_or_create_today_lesson', {
+      p_group_id: groupId,
+      p_lesson_title: title,
+      p_schedule_id: null
+    });
+    
+    const lessonId = lessonIdResponse.toString();
+    await startAttendanceWizard(ctx, groupId, lessonId, title);
+  } catch (err) {
+    console.error(err);
+    ctx.reply("Xatolik: " + err.message);
+  }
+}
+
+// Helper to convert time "HH:MM:SS" to minutes
+function timeToMinutes(tStr) {
+  const parts = tStr.split(':');
+  return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+}
+
+// 1. Dars boshlanishi haqida eslatma (har 5 daqiqada ishlaydi)
+cron.schedule('*/5 * * * *', async () => {
+  try {
+    const now = new Date();
+    const tzDate = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Tashkent"}));
+    let dayOfWeek = tzDate.getDay();
+    if (dayOfWeek === 0) dayOfWeek = 7;
+    
+    if (dayOfWeek === 7) return; // Sunday no lessons
+    
+    const todayStr = tzDate.toISOString().split('T')[0];
+    const curMinutes = tzDate.getHours() * 60 + tzDate.getMinutes();
+
+    const { data: schedules } = await supabase
+      .from('schedules')
+      .select('*, groups(name, teacher_id, users!groups_teacher_id_fkey(telegram_id, full_name))')
+      .eq('day_of_week', dayOfWeek);
+      
+    if (schedules) {
+      for (const s of schedules) {
+        const schMinutes = timeToMinutes(s.start_time);
+        const diff = curMinutes - schMinutes;
+        
+        // Agar dars boshlanganiga 15-25 daqiqa bo'lgan bo'lsa
+        if (diff >= 15 && diff <= 25) {
+          const { data: existing } = await supabase
+            .from('lessons')
+            .select('id')
+            .eq('lesson_date', todayStr)
+            .eq('schedule_id', s.id)
+            .maybeSingle();
+            
+          if (!existing) {
+            const teacher = s.groups?.users;
+            if (teacher && teacher.telegram_id) {
+              const text = `🔔 <b>Eslatma:</b> Hurmatli ${teacher.full_name}, sizning <b>${s.groups.name}</b> guruhingizda soat <b>${s.start_time.substring(0, 5)}</b> da dars boshlandi. Iltimos, dars davomatini belgilang.`;
+              const kb = Markup.inlineKeyboard([
+                [Markup.button.callback("🟢 Davomat belgilash", `wiz_start:${s.id}`)]
+              ]);
+              await bot.telegram.sendMessage(teacher.telegram_id, text, { parse_mode: 'HTML', ...kb }).catch(console.error);
+            }
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Error in start lesson reminder cron:', err);
+  }
+}, {
+  timezone: "Asia/Tashkent"
+});
+
+// 2. Davomat topshirmaganlik uchun ogohlantirishlar (12, 24, 36 soat) (har 30 daqiqada ishlaydi)
+cron.schedule('*/30 * * * *', async () => {
+  try {
+    const now = new Date();
+    const tzDate = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Tashkent"}));
+    
+    const todayStr = tzDate.toISOString().split('T')[0];
+    let todayDay = tzDate.getDay();
+    if (todayDay === 0) todayDay = 7;
+    
+    const yesterday = new Date(tzDate);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    let yesterdayDay = yesterday.getDay();
+    if (yesterdayDay === 0) yesterdayDay = 7;
+
+    const checkDays = [
+      { dateStr: todayStr, day: todayDay },
+      { dateStr: yesterdayStr, day: yesterdayDay }
+    ];
+
+    for (const d of checkDays) {
+      if (d.day === 7) continue;
+
+      const { data: schedules } = await supabase
+        .from('schedules')
+        .select('*, groups(id, name, teacher_id, tutor_id, users!groups_teacher_id_fkey(telegram_id, full_name))')
+        .eq('day_of_week', d.day);
+
+      if (!schedules) continue;
+
+      for (const s of schedules) {
+        const { data: lesson } = await supabase
+          .from('lessons')
+          .select('id')
+          .eq('lesson_date', d.dateStr)
+          .eq('schedule_id', s.id)
+          .maybeSingle();
+
+        if (lesson) continue;
+
+        const startParts = s.start_time.split(':');
+        const startHour = parseInt(startParts[0], 10);
+        const startMin = parseInt(startParts[1], 10);
+
+        const startDateTime = new Date(`${d.dateStr}T${startHour.toString().padStart(2, '0')}:${startMin.toString().padStart(2, '0')}:00+05:00`);
+        const diffMs = tzDate - startDateTime;
+        const diffHours = diffMs / (1000 * 60 * 60);
+
+        const teacher = s.groups?.users;
+        if (!teacher || !teacher.telegram_id) continue;
+
+        if (diffHours >= 12 && diffHours < 12.5) {
+          const text = `⚠️ <b>DIQQAT:</b> Hurmatli ${teacher.full_name}, sizning <b>${s.groups.name}</b> guruhingizda soat <b>${s.start_time.substring(0, 5)}</b> dagi dars uchun davomat belgilanmaganiga <b>12 soat</b> bo'ldi. Iltimos, davomatni oling.`;
+          const kb = Markup.inlineKeyboard([[Markup.button.callback("🟢 Davomat belgilash", `wiz_start:${s.id}`)]]);
+          await bot.telegram.sendMessage(teacher.telegram_id, text, { parse_mode: 'HTML', ...kb }).catch(console.error);
+        }
+        else if (diffHours >= 24 && diffHours < 24.5) {
+          const text = `🚨 <b>QAT'IY OGOHLANTIRISH:</b> Hurmatli ${teacher.full_name}, sizning <b>${s.groups.name}</b> guruhingizda soat <b>${s.start_time.substring(0, 5)}</b> dagi dars uchun davomat belgilanmaganiga <b>24 soat</b> bo'ldi. Iltimos, davomatni belgilang!`;
+          const kb = Markup.inlineKeyboard([[Markup.button.callback("🟢 Davomat belgilash", `wiz_start:${s.id}`)]]);
+          await bot.telegram.sendMessage(teacher.telegram_id, text, { parse_mode: 'HTML', ...kb }).catch(console.error);
+        }
+        else if (diffHours >= 36 && diffHours < 36.5) {
+          const textTeacher = `❌ <b>MUDDAT O'TDI:</b> Hurmatli ${teacher.full_name}, sizning <b>${s.groups.name}</b> guruhingizda soat <b>${s.start_time.substring(0, 5)}</b> dagi dars uchun davomat belgilanmaganiga <b>36 soat</b> bo'ldi. Ushbu qoidabuzarlik haqida rahbariyatga xabar yuborildi.`;
+          await bot.telegram.sendMessage(teacher.telegram_id, textTeacher, { parse_mode: 'HTML' }).catch(console.error);
+
+          const textAdmin = `📢 <b>Tizim ogohlantirishi:</b> O'qituvchi ${teacher.full_name} <b>${s.groups.name}</b> guruhida soat <b>${s.start_time.substring(0, 5)}</b> dagi dars uchun davomatni <b>36 soat</b> ichida topshirmadi.`;
+
+          if (s.groups.tutor_id) {
+            const { data: tutor } = await supabase.from('users').select('telegram_id').eq('id', s.groups.tutor_id).single();
+            if (tutor && tutor.telegram_id) {
+              await bot.telegram.sendMessage(tutor.telegram_id, textAdmin, { parse_mode: 'HTML' }).catch(console.error);
+            }
+          }
+
+          const { data: admins } = await supabase.from('users').select('telegram_id').eq('role', 'admin').not('telegram_id', 'is', null);
+          if (admins) {
+            for (const a of admins) {
+              await bot.telegram.sendMessage(a.telegram_id, textAdmin, { parse_mode: 'HTML' }).catch(console.error);
+            }
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Error in teacher warning cron job:', err);
   }
 }, {
   timezone: "Asia/Tashkent"

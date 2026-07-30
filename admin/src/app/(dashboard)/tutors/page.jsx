@@ -12,6 +12,7 @@ export default function TutorsPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingTutor, setEditingTutor] = useState(null);
   const [organizationId, setOrganizationId] = useState(null);
+  const [userRole, setUserRole] = useState(null);
 
   useEffect(() => {
     fetchTutors();
@@ -22,8 +23,11 @@ export default function TutorsPage() {
       setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data: userData } = await supabase.from('users').select('organization_id').eq('id', user.id).single();
-        if (userData) setOrganizationId(userData.organization_id);
+        const { data: userData } = await supabase.from('users').select('organization_id, role').eq('id', user.id).single();
+        if (userData) {
+          setOrganizationId(userData.organization_id);
+          setUserRole(userData.role);
+        }
       }
       
       // Fetch tutors and their assigned groups
@@ -75,6 +79,10 @@ export default function TutorsPage() {
     t.phone?.includes(search)
   );
 
+  if (userRole === 'academic') {
+    return <div style={{ padding: '2rem', textAlign: 'center' }}>Sizda ushbu sahifaga kirish huquqi yo'q.</div>;
+  }
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -88,9 +96,11 @@ export default function TutorsPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <button className="btn btn-primary" onClick={() => { setEditingTutor(null); setShowModal(true); }}>
-          <Plus size={18} /> Yangi Qo'shish
-        </button>
+        {(userRole === 'sysadmin' || userRole === 'admin') && (
+          <button className="btn btn-primary" onClick={() => { setEditingTutor(null); setShowModal(true); }}>
+            <Plus size={18} /> Yangi Qo'shish
+          </button>
+        )}
       </div>
 
       <div className={`card ${styles.tableCard}`}>
@@ -105,9 +115,9 @@ export default function TutorsPage() {
                   <th>F.I.Sh</th>
                   <th>Guruhlari</th>
                   <th>Telefon</th>
-                  <th>Login</th>
+                   <th>Login</th>
                   <th>Qo'shilgan sana</th>
-                  <th>Amallar</th>
+                  {(userRole === 'sysadmin' || userRole === 'admin') && <th>Amallar</th>}
                 </tr>
               </thead>
               <tbody>
@@ -128,16 +138,18 @@ export default function TutorsPage() {
                       <td>{tutor.phone || '-'}</td>
                       <td>{tutor.email || '-'}</td>
                       <td>{new Date(tutor.created_at).toLocaleDateString('uz-UZ')}</td>
-                      <td>
-                        <div className={styles.actions}>
-                          <button className={styles.actionBtn} onClick={() => { setEditingTutor(tutor); setShowModal(true); }}>
-                            <Edit2 size={16} />
-                          </button>
-                          <button className={`${styles.actionBtn} ${styles.danger}`} onClick={() => handleDelete(tutor.id)}>
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
+                       {(userRole === 'sysadmin' || userRole === 'admin') && (
+                        <td>
+                          <div className={styles.actions}>
+                            <button className={styles.actionBtn} onClick={() => { setEditingTutor(tutor); setShowModal(true); }}>
+                              <Edit2 size={16} />
+                            </button>
+                            <button className={`${styles.actionBtn} ${styles.danger}`} onClick={() => handleDelete(tutor.id)}>
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   ))
                 )}

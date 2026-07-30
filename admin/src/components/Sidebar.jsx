@@ -1,7 +1,9 @@
 'use client';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { useUserRole } from '@/lib/useUserRole';
 import { 
   LayoutDashboard, 
   GraduationCap, 
@@ -33,14 +35,65 @@ const bottomItems = [
   { name: 'Profil', path: '/profile', icon: User },
 ];
 
+const ROLE_LABELS = {
+  sysadmin: 'SYSADMIN',
+  admin: 'Admin',
+  director: 'Direktor',
+  academic: 'O\'quv Admini',
+  teacher: 'O\'qituvchi',
+  student: 'Tinglovchi'
+};
+
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const { role, loading, user } = useUserRole();
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    if (user && user.id !== 'demo') {
+      supabase
+        .from('users')
+        .select('full_name')
+        .eq('id', user.id)
+        .single()
+        .then(({ data }) => {
+          if (data) setProfile(data);
+        });
+    } else if (user && user.id === 'demo') {
+      setProfile({ full_name: 'Demo Admin' });
+    }
+  }, [user]);
 
   const handleLogout = () => {
     if (typeof window !== 'undefined') localStorage.removeItem('demo_login');
-    router.push('/login');
+    supabase.auth.signOut().then(() => {
+      router.push('/login');
+    });
   };
+
+  const filteredMenuItems = menuItems.filter(item => {
+    if (loading || !role) return false;
+    if (role === 'director') {
+      return ['/dashboard', '/students', '/tutors', '/groups', '/attendance', '/reports'].includes(item.path);
+    }
+    if (role === 'academic') {
+      return ['/dashboard', '/students', '/groups', '/schedules', '/lessons', '/attendance', '/reports'].includes(item.path);
+    }
+    return true; // sysadmin and admin can see all
+  });
+
+  const filteredBottomItems = bottomItems.filter(item => {
+    if (loading || !role) return false;
+    if (item.path === '/settings') {
+      return role === 'sysadmin'; // Only sysadmin sees settings
+    }
+    return true; // Everyone sees profile
+  });
+
+  const displayName = profile?.full_name || 'Yuklanmoqda...';
+  const displayRole = ROLE_LABELS[role] || 'Boshqaruvchi';
+  const avatarLetter = displayName.charAt(0).toUpperCase();
 
   return (
     <aside className={styles.sidebar}>
@@ -53,7 +106,7 @@ export default function Sidebar() {
         <nav className={styles.nav}>
           <div className={styles.navGroup}>
             <span className={styles.navLabel}>ASOSIY</span>
-            {menuItems.map((item) => {
+            {!loading && filteredMenuItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.path || pathname.startsWith(`${item.path}/`);
               
@@ -72,7 +125,7 @@ export default function Sidebar() {
 
           <div className={styles.navGroup}>
             <span className={styles.navLabel}>TIZIM</span>
-            {bottomItems.map((item) => {
+            {!loading && filteredBottomItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.path;
               
@@ -93,10 +146,10 @@ export default function Sidebar() {
 
       <div className={styles.footer}>
         <div className={styles.userInfo}>
-          <div className={styles.avatar}>A</div>
+          <div className={styles.avatar}>{avatarLetter}</div>
           <div className={styles.userDetails}>
-            <span className={styles.userName}>Admin</span>
-            <span className={styles.userRole}>Boshqaruvchi</span>
+            <span className={styles.userName} title={displayName}>{displayName}</span>
+            <span className={styles.userRole}>{displayRole}</span>
           </div>
         </div>
         <button className={styles.logoutBtn} title="Tizimdan chiqish" onClick={handleLogout}>

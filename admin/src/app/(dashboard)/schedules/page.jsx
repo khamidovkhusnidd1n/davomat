@@ -25,6 +25,7 @@ export default function SchedulesPage() {
   const [showModal, setShowModal] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState(null);
+  const [userRole, setUserRole] = useState(null);
   
   // Fake organizationId hozircha
   const organizationId = '11111111-1111-1111-1111-111111111111';
@@ -36,6 +37,13 @@ export default function SchedulesPage() {
   async function fetchData() {
     try {
       setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: userData } = await supabase.from('users').select('role').eq('id', user.id).single();
+        if (userData) {
+          setUserRole(userData.role);
+        }
+      }
       
       const [schedulesRes, groupsRes] = await Promise.all([
         supabase
@@ -79,6 +87,12 @@ export default function SchedulesPage() {
     s.groups?.course_name?.toLowerCase().includes(search.toLowerCase())
   );
 
+  if (userRole === 'director') {
+    return <div style={{ padding: '2rem', textAlign: 'center' }}>Sizda ushbu sahifaga kirish huquqi yo'q.</div>;
+  }
+
+  const isWriteEnabled = userRole === 'sysadmin' || userRole === 'admin' || userRole === 'academic';
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -92,14 +106,16 @@ export default function SchedulesPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button className="btn btn-secondary" onClick={() => setShowImport(true)}>
-            <FileSpreadsheet size={18} /> Excel Import
-          </button>
-          <button className="btn btn-primary" onClick={() => { setEditingSchedule(null); setShowModal(true); }}>
-            <Plus size={18} /> Yangi Dars Vaqti
-          </button>
-        </div>
+        {isWriteEnabled && (
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button className="btn btn-secondary" onClick={() => setShowImport(true)}>
+              <FileSpreadsheet size={18} /> Excel Import
+            </button>
+            <button className="btn btn-primary" onClick={() => { setEditingSchedule(null); setShowModal(true); }}>
+              <Plus size={18} /> Yangi Dars Vaqti
+            </button>
+          </div>
+        )}
       </div>
 
       <div className={`card ${styles.tableCard}`}>
@@ -114,7 +130,7 @@ export default function SchedulesPage() {
                   <th>Hafta Kuni</th>
                   <th>Boshlanish Vaqti</th>
                   <th>Tugash Vaqti</th>
-                  <th>Amallar</th>
+                  {isWriteEnabled && <th>Amallar</th>}
                 </tr>
               </thead>
               <tbody>
@@ -146,16 +162,18 @@ export default function SchedulesPage() {
                             {end}
                           </div>
                         </td>
-                        <td>
-                          <div className={styles.actions}>
-                            <button className={styles.actionBtn} onClick={() => { setEditingSchedule(schedule); setShowModal(true); }}>
-                              <Edit2 size={16} />
-                            </button>
-                            <button className={`${styles.actionBtn} ${styles.danger}`} onClick={() => handleDelete(schedule.id)}>
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        </td>
+                         {isWriteEnabled && (
+                          <td>
+                            <div className={styles.actions}>
+                              <button className={styles.actionBtn} onClick={() => { setEditingSchedule(schedule); setShowModal(true); }}>
+                                <Edit2 size={16} />
+                              </button>
+                              <button className={`${styles.actionBtn} ${styles.danger}`} onClick={() => handleDelete(schedule.id)}>
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        )}
                       </tr>
                     );
                   })

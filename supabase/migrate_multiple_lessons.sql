@@ -1,5 +1,6 @@
--- 1) schedules jadvalidagi cheklovni olib tashlash va start_time bilan yangi unikal cheklov qo'shish
+-- 1) schedules jadvalidagi cheklovlarni boshqarish
 ALTER TABLE public.schedules DROP CONSTRAINT IF EXISTS schedules_group_day_unique;
+ALTER TABLE public.schedules DROP CONSTRAINT IF EXISTS schedules_group_day_time_unique;
 ALTER TABLE public.schedules ADD CONSTRAINT schedules_group_day_time_unique UNIQUE (group_id, day_of_week, start_time);
 
 -- 2) lessons jadvaliga schedule_id ustunini qo'shish
@@ -9,6 +10,7 @@ ALTER TABLE public.lessons ADD COLUMN IF NOT EXISTS schedule_id UUID REFERENCES 
 ALTER TABLE public.lessons DROP CONSTRAINT IF EXISTS lessons_group_date_unique;
 
 -- 4) (group_id, lesson_date, schedule_id) uchun unikal cheklov qo'shish
+ALTER TABLE public.lessons DROP CONSTRAINT IF EXISTS lessons_group_date_schedule_unique;
 ALTER TABLE public.lessons ADD CONSTRAINT lessons_group_date_schedule_unique UNIQUE (group_id, lesson_date, schedule_id);
 
 -- 5) schedule_id NULL bo'lgan ad-hoc darslar uchun kuniga faqat 1 taga ruxsat berish cheklovi (Partial Index)

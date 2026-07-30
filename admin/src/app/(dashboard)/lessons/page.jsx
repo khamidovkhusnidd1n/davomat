@@ -5,6 +5,7 @@ import { Search, Calendar, Eye, Plus, X, Edit, Trash } from 'lucide-react';
 import Link from 'next/link';
 import { FileSpreadsheet } from 'lucide-react';
 import ExcelLessonsImport from '@/components/ExcelLessonsImport/ExcelLessonsImport';
+import Modal from '@/components/Modal/Modal';
 import styles from './page.module.css';
 
 export default function LessonsPage() {
@@ -272,129 +273,116 @@ export default function LessonsPage() {
         )}
       </div>
 
-      {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h2>Yangi dars qo'shish</h2>
-              <button className="modal-close" onClick={() => setShowModal(false)}>
-                <X size={24} />
-              </button>
-            </div>
-            
-            <form onSubmit={handleSaveLesson} className="modal-form">
-              <div className="form-group">
-                <label>Guruh</label>
-                <select 
-                  className="input" 
-                  value={formData.group_id}
-                  onChange={(e) => setFormData({...formData, group_id: e.target.value})}
-                  required
-                >
-                  <option value="">Guruhni tanlang</option>
-                  {groups.map(g => (
-                    <option key={g.id} value={g.id}>{g.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>Sana</label>
-                <input 
-                  type="date" 
-                  className="input" 
-                  value={formData.lesson_date}
-                  onChange={(e) => setFormData({...formData, lesson_date: e.target.value})}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Modul/fan mavzusi (masalan: Rangtasvir)</label>
-                <input 
-                  type="text" 
-                  className="input" 
-                  placeholder="Mavzuni kiriting..."
-                  value={formData.title}
-                  onChange={(e) => setFormData({...formData, title: e.target.value})}
-                  required
-                />
-              </div>
-
-              <div className="modal-actions">
-                <button type="button" className="btn btn-outline" onClick={() => setShowModal(false)}>
-                  Bekor qilish
-                </button>
-                <button type="submit" className="btn btn-primary" disabled={saving}>
-                  {saving ? 'Saqlanmoqda...' : 'Saqlash'}
-                </button>
-              </div>
-            </form>
+      <Modal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title="Yangi dars qo'shish"
+      >
+        <form onSubmit={handleSaveLesson}>
+          <div className="form-group">
+            <label>Guruh</label>
+            <select 
+              className="input" 
+              value={formData.group_id}
+              onChange={(e) => setFormData({...formData, group_id: e.target.value})}
+              required
+            >
+              <option value="">Guruhni tanlang</option>
+              {groups.map(g => (
+                <option key={g.id} value={g.id}>{g.name}</option>
+              ))}
+            </select>
           </div>
-        </div>
-      )}
 
-      {showEditModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h2>Darsni tahrirlash</h2>
-              <button className="modal-close" onClick={() => setShowEditModal(false)}>
-                <X size={24} />
-              </button>
-            </div>
-            
-            <form onSubmit={handleUpdateLesson} className="modal-form">
-              <div className="form-group">
-                <label>Guruh</label>
-                <select 
-                  className="input" 
-                  value={editFormData.group_id}
-                  onChange={(e) => setEditFormData({...editFormData, group_id: e.target.value})}
-                  required
-                >
-                  <option value="">Guruhni tanlang</option>
-                  {groups.map(g => (
-                    <option key={g.id} value={g.id}>{g.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>Sana</label>
-                <input 
-                  type="date" 
-                  className="input" 
-                  value={editFormData.lesson_date}
-                  onChange={(e) => setEditFormData({...editFormData, lesson_date: e.target.value})}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Modul/fan mavzusi (masalan: Rangtasvir)</label>
-                <input 
-                  type="text" 
-                  className="input" 
-                  placeholder="Mavzuni kiriting..."
-                  value={editFormData.title}
-                  onChange={(e) => setEditFormData({...editFormData, title: e.target.value})}
-                  required
-                />
-              </div>
-
-              <div className="modal-actions">
-                <button type="button" className="btn btn-outline" onClick={() => setShowEditModal(false)}>
-                  Bekor qilish
-                </button>
-                <button type="submit" className="btn btn-primary" disabled={editing}>
-                  {editing ? 'Saqlanmoqda...' : 'Saqlash'}
-                </button>
-              </div>
-            </form>
+          <div className="form-group">
+            <label>Sana</label>
+            <input 
+              type="date" 
+              className="input" 
+              value={formData.lesson_date}
+              onChange={(e) => setFormData({...formData, lesson_date: e.target.value})}
+              required
+            />
           </div>
-        </div>
-      )}
+
+          <div className="form-group">
+            <label>Modul/fan mavzusi (masalan: Rangtasvir)</label>
+            <input 
+              type="text" 
+              className="input" 
+              placeholder="Mavzuni kiriting..."
+              value={formData.title}
+              onChange={(e) => setFormData({...formData, title: e.target.value})}
+              required
+            />
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
+            <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>
+              Bekor qilish
+            </button>
+            <button type="submit" className="btn btn-primary" disabled={saving}>
+              {saving ? 'Saqlanmoqda...' : 'Saqlash'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        title="Darsni tahrirlash"
+      >
+        <form onSubmit={handleUpdateLesson}>
+          <div className="form-group">
+            <label>Guruh</label>
+            <select 
+              className="input" 
+              value={editFormData.group_id}
+              onChange={(e) => setEditFormData({...editFormData, group_id: e.target.value})}
+              required
+            >
+              <option value="">Guruhni tanlang</option>
+              {groups.map(g => (
+                <option key={g.id} value={g.id}>{g.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Sana</label>
+            <input 
+              type="date" 
+              className="input" 
+              value={editFormData.lesson_date}
+              onChange={(e) => setEditFormData({...editFormData, lesson_date: e.target.value})}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Modul/fan mavzusi (masalan: Rangtasvir)</label>
+            <input 
+              type="text" 
+              className="input" 
+              placeholder="Mavzuni kiriting..."
+              value={editFormData.title}
+              onChange={(e) => setEditFormData({...editFormData, title: e.target.value})}
+              required
+            />
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
+            <button type="button" className="btn btn-secondary" onClick={() => setShowEditModal(false)}>
+              Bekor qilish
+            </button>
+            <button type="submit" className="btn btn-primary" disabled={editing}>
+              {editing ? 'Saqlanmoqda...' : 'Saqlash'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
       <ExcelLessonsImport
         isOpen={showImport}
         onClose={() => setShowImport(false)}

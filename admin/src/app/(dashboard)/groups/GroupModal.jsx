@@ -3,12 +3,13 @@ import Modal from '@/components/Modal/Modal';
 import { supabase } from '@/lib/supabase';
 import styles from '../students/StudentModal.module.css'; // Reusing CSS
 
-export default function GroupModal({ isOpen, onClose, group, tutors, monitors, organizationId, onSuccess }) {
+export default function GroupModal({ isOpen, onClose, group, nazoratchis, monitors, organizationId, onSuccess }) {
   const isEdit = !!group;
   const [formData, setFormData] = useState({
     name: '',
     course_name: '',
-    tutor_id: '',
+    education_type: 'qayta_tayyorlov',
+    nazoratchi_id: '',
     monitor_id: '',
   });
   const [loading, setLoading] = useState(false);
@@ -20,11 +21,12 @@ export default function GroupModal({ isOpen, onClose, group, tutors, monitors, o
           id: group.id,
           name: group.name || '',
           course_name: group.course_name || '',
-          tutor_id: group.tutor_id || '',
+          education_type: group.education_type || 'qayta_tayyorlov',
+          nazoratchi_id: group.nazoratchi_id || '',
           monitor_id: group.monitor_id || '',
         });
       } else {
-        setFormData({ name: '', course_name: '', tutor_id: '', monitor_id: '' });
+        setFormData({ name: '', course_name: '', education_type: 'qayta_tayyorlov', nazoratchi_id: '', monitor_id: '' });
       }
     }
   }, [isOpen, group]);
@@ -37,8 +39,9 @@ export default function GroupModal({ isOpen, onClose, group, tutors, monitors, o
       const payload = {
         name: formData.name,
         course_name: formData.course_name,
-        tutor_id: formData.tutor_id || null, // null is allowed
-        monitor_id: formData.monitor_id || null, // null is allowed
+        education_type: formData.education_type,
+        nazoratchi_id: formData.nazoratchi_id || null,
+        monitor_id: formData.monitor_id || null,
         organization_id: organizationId,
       };
 
@@ -82,6 +85,19 @@ export default function GroupModal({ isOpen, onClose, group, tutors, monitors, o
     >
       <form className={styles.form} onSubmit={handleSubmit}>
         <div className="form-group">
+          <label>Ta'lim turi *</label>
+          <select
+            className="input"
+            value={formData.education_type}
+            onChange={e => setFormData({...formData, education_type: e.target.value})}
+            required
+          >
+            <option value="qayta_tayyorlov">Qayta tayyorlov</option>
+            <option value="malaka_oshirish">Malaka oshirish</option>
+          </select>
+        </div>
+
+        <div className="form-group">
           <label>Guruh nomi *</label>
           <input 
             className="input" 
@@ -103,14 +119,14 @@ export default function GroupModal({ isOpen, onClose, group, tutors, monitors, o
         </div>
 
         <div className="form-group">
-          <label>Tutor (Guruh rahbari)</label>
+          <label>Nazoratchi (Guruh rahbari)</label>
           <select 
             className="input" 
-            value={formData.tutor_id || ''}
-            onChange={e => setFormData({...formData, tutor_id: e.target.value})}
+            value={formData.nazoratchi_id || ''}
+            onChange={e => setFormData({...formData, nazoratchi_id: e.target.value})}
           >
             <option value="">— Biriktirilmagan —</option>
-            {tutors?.map(t => (
+            {nazoratchis?.map(t => (
               <option key={t.id} value={t.id}>{t.full_name}</option>
             ))}
           </select>

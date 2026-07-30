@@ -36,25 +36,26 @@ export default function GroupsPage() {
         }
       }
       
-      const [groupsRes, tutorsRes, monitorsRes] = await Promise.all([
+      const [groupsRes, nazoratchisRes, monitorsRes] = await Promise.all([
         supabase.from('groups').select(`
           id,
           name,
           course_name,
-          tutor_id,
+          education_type,
+          nazoratchi_id,
           monitor_id,
           created_at,
-          tutor:users!groups_tutor_id_fkey(full_name),
+          nazoratchi:users!groups_nazoratchi_id_fkey(full_name),
           monitor:users!groups_monitor_id_fkey(full_name),
           students(count)
         `),
-        supabase.from('users').select('id, full_name').eq('role', 'tutor'),
+        supabase.from('users').select('id, full_name').eq('role', 'nazoratchi'),
         supabase.from('users').select('id, full_name').eq('role', 'monitor')
       ]);
       
       if (groupsRes.error) throw groupsRes.error;
       setGroups(groupsRes.data || []);
-      setTutors(tutorsRes.data || []);
+      setTutors(nazoratchisRes.data || []);
       setMonitors(monitorsRes.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -145,9 +146,10 @@ export default function GroupsPage() {
             <table className={styles.table}>
               <thead>
                 <tr>
+                  <th>Ta'lim turi</th>
                   <th>Guruh Nomi</th>
                   <th>Kurs Nomi</th>
-                  <th>Tutor</th>
+                  <th>Nazoratchi</th>
                   <th>Sinf sardori</th>
                   <th>Tinglovchilar soni</th>
                   <th>Status</th>
@@ -163,9 +165,21 @@ export default function GroupsPage() {
                 ) : (
                   filteredGroups.map((group) => (
                     <tr key={group.id} style={{ opacity: group.status === 'archived' ? 0.6 : 1 }}>
+                      <td>
+                        <span style={{
+                          padding: '2px 8px',
+                          borderRadius: '12px',
+                          fontSize: '0.75rem',
+                          fontWeight: '600',
+                          background: group.education_type === 'malaka_oshirish' ? '#dbeafe' : '#dcfce7',
+                          color: group.education_type === 'malaka_oshirish' ? '#1d4ed8' : '#15803d'
+                        }}>
+                          {group.education_type === 'malaka_oshirish' ? 'Malaka oshirish' : 'Qayta tayyorlov'}
+                        </span>
+                      </td>
                       <td style={{ fontWeight: 'bold' }}>{group.name}</td>
                       <td>{group.course_name}</td>
-                      <td>{group.tutor?.full_name || 'Biriktirilmagan'}</td>
+                      <td>{group.nazoratchi?.full_name || 'Biriktirilmagan'}</td>
                       <td>{group.monitor?.full_name || 'Biriktirilmagan'}</td>
                       <td>
                         <span className={styles.countBadge}>
@@ -216,7 +230,7 @@ export default function GroupsPage() {
         isOpen={showModal}
         onClose={() => setShowModal(false)}
         group={editingGroup}
-        tutors={tutors}
+        nazoratchis={tutors}
         monitors={monitors}
         organizationId={organizationId}
         onSuccess={fetchData}

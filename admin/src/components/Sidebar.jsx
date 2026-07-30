@@ -22,7 +22,7 @@ import styles from './Sidebar.module.css';
 const menuItems = [
   { name: 'Bosh sahifa', path: '/dashboard', icon: LayoutDashboard },
   { name: "O'quvchilar", path: '/students', icon: GraduationCap },
-  { name: "O'qituvchilar", path: '/tutors', icon: Users },
+  { name: "O'qituvchilar", path: '/teachers', icon: Users },
   { name: 'Guruhlar', path: '/groups', icon: BookOpen },
   { name: 'Jadval', path: '/schedules', icon: CalendarDays },
   { name: 'Darslar', path: '/lessons', icon: CalendarClock },
@@ -39,8 +39,9 @@ const ROLE_LABELS = {
   sysadmin: 'SYSADMIN',
   admin: 'Admin',
   director: 'Direktor',
-  academic: 'O\'quv Admini',
-  teacher: 'O\'qituvchi',
+  academic: "O'quv Admini",
+  nazoratchi: 'Nazoratchi',
+  monitor: 'Sinf sardori',
   student: 'Tinglovchi'
 };
 
@@ -75,10 +76,10 @@ export default function Sidebar() {
   const filteredMenuItems = menuItems.filter(item => {
     if (loading || !role) return false;
     if (role === 'director') {
-      return ['/dashboard', '/students', '/tutors', '/groups', '/attendance', '/reports'].includes(item.path);
+      return ['/dashboard', '/students', '/teachers', '/groups', '/attendance', '/reports'].includes(item.path);
     }
     if (role === 'academic') {
-      return ['/dashboard', '/students', '/groups', '/schedules', '/lessons', '/attendance', '/reports'].includes(item.path);
+      return ['/dashboard', '/students', '/teachers', '/groups', '/schedules', '/lessons', '/attendance', '/reports'].includes(item.path);
     }
     return true; // sysadmin and admin can see all
   });

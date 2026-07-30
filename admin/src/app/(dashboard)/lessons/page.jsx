@@ -97,44 +97,6 @@ export default function LessonsPage() {
     l.title?.toLowerCase().includes(search.toLowerCase()) || 
     l.groups?.name?.toLowerCase().includes(search.toLowerCase())
   );
-
-  const getOrCreateScheduleId = async (groupId, dateStr, startTime, endTime) => {
-    const dateObj = new Date(dateStr);
-    let dayOfWeek = dateObj.getDay();
-    if (dayOfWeek === 0) dayOfWeek = 7;
-
-    const start = startTime.length === 5 ? `${startTime}:00` : startTime;
-    const end = endTime.length === 5 ? `${endTime}:00` : endTime;
-
-    const { data: existing } = await supabase
-      .from('schedules')
-      .select('id')
-      .eq('group_id', groupId)
-      .eq('day_of_week', dayOfWeek)
-      .eq('start_time', start)
-      .maybeSingle();
-
-    if (existing) {
-      return existing.id;
-    }
-
-    const { data: inserted, error } = await supabase
-      .from('schedules')
-      .insert({
-        group_id: groupId,
-        day_of_week: dayOfWeek,
-        start_time: start,
-        end_time: end
-      })
-      .select('id')
-      .single();
-
-    if (error) throw error;
-    
-    fetchSchedules();
-    return inserted.id;
-  };
-
   const parseLessonTitle = (rawTitle, scheduleId, schedulesList) => {
     let startTime = '09:00';
     let endTime = '13:00';
@@ -161,19 +123,21 @@ export default function LessonsPage() {
     
     try {
       setSaving(true);
-      const scheduleId = await getOrCreateScheduleId(formData.group_id, formData.lesson_date, formData.start_time, formData.end_time);
-      const finalTitle = `${formData.start_time}-${formData.end_time} | ${formData.title}`;
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
 
-      const { error } = await supabase.from('lessons').insert({
-        group_id: formData.group_id,
-        lesson_date: formData.lesson_date,
-        title: finalTitle,
-        schedule_id: scheduleId,
-        created_by: null
+      const res = await fetch('/api/lessons/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(formData)
       });
-      
-      if (error) throw error;
-      
+
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'Saqlashda xatolik yuz berdi');
+
       setShowModal(false);
       setFormData({
         group_id: '',
@@ -183,6 +147,7 @@ export default function LessonsPage() {
         end_time: '13:00'
       });
       fetchLessons();
+      fetchSchedules();
     } catch (err) {
       console.error(err);
       alert('Xatolik yuz berdi: ' + err.message);
@@ -209,22 +174,24 @@ export default function LessonsPage() {
     if (!editFormData.group_id || !editFormData.lesson_date || !editFormData.title || !editFormData.start_time || !editFormData.end_time) return;
     try {
       setEditing(true);
-      const scheduleId = await getOrCreateScheduleId(editFormData.group_id, editFormData.lesson_date, editFormData.start_time, editFormData.end_time);
-      const finalTitle = `${editFormData.start_time}-${editFormData.end_time} | ${editFormData.title}`;
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
 
-      const { error } = await supabase
-        .from('lessons')
-        .update({
-          group_id: editFormData.group_id,
-          lesson_date: editFormData.lesson_date,
-          title: finalTitle,
-          schedule_id: scheduleId
-        })
-        .eq('id', editFormData.id);
-      
-      if (error) throw error;
+      const res = await fetch('/api/lessons/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(editFormData)
+      });
+
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'Saqlashda xatolik yuz berdi');
+
       setShowEditModal(false);
       fetchLessons();
+      fetchSchedules();
     } catch (err) {
       console.error(err);
       alert('Xatolik yuz berdi: ' + err.message);
@@ -257,6 +224,8 @@ export default function LessonsPage() {
     <div className={styles.container}>
       <div className={styles.header}>
         <h1>Darslar jadvali</h1>
+
+      
         <div className={styles.controls}>
           <Search size={20} className={styles.searchIcon} />
           <input 

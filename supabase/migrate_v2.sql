@@ -51,6 +51,18 @@ DROP POLICY IF EXISTS "write_insert_schedules" ON public.schedules;
 DROP POLICY IF EXISTS "write_update_schedules" ON public.schedules;
 DROP POLICY IF EXISTS "write_delete_schedules" ON public.schedules;
 
+-- subjects polisalari (oldingi yarim run dan qolgan bo'lishi mumkin)
+DROP POLICY IF EXISTS "read_subjects" ON public.subjects;
+DROP POLICY IF EXISTS "write_subjects" ON public.subjects;
+
+-- teachers polisalari
+DROP POLICY IF EXISTS "read_teachers" ON public.teachers;
+DROP POLICY IF EXISTS "write_teachers" ON public.teachers;
+
+-- teacher_subjects polisalari
+DROP POLICY IF EXISTS "read_teacher_subjects" ON public.teacher_subjects;
+DROP POLICY IF EXISTS "write_teacher_subjects" ON public.teacher_subjects;
+
 
 -- ============================================================================
 -- QADAM 2: users.role CHECK — nazoratchi qo'shish

@@ -83,7 +83,7 @@ export default function GroupsPage() {
 
     return g.name?.toLowerCase().includes(search.toLowerCase()) || 
            g.course_name?.toLowerCase().includes(search.toLowerCase()) ||
-           g.tutor?.full_name?.toLowerCase().includes(search.toLowerCase()) ||
+           g.nazoratchi?.full_name?.toLowerCase().includes(search.toLowerCase()) ||
            g.monitor?.full_name?.toLowerCase().includes(search.toLowerCase());
   });
 

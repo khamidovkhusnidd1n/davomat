@@ -22,12 +22,19 @@ export default function LessonsPage() {
   const [editing, setEditing] = useState(false);
   const [userRole, setUserRole] = useState(null);
   const [schedules, setSchedules] = useState([]);
+
+  const [subjects, setSubjects] = useState([]);
+  const [teachers, setTeachers] = useState([]);
+  const [teacherSubjects, setTeacherSubjects] = useState([]);
+
   const [formData, setFormData] = useState({
     group_id: '',
     lesson_date: new Date().toISOString().split('T')[0],
     title: '',
     start_time: '09:00',
-    end_time: '13:00'
+    end_time: '13:00',
+    subject_id: '',
+    teacher_id: ''
   });
   const [editFormData, setEditFormData] = useState({
     id: '',
@@ -35,14 +42,34 @@ export default function LessonsPage() {
     lesson_date: '',
     title: '',
     start_time: '09:00',
-    end_time: '13:00'
+    end_time: '13:00',
+    subject_id: '',
+    teacher_id: ''
   });
 
   useEffect(() => {
     fetchLessons();
     fetchGroups();
     fetchSchedules();
+    fetchSubjects();
+    fetchTeachers();
+    fetchTeacherSubjects();
   }, []);
+
+  async function fetchSubjects() {
+    const { data } = await supabase.from('subjects').select('id, name').order('name');
+    if (data) setSubjects(data);
+  }
+
+  async function fetchTeachers() {
+    const { data } = await supabase.from('teachers').select('id, full_name, education_type').order('full_name');
+    if (data) setTeachers(data);
+  }
+
+  async function fetchTeacherSubjects() {
+    const { data } = await supabase.from('teacher_subjects').select('teacher_id, subject_id');
+    if (data) setTeacherSubjects(data);
+  }
 
   async function fetchSchedules() {
     const { data } = await supabase
@@ -54,7 +81,7 @@ export default function LessonsPage() {
   }
 
   async function fetchGroups() {
-    const { data } = await supabase.from('groups').select('id, name').order('name');
+    const { data } = await supabase.from('groups').select('id, name, education_type').order('name');
     if (data) setGroups(data);
   }
 
@@ -77,8 +104,12 @@ export default function LessonsPage() {
           lesson_date,
           group_id,
           schedule_id,
-          groups ( name, course_name ),
+          teacher_id,
+          subject_id,
+          groups ( name, course_name, education_type ),
           users!lessons_created_by_fkey ( full_name ),
+          teachers ( full_name ),
+          subjects ( name ),
           attendance ( status )
         `)
         .order('lesson_date', { ascending: false });
@@ -95,7 +126,9 @@ export default function LessonsPage() {
 
   const filteredLessons = lessons.filter(l => 
     l.title?.toLowerCase().includes(search.toLowerCase()) || 
-    l.groups?.name?.toLowerCase().includes(search.toLowerCase())
+    l.groups?.name?.toLowerCase().includes(search.toLowerCase()) ||
+    l.subjects?.name?.toLowerCase().includes(search.toLowerCase()) ||
+    l.teachers?.full_name?.toLowerCase().includes(search.toLowerCase())
   );
   const parseLessonTitle = (rawTitle, scheduleId, schedulesList) => {
     let startTime = '09:00';
@@ -144,7 +177,9 @@ export default function LessonsPage() {
         lesson_date: new Date().toISOString().split('T')[0],
         title: '',
         start_time: '09:00',
-        end_time: '13:00'
+        end_time: '13:00',
+        subject_id: '',
+        teacher_id: ''
       });
       fetchLessons();
       fetchSchedules();
@@ -164,7 +199,9 @@ export default function LessonsPage() {
       lesson_date: lesson.lesson_date || '',
       title: cleanTitle,
       start_time: startTime,
-      end_time: endTime
+      end_time: endTime,
+      subject_id: lesson.subject_id || '',
+      teacher_id: lesson.teacher_id || ''
     });
     setShowEditModal(true);
   };
@@ -215,6 +252,37 @@ export default function LessonsPage() {
       alert("O'chirishda xatolik: " + err.message);
     }
   };
+
+  // Filter logic for teachers
+  const selectedGroup = groups.find(g => g.id === formData.group_id);
+  const groupEduType = selectedGroup?.education_type;
+  
+  const groupFilteredTeachers = groupEduType
+    ? teachers.filter(t => t.education_type === groupEduType)
+    : teachers;
+
+  const formFilteredTeachers = formData.subject_id
+    ? groupFilteredTeachers.filter(t => 
+        teacherSubjects.some(ts => ts.teacher_id === t.id && ts.subject_id === formData.subject_id)
+      )
+    : groupFilteredTeachers;
+
+  const displayTeachers = formFilteredTeachers.length > 0 ? formFilteredTeachers : groupFilteredTeachers;
+
+  const selectedEditGroup = groups.find(g => g.id === editFormData.group_id);
+  const editGroupEduType = selectedEditGroup?.education_type;
+  
+  const editGroupFilteredTeachers = editGroupEduType
+    ? teachers.filter(t => t.education_type === editGroupEduType)
+    : teachers;
+
+  const editFilteredTeachers = editFormData.subject_id
+    ? editGroupFilteredTeachers.filter(t => 
+        teacherSubjects.some(ts => ts.teacher_id === t.id && ts.subject_id === editFormData.subject_id)
+      )
+    : editGroupFilteredTeachers;
+
+  const displayEditTeachers = editFilteredTeachers.length > 0 ? editFilteredTeachers : editGroupFilteredTeachers;
 
   if (userRole === 'director') {
     return <div style={{ padding: '2rem', textAlign: 'center' }}>Sizda ushbu sahifaga kirish huquqi yo'q.</div>;
@@ -287,7 +355,23 @@ export default function LessonsPage() {
                           </div>
                         </td>
                         <td style={{ fontWeight: 'bold' }}>{lesson.groups?.name || 'Noma\'lum'}</td>
-                        <td>{lesson.title || 'Mavzusiz'}</td>
+                        <td>
+                          <div className={styles.subjectTopicWrapper}>
+                            {lesson.subjects?.name && (
+                              <span className={styles.subjectBadge}>
+                                {lesson.subjects.name}
+                              </span>
+                            )}
+                            <div className={styles.topicText}>
+                              {lesson.title || 'Mavzusiz'}
+                            </div>
+                            {lesson.teachers?.full_name && (
+                              <span className={styles.teacherText}>
+                                O'qituvchi: {lesson.teachers.full_name}
+                              </span>
+                            )}
+                          </div>
+                        </td>
                         <td>{lesson.users?.full_name || 'Tizim'}</td>
                         <td>
                           {total > 0 ? (
@@ -389,7 +473,37 @@ export default function LessonsPage() {
           </div>
 
           <div className="form-group">
-            <label>Modul/fan mavzusi (masalan: Rangtasvir)</label>
+            <label>Fan</label>
+            <select 
+              className="input" 
+              value={formData.subject_id}
+              onChange={(e) => setFormData({...formData, subject_id: e.target.value})}
+              required
+            >
+              <option value="">Fanni tanlang</option>
+              {subjects.map(s => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>O'qituvchi</label>
+            <select 
+              className="input" 
+              value={formData.teacher_id}
+              onChange={(e) => setFormData({...formData, teacher_id: e.target.value})}
+              required
+            >
+              <option value="">O'qituvchini tanlang</option>
+              {displayTeachers.map(t => (
+                <option key={t.id} value={t.id}>{t.full_name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Mavzu</label>
             <input 
               type="text" 
               className="input" 
@@ -467,7 +581,37 @@ export default function LessonsPage() {
           </div>
 
           <div className="form-group">
-            <label>Modul/fan mavzusi (masalan: Rangtasvir)</label>
+            <label>Fan</label>
+            <select 
+              className="input" 
+              value={editFormData.subject_id}
+              onChange={(e) => setEditFormData({...editFormData, subject_id: e.target.value})}
+              required
+            >
+              <option value="">Fanni tanlang</option>
+              {subjects.map(s => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>O'qituvchi</label>
+            <select 
+              className="input" 
+              value={editFormData.teacher_id}
+              onChange={(e) => setEditFormData({...editFormData, teacher_id: e.target.value})}
+              required
+            >
+              <option value="">O'qituvchini tanlang</option>
+              {displayEditTeachers.map(t => (
+                <option key={t.id} value={t.id}>{t.full_name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Mavzu</label>
             <input 
               type="text" 
               className="input" 

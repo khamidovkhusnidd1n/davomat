@@ -99,3 +99,65 @@ Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 310:
 Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 311: 14 2026-03-24 Tuesday 3 17-00 18-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 6 14-гр. 6-хафта   
 Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 321: 14 2026-03-28 Shanba 1 14-00 15-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 6 14-гр. 6-хафта   
 Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 322: 14 2026-03-28 Saturday 2 15-30 16-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 6 14-гр. 6-хафта   
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 323: 14 2026-03-28 Saturday 3 17-00 18-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 6 14-гр. 6-хафта   
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 333: 14 2026-04-02 Payshanba 1 14-00 15-20 Onlayn chat 3.01 Chizmatasvir  amaliy Z.Qiyomov 7 14-гр. 7-хафта 
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 334: 14 2026-04-02 Thursday 2 15-30 16-50 Onlayn chat 3.01 Chizmatasvir  amaliy Z.Qiyomov 7 14-гр. 7-хафта 
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 335: 14 2026-04-02 Thursday 3 17-00 18-20 Onlayn chat 3.01 Chizmatasvir  amaliy Z.Qiyomov 7 14-гр. 7-хафта 
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 360: 14 2026-04-13 Dushanba 1 9-00 10-20 Onlayn chat 3.01 Chizmatasvir  amaliy Z.Qiyomov  davomi
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 361: 14 2026-04-13 Monday 2 10-30 11-50 Onlayn chat 3.01 Chizmatasvir  amaliy Z.Qiyomov  davomi
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 362: 14 2026-04-13 Monday 3 12-30 13-50 Onlayn chat 3.01 Chizmatasvir  amaliy Z.Qiyomov  davomi
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 375: 14 2026-04-18 Shanba 1 14-00 15-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 9 14-гр.9 хафта  
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 376: 14 2026-04-18 Saturday 2 15-30 16-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 9 14-гр.9 хафта  
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 377: 14 2026-04-18 Saturday 3 17-00 18-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 9 14-гр.9 хафта  
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 381: 14 2026-04-21 Seshanba 1 9-00 10-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 10 14-гр.10 хафта  
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 382: 14 2026-04-21 Tuesday 2 10-30 11-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 10 14-гр.10 хафта  
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 383: 14 2026-04-21 Tuesday 3 12-30 13-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 10 14-гр.10 хафта  
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 393: 14 2026-04-25 Shanba 1 9-00 10-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 10 14-гр.10 хафта  
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 394: 14 2026-04-25 Saturday 2 10-30 11-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 10 14-гр.10 хафта  
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 395: 14 2026-04-25 Saturday 3 12-30 13-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 10 14-гр.10 хафта  
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 405: 14 2026-04-30 Payshanba 1 10-30 11-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 11 14гр.11 хафта   
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 406: 14 2026-04-30 Thursday 2 10-30 11-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 11 14гр.11 хафта   
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 407: 14 2026-04-30 Thursday 3 12-30 13-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 11 14гр.11 хафта   
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 417: 14 2026-05-05 Seshanba 1 9-00 10-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 12 14-гр.12 хафта   
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 418: 14 2026-05-05 Tuesday 2 10-30 11-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 12 14-гр.12 хафта   
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 419: 14 2026-05-05 Tuesday 3 12-30 13-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 12 14-гр.12 хафта   
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 420: 14 2026-05-06 Chorshanba 1 9-00 10-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 12 14-гр.12 хафта   
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 421: 14 2026-05-06 Wednesday 2 10-30 11-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 12 14-гр.12 хафта   
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 422: 14 2026-05-06 Wednesday 3 12-30 13-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 12 14-гр.12 хафта   
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 426: 14 2026-05-08 Juma 1 9-00 10-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 12 14-гр.12 хафта   
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 427: 14 2026-05-08 Friday 2 10-30 11-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 12 14-гр.12 хафта   
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 428: 14 2026-05-08 Friday 3 12-30 13-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov 12 14-гр.12 хафта   
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 432: 14 2026-05-12 Seshanba 1 14-00 15-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov  davomi 
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 433: 14 2026-05-12 Tuesday 2 15-30 16-50 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov  davomi 
+Found QIYOMOV in Excel: Davomat_import_tayyor.xlsx -> Davomat_import -> row 434: 14 2026-05-12 Tuesday 3 17-00 18-20 Onlayn chat 3.01 Chizmatasvir amaliy Z.Qiyomov  davomi 
+Found RAJABOV in Pdf: 12-13 may Konferensiya (2).pdf -> snippet:   
+1 
+ 
+    
+2 
+ 
+ 
+ 
+ 
+Hurmatli_____________________________________________________! 
+Sizni 2026 - yil 12 - 13-may kunlari O‘zbekiston Respublikasi Raqamli 
+texnologiyalari vazirligi huzuridagi “Sun’iy intellekt va raqamli iqtisodiyotni 
+rivojlantirish markazi” davlat muassasasi hamda Toshkent ama
+Found RAJABOV in Pdf: 12-13 may Konferensiya.pdf -> snippet:   
+1 
+ 
+    
+2 
+ 
+ 
+ 
+ 
+Hurmatli_____________________________________________________! 
+Sizni 2026 - yil 12 - 13-may kunlari O‘zbekiston Respublikasi Raqamli 
+texnologiyalari vazirligi huzuridagi “Sun’iy intellekt va raqamli iqtisodiyotni 
+rivojlantirish markazi” davlat muassasasi hamda Toshkent ama
+Found RAJABOV in Docx: N.KUDAYBERGENOVA Bitiruv malalaviy ish 2026.docx -> snippet: O‘ ZBEKISTON BADIIY   AKADEMIYASI O‘ ZBEKISTON BADIIY   AKADEMIYASI   HUZURIDAGI BADIIY TA ’ LIM Y O‘ NALISHLARIDA PEDAGOG VA MUTAXASSIS KADRLARNI QAYTA TAYYORLASH HAMDA ULARNING MALAKASINI OSHIRISH MARKAZI “Himoyaga tavsiya etaman” Markaz direktori ______________D.Shukurov “______”____________2026 
+Found RAJABOV in Excel: ҚТ.ОТМ.Тас.сан 14-гр 2025.xlsx -> қайта тайёрлаш умумий -> row 68: 61 Rajabov Ro'ziboy Egamberdiyevich  Erkak 1963-02-13 00:00:00 AB1502973 31302631851403 Oliy Toshkent davlat Pedagogika instituti 1985 Chizmachilik va rasm Dastgohli rangtasvir  36 Surxondaryo  Termiz shahar Ro'zi Choriyev nomidagi Surxondaryo ISMI .+998937608063 Dastgohli rangtasvir rassomi  Tasviriy san'at
+Found RAJABOV in Excel: ҚТ.ОТМ.Тас.сан 14-гр 2025.xlsx -> ОТМ.Тас.сан.14-гр -> row 53: 61 Rajabov Ro'ziboy Egamberdiyevich  Erkak 1963-02-13 00:00:00 AB1502973 31302631851403 Oliy Toshkent davlat Pedagogika instituti 1985 Chizmachilik va rasm Dastgohli rangtasvir  36 Surxondaryo  Termiz shahar Ro'zi Choriyev nomidagi Surxondaryo ISMI .+998937608063 Dastgohli rangtasvir rassomi 
+Found RAJABOV in Excel: ҚТ.ОТМ.Тас.сан 14-гр 2025.xlsx -> Проф.Тас.сан. -> row 53: 61 Rajabov Ro'ziboy Egamberdiyevich  Erkak 1963-02-13 00:00:00 AB1502973 31302631851403 Oliy Toshkent davlat Pedagogika instituti 1985 Chizmachilik va rasm Dastgohli rangtasvir  36 Surxondaryo  Termiz shahar Ro'zi Choriyev nomidagi Surxondaryo ISMI .+998937608063 Dastgohli rangtasvir rassomi 
+Found RAJABOV in Excel: ҚТ.ОТМ.Тас.сан 14-гр 2025.xlsx -> ОТМ.Наққошлик.14-гр (2) -> row 53: 61 Rajabov Ro'ziboy Egamberdiyevich  Erkak 1963-02-13 00:00:00 AB1502973 31302631851403 Oliy Toshkent davlat Pedagogika instituti 1985 Chizmachilik va rasm Dastgohli rangtasvir  36 Surxondaryo  Termiz shahar Ro'zi Choriyev nomidagi Surxondaryo ISMI .+998937608063 Dastgohli rangtasvir rassomi 

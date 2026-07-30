@@ -133,3 +133,30 @@
   color: var(--error) !important;
   border-color: #fca5a5 !important;
 }
+
+.subjectTopicWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.subjectBadge {
+  background: rgba(79, 70, 229, 0.1);
+  color: var(--primary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  width: fit-content;
+}
+
+.topicText {
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.teacherText {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}

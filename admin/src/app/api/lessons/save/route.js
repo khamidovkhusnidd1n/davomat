@@ -12,7 +12,7 @@ export async function POST(req) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const { id, group_id, lesson_date, title, start_time, end_time } = await req.json();
+    const { id, group_id, lesson_date, title, start_time, end_time, subject_id, teacher_id } = await req.json();
 
     if (!group_id || !lesson_date || !title || !start_time || !end_time) {
       return NextResponse.json({ error: 'Barcha maydonlar to\'ldirilishi shart' }, { status: 400 });
@@ -47,7 +47,9 @@ export async function POST(req) {
           group_id: group_id,
           day_of_week: dayOfWeek,
           start_time: start,
-          end_time: end
+          end_time: end,
+          subject_id: subject_id || null,
+          teacher_id: teacher_id || null
         })
         .select('id')
         .single();
@@ -68,7 +70,9 @@ export async function POST(req) {
           group_id,
           lesson_date,
           title: finalTitle,
-          schedule_id: scheduleId
+          schedule_id: scheduleId,
+          subject_id: subject_id || null,
+          teacher_id: teacher_id || null
         })
         .eq('id', id);
 
@@ -82,7 +86,9 @@ export async function POST(req) {
           lesson_date,
           title: finalTitle,
           schedule_id: scheduleId,
-          created_by: auth.user.id
+          created_by: auth.user.id,
+          subject_id: subject_id || null,
+          teacher_id: teacher_id || null
         });
 
       if (insertErr) throw insertErr;

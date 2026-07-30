@@ -673,15 +673,35 @@ bot.hears('📊 Davomat hisobotlari', async (ctx) => {
           continue;
        }
        
-       const { data: atts } = await supabase
-         .from('attendance')
-         .select('status')
-         .in('student_id', studentIds);
-         
+       const [attsRes, lastLessonRes] = await Promise.all([
+         supabase
+           .from('attendance')
+           .select('status')
+           .in('student_id', studentIds),
+         supabase
+           .from('lessons')
+           .select('lesson_date')
+           .eq('group_id', g.id)
+           .order('lesson_date', { ascending: false })
+           .limit(1)
+           .maybeSingle()
+       ]);
+       
+       const atts = attsRes.data;
+       const lastLesson = lastLessonRes.data;
+          
        let total = atts ? atts.length : 0;
        let present = atts ? atts.filter(a => a.status === 'present' || a.status === 'late').length : 0;
        let pct = total > 0 ? Math.round((present / total) * 100) : 100;
-       groupStats.push(`🏫 <b>${g.name}</b>: <b>${pct}%</b> davomat (${present}/${total})`);
+       
+       let dateStr = '';
+       if (lastLesson) {
+         const dateObj = new Date(lastLesson.lesson_date);
+         const months = ['yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avgust', 'sentabr', 'oktabr', 'noyabr', 'dekabr'];
+         dateStr = ` (oxirgi dars: ${dateObj.getDate()}-${months[dateObj.getMonth()]})`;
+       }
+
+       groupStats.push(`🏫 <b>${g.name}</b>: <b>${pct}%</b> davomat (${present}/${total})${dateStr}`);
     }
     ctx.replyWithHTML(`📊 <b>Guruhlaringiz davomat foizlari:</b>\n\n` + groupStats.join('\n'));
   } catch (e) {

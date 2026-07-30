@@ -69,9 +69,10 @@ export async function POST(req) {
 
     const success = [];
     const failed = [];
-    const lessonsMap = new Map();
+    const schedulesMap = new Map();
+    const rowsToProcess = [];
 
-    // 2. Process each row
+    // 2. Process each row and identify unique schedules first
     for (let i = 0; i < lessonsData.length; i++) {
       const row = lessonsData[i];
       if (i % 100 === 0) console.log(`Processed ${i} rows...`);
@@ -92,7 +93,6 @@ export async function POST(req) {
       let matchedGroup = findBestMatch(String(guruhName), groupOptions);
       if (!matchedGroup) {
         console.log(`Creating missing group: ${guruhName}`);
-        // Automatically create the missing group
         const { data: newGroup, error: ngErr } = await adminSupabase
           .from('groups')
           .insert({
@@ -112,28 +112,86 @@ export async function POST(req) {
         groupOptions.push({ id: newGroup.id, name: newGroup.name });
       }
 
-      // Format title: "15:00-16:20 | Mavzu nomi (O'qituvchi)"
-      const startClean = String(boshlanish || '').replace('-', ':');
-      const endClean = String(tugash || '').replace('-', ':');
-      const timeStr = startClean && endClean ? `${startClean}-${endClean} | ` : '';
-      const tutorStr = oqituvchi ? ` (${oqituvchi})` : '';
-      
-      const title = `${timeStr}${mavzu}${tutorStr}`;
+      // Calculate day of week
+      const dateObj = new Date(sana);
+      let dayOfWeek = dateObj.getDay();
+      if (dayOfWeek === 0) dayOfWeek = 7;
 
-      // Instead of array, use a Map to merge duplicates
-      const key = `${matchedGroup.id}_${sana}`;
-      if (lessonsMap.has(key)) {
-        const existing = lessonsMap.get(key);
+      let start = '15:00';
+      let end = '16:00';
+      if (boshlanish) start = String(boshlanish).trim().replace('-', ':');
+      if (tugash) end = String(tugash).trim().replace('-', ':');
+
+      const skey = `${matchedGroup.id}_${dayOfWeek}_${start}`;
+      if (!schedulesMap.has(skey)) {
+        schedulesMap.set(skey, {
+          group_id: matchedGroup.id,
+          day_of_week: dayOfWeek,
+          start_time: start,
+          end_time: end
+        });
+      }
+
+      rowsToProcess.push({
+        row,
+        groupId: matchedGroup.id,
+        sana,
+        start,
+        end,
+        mavzu,
+        oqituvchi,
+        dayOfWeek
+      });
+    }
+
+    // 3. Upsert schedules first to obtain IDs
+    const schedulesToInsert = Array.from(schedulesMap.values());
+    const scheduleIdMap = new Map();
+
+    if (schedulesToInsert.length > 0) {
+      console.log(`Upserting ${schedulesToInsert.length} schedules...`);
+      const { data: insertedSchedules, error: schErr } = await adminSupabase
+        .from('schedules')
+        .upsert(schedulesToInsert, { onConflict: 'group_id,day_of_week,start_time' })
+        .select('id, group_id, day_of_week, start_time');
+
+      if (schErr) {
+        console.error('Schedules upsert error:', schErr);
+        return NextResponse.json({ error: 'Jadvallarni saqlashda xato: ' + schErr.message }, { status: 500 });
+      }
+
+      if (insertedSchedules) {
+        for (const s of insertedSchedules) {
+          const skey = `${s.group_id}_${s.day_of_week}_${s.start_time}`;
+          scheduleIdMap.set(skey, s.id);
+        }
+      }
+    }
+
+    // 4. Map lessons to schedule IDs and build unique lessons
+    const lessonsMap = new Map();
+    for (const item of rowsToProcess) {
+      const skey = `${item.groupId}_${item.dayOfWeek}_${item.start}`;
+      const scheduleId = scheduleIdMap.get(skey) || null;
+
+      const timeStr = item.start && item.end ? `${item.start}-${item.end} | ` : '';
+      const tutorStr = item.oqituvchi ? ` (${item.oqituvchi})` : '';
+      const title = `${timeStr}${item.mavzu}${tutorStr}`;
+
+      const lessonKey = `${item.groupId}_${item.sana}_${scheduleId}`;
+      if (lessonsMap.has(lessonKey)) {
+        const existing = lessonsMap.get(lessonKey);
         existing.lesson.title += ` /// ${title}`;
-        existing.rows.push(row);
+        existing.rows.push(item.row);
       } else {
-        lessonsMap.set(key, {
+        lessonsMap.set(lessonKey, {
           lesson: {
-            group_id: matchedGroup.id,
-            lesson_date: sana,
-            title: title
+            group_id: item.groupId,
+            lesson_date: item.sana,
+            title: title,
+            schedule_id: scheduleId
           },
-          rows: [row]
+          rows: [item.row]
         });
       }
     }
@@ -141,25 +199,23 @@ export async function POST(req) {
     const uniqueLessons = Array.from(lessonsMap.values());
     const finalLessonsToInsert = uniqueLessons.map(x => x.lesson);
 
-    console.log(`Finished processing rows. Inserting ${finalLessonsToInsert.length} UNIQUE lessons...`);
+    console.log(`Finished processing rows. Upserting ${finalLessonsToInsert.length} UNIQUE lessons...`);
 
-    // 3. Bulk Insert
+    // 5. Bulk Upsert Lessons
     if (finalLessonsToInsert.length > 0) {
-      // Chunk the array if it's too big
       const CHUNK_SIZE = 200;
       for (let i = 0; i < finalLessonsToInsert.length; i += CHUNK_SIZE) {
-        console.log(`Inserting chunk ${i} to ${i + CHUNK_SIZE}...`);
+        console.log(`Upserting chunk ${i} to ${i + CHUNK_SIZE}...`);
         const chunk = finalLessonsToInsert.slice(i, i + CHUNK_SIZE);
         const { data, error } = await adminSupabase
           .from('lessons')
-          .upsert(chunk, { onConflict: 'group_id,lesson_date' })
+          .upsert(chunk, { onConflict: 'group_id,lesson_date,schedule_id' })
           .select('id');
 
         if (error) {
           console.error('Chunk insert error:', error);
           return NextResponse.json({ error: 'Saqlashda xato: ' + error.message }, { status: 500 });
         } else if (data) {
-          // Mark all successfully inserted
           for (let j = 0; j < data.length; j++) {
             const originalRows = uniqueLessons[i + j].rows;
             for (const r of originalRows) {
@@ -167,42 +223,6 @@ export async function POST(req) {
             }
           }
         }
-      }
-
-      // Automatically extract and insert weekly schedules to populate Jadval page
-      const schedulesMap = new Map();
-      for (const les of finalLessonsToInsert) {
-        const dateObj = new Date(les.lesson_date);
-        let dayOfWeek = dateObj.getDay();
-        if (dayOfWeek === 0) dayOfWeek = 7;
-        
-        // Extract first time slot from title if possible (e.g. "15:00-16:20 | Mavzu")
-        let start = '15:00';
-        let end = '16:00';
-        const match = les.title.match(/(\d{2}:\d{2})-(\d{2}:\d{2})/);
-        if (match) {
-          start = match[1];
-          end = match[2];
-        }
-
-        const skey = `${les.group_id}_${dayOfWeek}`;
-        if (!schedulesMap.has(skey)) {
-          schedulesMap.set(skey, {
-            group_id: les.group_id,
-            day_of_week: dayOfWeek,
-            start_time: start,
-            end_time: end
-          });
-        }
-      }
-
-      const schedulesToInsert = Array.from(schedulesMap.values());
-      if (schedulesToInsert.length > 0) {
-        // Upsert schedules so we don't crash if they already exist
-        await adminSupabase
-          .from('schedules')
-          .upsert(schedulesToInsert, { onConflict: 'group_id, day_of_week' })
-          .select('id');
       }
     }
 

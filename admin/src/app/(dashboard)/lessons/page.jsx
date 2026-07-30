@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Search, Calendar, Eye, Plus, X } from 'lucide-react';
+import { Search, Calendar, Eye, Plus, X, Edit, Trash } from 'lucide-react';
 import Link from 'next/link';
 import { FileSpreadsheet } from 'lucide-react';
 import ExcelLessonsImport from '@/components/ExcelLessonsImport/ExcelLessonsImport';
@@ -15,12 +15,20 @@ export default function LessonsPage() {
   
   // Modal states
   const [showModal, setShowModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [userRole, setUserRole] = useState(null);
   const [formData, setFormData] = useState({
     group_id: '',
     lesson_date: new Date().toISOString().split('T')[0],
+    title: ''
+  });
+  const [editFormData, setEditFormData] = useState({
+    id: '',
+    group_id: '',
+    lesson_date: '',
     title: ''
   });
 
@@ -97,6 +105,57 @@ export default function LessonsPage() {
     }
   }
 
+  const handleEditClick = (lesson) => {
+    setEditFormData({
+      id: lesson.id,
+      group_id: lesson.group_id || '',
+      lesson_date: lesson.lesson_date || '',
+      title: lesson.title || ''
+    });
+    setShowEditModal(true);
+  };
+
+  const handleUpdateLesson = async (e) => {
+    e.preventDefault();
+    if (!editFormData.group_id || !editFormData.lesson_date || !editFormData.title) return;
+    try {
+      setEditing(true);
+      const { error } = await supabase
+        .from('lessons')
+        .update({
+          group_id: editFormData.group_id,
+          lesson_date: editFormData.lesson_date,
+          title: editFormData.title
+        })
+        .eq('id', editFormData.id);
+      
+      if (error) throw error;
+      setShowEditModal(false);
+      fetchLessons();
+    } catch (err) {
+      console.error(err);
+      alert('Xatolik yuz berdi: ' + err.message);
+    } finally {
+      setEditing(false);
+    }
+  };
+
+  const handleDeleteLesson = async (id) => {
+    if (!confirm("Haqiqatan ham ushbu darsni o'chirmoqchimisiz? Darsga tegishli barcha davomatlar ham butunlay o'chib ketadi!")) return;
+    try {
+      const { error } = await supabase
+        .from('lessons')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      fetchLessons();
+    } catch (err) {
+      console.error(err);
+      alert("O'chirishda xatolik: " + err.message);
+    }
+  };
+
   if (userRole === 'director') {
     return <div style={{ padding: '2rem', textAlign: 'center' }}>Sizda ushbu sahifaga kirish huquqi yo'q.</div>;
   }
@@ -143,7 +202,7 @@ export default function LessonsPage() {
                   <th>Mavzu</th>
                   <th>Yaratuvchi</th>
                   <th>Davomat</th>
-                  <th>Batafsil</th>
+                  <th>Amallar</th>
                 </tr>
               </thead>
               <tbody>
@@ -185,11 +244,23 @@ export default function LessonsPage() {
                           )}
                         </td>
                         <td>
-                          <Link href={`/attendance?group=${encodeURIComponent(lesson.groups?.name || '')}&date=${lesson.lesson_date}`}>
-                            <button className={styles.actionBtn} title="Ko'rish">
-                              <Eye size={18} />
-                            </button>
-                          </Link>
+                          <div className={styles.actionsContainer}>
+                            <Link href={`/attendance?group=${encodeURIComponent(lesson.groups?.name || '')}&date=${lesson.lesson_date}`}>
+                              <button className={styles.actionBtn} title="Ko'rish">
+                                <Eye size={18} />
+                              </button>
+                            </Link>
+                            {isWriteEnabled && (
+                              <button className={styles.actionBtn} onClick={() => handleEditClick(lesson)} title="Tahrirlash">
+                                <Edit size={18} />
+                              </button>
+                            )}
+                            {(userRole === 'sysadmin' || userRole === 'admin') && (
+                              <button className={`${styles.actionBtn} ${styles.deleteBtn}`} onClick={() => handleDeleteLesson(lesson.id)} title="O'chirish">
+                                <Trash size={18} />
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );
@@ -256,6 +327,68 @@ export default function LessonsPage() {
                 </button>
                 <button type="submit" className="btn btn-primary" disabled={saving}>
                   {saving ? 'Saqlanmoqda...' : 'Saqlash'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showEditModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2>Darsni tahrirlash</h2>
+              <button className="modal-close" onClick={() => setShowEditModal(false)}>
+                <X size={24} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleUpdateLesson} className="modal-form">
+              <div className="form-group">
+                <label>Guruh</label>
+                <select 
+                  className="input" 
+                  value={editFormData.group_id}
+                  onChange={(e) => setEditFormData({...editFormData, group_id: e.target.value})}
+                  required
+                >
+                  <option value="">Guruhni tanlang</option>
+                  {groups.map(g => (
+                    <option key={g.id} value={g.id}>{g.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Sana</label>
+                <input 
+                  type="date" 
+                  className="input" 
+                  value={editFormData.lesson_date}
+                  onChange={(e) => setEditFormData({...editFormData, lesson_date: e.target.value})}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Modul/fan mavzusi (masalan: Rangtasvir)</label>
+                <input 
+                  type="text" 
+                  className="input" 
+                  placeholder="Mavzuni kiriting..."
+                  value={editFormData.title}
+                  onChange={(e) => setEditFormData({...editFormData, title: e.target.value})}
+                  required
+                />
+              </div>
+
+              <div className="modal-actions">
+                <button type="button" className="btn btn-outline" onClick={() => setShowEditModal(false)}>
+                  Bekor qilish
+                </button>
+                <button type="submit" className="btn btn-primary" disabled={editing}>
+                  {editing ? 'Saqlanmoqda...' : 'Saqlash'}
                 </button>
               </div>
             </form>

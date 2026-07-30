@@ -561,6 +561,14 @@ bot.hears('📅 Mening darslarim', async (ctx) => {
 
     const groupIds = groups.map(g => g.id);
 
+    // 1. Fetch today's already created/imported lessons
+    const { data: todayLessons } = await supabase
+      .from('lessons')
+      .select('id, group_id, title, schedule_id, groups(name)')
+      .eq('lesson_date', todayStr)
+      .in('group_id', groupIds);
+
+    // 2. Fetch today's scheduled lessons
     const { data: schedules } = await supabase
       .from('schedules')
       .select('*, groups(id, name, course_name)')
@@ -568,17 +576,47 @@ bot.hears('📅 Mening darslarim', async (ctx) => {
       .eq('day_of_week', dayOfWeek)
       .order('start_time', { ascending: true });
 
-    if (!schedules || schedules.length === 0) {
+    const options = [];
+    const existingScheduleIds = new Set();
+
+    if (todayLessons) {
+      for (const les of todayLessons) {
+        options.push({
+          type: 'existing',
+          lessonId: les.id,
+          groupId: les.group_id,
+          title: les.title,
+          displayName: `🏫 ${les.groups?.name}: ${les.title}`
+        });
+        if (les.schedule_id) {
+          existingScheduleIds.add(les.schedule_id);
+        }
+      }
+    }
+
+    if (schedules) {
+      for (const sch of schedules) {
+        if (!existingScheduleIds.has(sch.id)) {
+          const title = `${sch.groups.course_name || sch.groups.name} (${sch.start_time.substring(0, 5)} - ${sch.end_time.substring(0, 5)})`;
+          options.push({
+            type: 'schedule',
+            scheduleId: sch.id,
+            groupId: sch.group_id,
+            title: title,
+            displayName: `🏫 ${sch.groups.name} (${sch.start_time.substring(0, 5)}-${sch.end_time.substring(0, 5)})`
+          });
+        }
+      }
+    }
+
+    if (options.length === 0) {
       return ctx.reply("Bugun guruhlaringizda darslar rejalashtirilmagan.");
     }
 
-    ctx.session.todaySchedules = schedules;
+    ctx.session.todayLessons = options;
 
-    const buttons = schedules.map((s, idx) => [
-      Markup.button.callback(
-        `🏫 ${s.groups.name} (${s.start_time.substring(0, 5)}-${s.end_time.substring(0, 5)})`, 
-        `start_lesson_sch:${idx}`
-      )
+    const buttons = options.map((opt, idx) => [
+      Markup.button.callback(opt.displayName, `start_lesson_opt:${idx}`)
     ]);
 
     ctx.reply("Bugungi darslaringiz. Davomatni boshlash uchun darsni tanlang:", Markup.inlineKeyboard(buttons));
@@ -588,25 +626,28 @@ bot.hears('📅 Mening darslarim', async (ctx) => {
   }
 });
 
-bot.action(/start_lesson_sch:(\d+)/, async (ctx) => {
+bot.action(/start_lesson_opt:(\d+)/, async (ctx) => {
   try {
     const idx = parseInt(ctx.match[1], 10);
-    const schedules = ctx.session.todaySchedules;
-    if (!schedules || !schedules[idx]) {
+    const options = ctx.session.todayLessons;
+    if (!options || !options[idx]) {
       return ctx.answerCbQuery("Dars ma'lumotlari topilmadi, iltimos qaytadan darslar ro'yxatini oching.");
     }
 
-    const sch = schedules[idx];
-    const title = `${sch.groups.course_name || sch.groups.name} (${sch.start_time.substring(0, 5)} - ${sch.end_time.substring(0, 5)})`;
-    
-    const { data: lessonId, error: rpcError } = await supabase.rpc('get_or_create_today_lesson', {
-      p_group_id: sch.group_id,
-      p_lesson_title: title,
-      p_schedule_id: sch.id
-    });
-    if (rpcError) throw rpcError;
+    const opt = options[idx];
+    let lessonId = opt.lessonId;
 
-    await startAttendanceWizard(ctx, sch.group_id, lessonId, title);
+    if (opt.type === 'schedule') {
+      const { data, error: rpcError } = await supabase.rpc('get_or_create_today_lesson', {
+        p_group_id: opt.groupId,
+        p_lesson_title: opt.title,
+        p_schedule_id: opt.scheduleId
+      });
+      if (rpcError) throw rpcError;
+      lessonId = data;
+    }
+
+    await startAttendanceWizard(ctx, opt.groupId, lessonId, opt.title);
     await ctx.answerCbQuery();
   } catch (err) {
     console.error(err);

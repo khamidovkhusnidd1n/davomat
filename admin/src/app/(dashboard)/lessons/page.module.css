@@ -121,3 +121,15 @@
   text-align: center;
   color: var(--text-muted);
 }
+
+.actionsContainer {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.deleteBtn:hover {
+  background: #fef2f2 !important;
+  color: var(--error) !important;
+  border-color: #fca5a5 !important;
+}

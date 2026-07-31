@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Search, Plus, Trash2, Edit2, Clock, FileSpreadsheet } from 'lucide-react';
+import { Search, Plus, Trash2, Edit2, Clock, FileSpreadsheet, RefreshCw } from 'lucide-react';
 import ScheduleModal from './ScheduleModal';
 import ExcelImportSchedule from '@/components/ExcelImportSchedule/ExcelImportSchedule';
 
@@ -85,6 +85,59 @@ export default function SchedulesPage() {
       fetchData(true);
     } catch (err) {
       alert(err.message);
+    }
+  };
+
+  const handleGenerateLessons = async (sch) => {
+    if (!confirm(`"${DAYS[sch.day_of_week]}" uchun keyingi 16 haftalik darslarni yaratishni xohlaysizmi?`)) return;
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const targetJsDay = sch.day_of_week % 7;
+      const todayJs = today.getDay();
+      let daysUntilTarget = (targetJsDay - todayJs + 7) % 7;
+      const startDate = new Date(today);
+      startDate.setDate(startDate.getDate() + daysUntilTarget);
+
+      const lessonDates = [];
+      for (let week = 0; week < 16; week++) {
+        const d = new Date(startDate);
+        d.setDate(d.getDate() + week * 7);
+        const dateStr = d.toISOString().split('T')[0];
+        const start = sch.start_time?.substring(0, 5) || '09:00';
+        const end = sch.end_time?.substring(0, 5) || '13:00';
+        const title = `${start}-${end} | ${sch.subjects?.name || ''}`;
+        lessonDates.push({
+          group_id: sch.group_id,
+          lesson_date: dateStr,
+          title,
+          start_time: sch.start_time || null,
+          end_time: sch.end_time || null,
+          teacher_id: sch.teacher_id || null,
+          subject_id: sch.subject_id || null,
+          schedule_id: sch.id,
+          lesson_type: 'practice',
+        });
+      }
+
+      const { data: existing } = await supabase
+        .from('lessons')
+        .select('lesson_date')
+        .eq('group_id', sch.group_id)
+        .eq('schedule_id', sch.id);
+
+      const existingDates = new Set((existing || []).map(l => l.lesson_date));
+      const toInsert = lessonDates.filter(l => !existingDates.has(l.lesson_date));
+
+      if (toInsert.length === 0) {
+        alert('Bu jadval uchun darslar allaqachon yaratilgan!');
+        return;
+      }
+      const { error } = await supabase.from('lessons').insert(toInsert);
+      if (error) throw error;
+      alert(`✅ ${toInsert.length} ta dars muvaffaqiyatli yaratildi!`);
+    } catch (err) {
+      alert('Xato: ' + err.message);
     }
   };
 
@@ -226,6 +279,14 @@ export default function SchedulesPage() {
                                           </div>
                                           {isWriteEnabled && (
                                             <div className={styles.scheduleActions}>
+                                              <button 
+                                                className={`${styles.scheduleActionBtn}`}
+                                                style={{ color: '#22c55e' }}
+                                                onClick={(e) => { e.stopPropagation(); handleGenerateLessons(sch); }}
+                                                title="Darslar yaratish"
+                                              >
+                                                <RefreshCw size={14} />
+                                              </button>
                                               <button 
                                                 className={styles.scheduleActionBtn}
                                                 onClick={(e) => { e.stopPropagation(); setEditingSchedule(sch); setShowModal(true); }}

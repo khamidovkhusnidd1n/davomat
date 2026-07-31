@@ -121,13 +121,31 @@ export default function AttendancePage() {
           ))}
         </select>
 
-        <input 
-          type="date"
-          className="input"
-          style={{ maxWidth: '160px' }}
-          value={filterDate}
-          onChange={(e) => setFilterDate(e.target.value)}
-        />
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <input 
+            type="date"
+            className="input"
+            style={{ maxWidth: '160px' }}
+            value={filterDate}
+            onChange={(e) => setFilterDate(e.target.value)}
+          />
+          {filterDate && (
+            <button 
+              className="btn btn-secondary" 
+              style={{ 
+                padding: '0.5rem 0.75rem', 
+                fontSize: '0.85rem', 
+                backgroundColor: '#f3f4f6', 
+                color: '#374151',
+                border: '1px solid #e5e7eb'
+              }}
+              onClick={() => setFilterDate('')}
+              title="Sanani tozalash"
+            >
+              Tozalash
+            </button>
+          )}
+        </div>
       </div>
 
       <div className={`card ${styles.tableCard}`}>

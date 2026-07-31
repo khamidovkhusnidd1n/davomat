@@ -23,9 +23,9 @@ export default function StudentsPage() {
     fetchAll();
   }, []);
 
-  async function fetchAll() {
+  async function fetchAll(silent = false) {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: userData } = await supabase.from('users').select('organization_id, role').eq('id', user.id).single();
@@ -72,7 +72,7 @@ export default function StudentsPage() {
         const d = await res.json();
         throw new Error(d.error);
       }
-      fetchAll();
+      fetchAll(true);
     } catch (err) {
       alert(err.message);
     }
@@ -214,7 +214,7 @@ export default function StudentsPage() {
         onClose={() => setShowImport(false)}
         groups={groups}
         organizationId={organizationId}
-        onSuccess={fetchAll}
+        onSuccess={() => fetchAll(true)}
       />
       
       <StudentModal
@@ -223,7 +223,7 @@ export default function StudentsPage() {
         student={editingStudent}
         groups={groups}
         organizationId={organizationId}
-        onSuccess={fetchAll}
+        onSuccess={() => fetchAll(true)}
       />
     </div>
   );

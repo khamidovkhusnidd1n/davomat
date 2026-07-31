@@ -24,9 +24,9 @@ export default function GroupsPage() {
     fetchData();
   }, []);
 
-  async function fetchData() {
+  async function fetchData(silent = false) {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: userData } = await supabase.from('users').select('organization_id, role').eq('id', user.id).single();
@@ -69,7 +69,7 @@ export default function GroupsPage() {
     try {
       const { error } = await supabase.from('groups').delete().eq('id', id);
       if (error) throw error;
-      fetchData();
+      fetchData(true);
     } catch (err) {
       alert(err.message);
     }
@@ -92,7 +92,7 @@ export default function GroupsPage() {
     try {
       const { error } = await supabase.from('groups').update({ status: newStatus }).eq('id', id);
       if (error) throw error;
-      fetchData();
+      fetchData(true);
     } catch (err) {
       alert(err.message);
     }
@@ -233,7 +233,7 @@ export default function GroupsPage() {
         nazoratchis={tutors}
         monitors={monitors}
         organizationId={organizationId}
-        onSuccess={fetchData}
+        onSuccess={() => fetchData(true)}
       />
       <SyllabusModal
         isOpen={showSyllabus}
@@ -244,7 +244,7 @@ export default function GroupsPage() {
         isOpen={showGroupsImport}
         onClose={() => setShowGroupsImport(false)}
         organizationId={organizationId}
-        onSuccess={fetchData}
+        onSuccess={() => fetchData(true)}
       />
     </div>
   );

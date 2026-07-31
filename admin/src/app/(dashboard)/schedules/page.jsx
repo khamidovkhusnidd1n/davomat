@@ -36,9 +36,9 @@ export default function SchedulesPage() {
     fetchData();
   }, []);
 
-  async function fetchData() {
+  async function fetchData(silent = false) {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: userData } = await supabase.from('users').select('role').eq('id', user.id).single();
@@ -82,7 +82,7 @@ export default function SchedulesPage() {
     try {
       const { error } = await supabase.from('schedules').delete().eq('id', id);
       if (error) throw error;
-      fetchData();
+      fetchData(true);
     } catch (err) {
       alert(err.message);
     }
@@ -384,7 +384,7 @@ export default function SchedulesPage() {
         onClose={() => setShowModal(false)}
         schedule={editingSchedule}
         groups={groups}
-        onSuccess={fetchData}
+        onSuccess={() => fetchData(true)}
       />
 
       <ExcelImportSchedule
@@ -392,7 +392,7 @@ export default function SchedulesPage() {
         onClose={() => setShowImport(false)}
         groups={groups}
         organizationId={organizationId}
-        onSuccess={fetchData}
+        onSuccess={() => fetchData(true)}
       />
     </div>
   );

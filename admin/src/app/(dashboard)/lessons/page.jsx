@@ -87,9 +87,9 @@ export default function LessonsPage() {
     if (data) setGroups(data);
   }
 
-  async function fetchLessons() {
+  async function fetchLessons(silent = false) {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: userData } = await supabase.from('users').select('role').eq('id', user.id).single();
@@ -184,7 +184,7 @@ export default function LessonsPage() {
         teacher_id: '',
         custom_subject_name: ''
       });
-      fetchLessons();
+      fetchLessons(true);
       fetchSchedules();
     } catch (err) {
       console.error(err);
@@ -236,7 +236,7 @@ export default function LessonsPage() {
       if (!res.ok) throw new Error(result.error || 'Saqlashda xatolik yuz berdi');
 
       setShowEditModal(false);
-      fetchLessons();
+      fetchLessons(true);
       fetchSchedules();
     } catch (err) {
       console.error(err);
@@ -255,7 +255,7 @@ export default function LessonsPage() {
         .eq('id', id);
       
       if (error) throw error;
-      fetchLessons();
+      fetchLessons(true);
     } catch (err) {
       console.error(err);
       alert("O'chirishda xatolik: " + err.message);
@@ -739,7 +739,7 @@ export default function LessonsPage() {
       <ExcelLessonsImport
         isOpen={showImport}
         onClose={() => setShowImport(false)}
-        onSuccess={fetchLessons}
+        onSuccess={() => fetchLessons(true)}
       />
     </div>
   );

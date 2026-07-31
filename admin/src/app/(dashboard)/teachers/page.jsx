@@ -24,9 +24,9 @@ export default function TeachersPage() {
     fetchData();
   }, [academicYear]);
 
-  async function fetchData() {
+  async function fetchData(silent = false) {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: ud } = await supabase.from('users').select('role').eq('id', user.id).single();
@@ -86,7 +86,7 @@ export default function TeachersPage() {
     try {
       const { error } = await supabase.from('teachers').delete().eq('id', id);
       if (error) throw error;
-      fetchData();
+      fetchData(true);
     } catch (err) {
       alert("Xatolik yuz berdi: " + err.message);
     }
@@ -435,7 +435,7 @@ export default function TeachersPage() {
       <TeacherImportModal
         isOpen={showImport}
         onClose={() => setShowImport(false)}
-        onSuccess={fetchData}
+        onSuccess={() => fetchData(true)}
         academicYear={academicYear}
       />
 
@@ -444,7 +444,7 @@ export default function TeachersPage() {
         onClose={() => setShowAddModal(false)}
         teacher={selectedTeacher}
         academicYear={academicYear}
-        onSuccess={fetchData}
+        onSuccess={() => fetchData(true)}
       />
     </div>
   );

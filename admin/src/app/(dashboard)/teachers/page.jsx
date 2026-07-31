@@ -106,7 +106,7 @@ export default function TeachersPage() {
       });
       return acc;
     }, []);
-    worksheet['!cols'] = max_len.map(w => ({ wshpt: w * 6 }));
+    worksheet['!cols'] = max_len.map(w => ({ wch: w }));
 
     XLSX.writeFile(workbook, `O'qituvchilar_Hisoboti_${academicYear}.xlsx`);
   };

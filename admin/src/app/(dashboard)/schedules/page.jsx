@@ -54,11 +54,11 @@ export default function SchedulesPage() {
             day_of_week,
             start_time,
             end_time,
-            groups ( id, name, course_name )
+            groups ( id, name, course_name, education_type )
           `)
           .order('day_of_week', { ascending: true })
           .order('start_time', { ascending: true }),
-        supabase.from('groups').select('id, name')
+        supabase.from('groups').select('id, name, course_name, education_type')
       ]);
       
       if (schedulesRes.error) throw schedulesRes.error;
@@ -82,10 +82,23 @@ export default function SchedulesPage() {
     }
   };
 
-  const filteredSchedules = schedules.filter(s => 
-    s.groups?.name?.toLowerCase().includes(search.toLowerCase()) || 
-    s.groups?.course_name?.toLowerCase().includes(search.toLowerCase())
+  const filteredGroups = groups.filter(g => 
+    g.name?.toLowerCase().includes(search.toLowerCase()) || 
+    g.course_name?.toLowerCase().includes(search.toLowerCase())
   );
+
+  const groupsWithSchedules = filteredGroups.map(g => {
+    const groupSchedules = schedules
+      .filter(s => s.group_id === g.id)
+      .sort((a, b) => a.day_of_week - b.day_of_week || a.start_time.localeCompare(b.start_time));
+    return {
+      ...g,
+      schedules: groupSchedules
+    };
+  });
+
+  const qaytaGroups = groupsWithSchedules.filter(g => g.education_type === 'qayta_tayyorlov');
+  const malakaGroups = groupsWithSchedules.filter(g => g.education_type === 'malaka_oshirish');
 
   if (userRole === 'director') {
     return <div style={{ padding: '2rem', textAlign: 'center' }}>Sizda ushbu sahifaga kirish huquqi yo'q.</div>;
@@ -118,71 +131,125 @@ export default function SchedulesPage() {
         )}
       </div>
 
-      <div className={`card ${styles.tableCard}`}>
-        {loading ? (
-          <div className={styles.loading}>Yuklanmoqda...</div>
-        ) : (
-          <div className={styles.tableResponsive}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Guruh Nomi</th>
-                  <th>Hafta Kuni</th>
-                  <th>Boshlanish Vaqti</th>
-                  <th>Tugash Vaqti</th>
-                  {isWriteEnabled && <th>Amallar</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {filteredSchedules.length === 0 ? (
-                  <tr>
-                    <td colSpan="5" className={styles.emptyText}>Ma'lumot topilmadi</td>
-                  </tr>
-                ) : (
-                  filteredSchedules.map((schedule) => {
-                    const start = schedule.start_time.substring(0, 5);
-                    const end = schedule.end_time.substring(0, 5);
-                    return (
-                      <tr key={schedule.id}>
-                        <td style={{ fontWeight: 'bold' }}>{schedule.groups?.name || 'Noma\'lum'}</td>
-                        <td>
-                          <span className={styles.dayBadge}>
-                            {DAYS[schedule.day_of_week] || 'Noma\'lum'}
-                          </span>
-                        </td>
-                        <td>
-                          <div className={styles.timeWrapper}>
-                            <Clock size={14} className={styles.timeIcon} />
-                            {start}
-                          </div>
-                        </td>
-                        <td>
-                          <div className={styles.timeWrapper}>
-                            <Clock size={14} className={styles.timeIcon} />
-                            {end}
-                          </div>
-                        </td>
-                         {isWriteEnabled && (
-                          <td>
-                            <div className={styles.actions}>
-                              <button className={styles.actionBtn} onClick={() => { setEditingSchedule(schedule); setShowModal(true); }}>
-                                <Edit2 size={16} />
-                              </button>
-                              <button className={`${styles.actionBtn} ${styles.danger}`} onClick={() => handleDelete(schedule.id)}>
-                                <Trash2 size={16} />
-                              </button>
+      {loading ? (
+        <div className={styles.loading}>Yuklanmoqda...</div>
+      ) : (
+        <div className={styles.dashboard}>
+          {/* Qayta Tayyorlov Column */}
+          <div className={styles.column}>
+            <h2 className={`${styles.columnTitle} ${styles.qayta}`}>
+              Qayta tayyorlov guruhlari ({qaytaGroups.length})
+            </h2>
+            {qaytaGroups.length === 0 ? (
+              <div className={styles.emptyText}>Guruhlar topilmadi</div>
+            ) : (
+              qaytaGroups.map(group => (
+                <div key={group.id} className={styles.groupCard}>
+                  <div className={styles.groupCardHeader}>
+                    <div>
+                      <h3 className={styles.groupName}>{group.name}</h3>
+                      <span className={styles.courseName}>{group.course_name || 'Yo\'nalish kiritilmagan'}</span>
+                    </div>
+                  </div>
+                  <div className={styles.scheduleList}>
+                    {group.schedules.length === 0 ? (
+                      <p className={styles.noScheduleText}>Hali dars jadvali belgilanmagan</p>
+                    ) : (
+                      group.schedules.map(sch => {
+                        const start = sch.start_time.substring(0, 5);
+                        const end = sch.end_time.substring(0, 5);
+                        return (
+                          <div key={sch.id} className={styles.scheduleItem}>
+                            <div className={styles.scheduleTime}>
+                              <span className={styles.scheduleDay}>{DAYS[sch.day_of_week]}</span>
+                              <span className={styles.scheduleHours}>{start} - {end}</span>
                             </div>
-                          </td>
-                        )}
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+                            {isWriteEnabled && (
+                              <div className={styles.scheduleActions}>
+                                <button 
+                                  className={styles.scheduleActionBtn}
+                                  onClick={() => { setEditingSchedule(sch); setShowModal(true); }}
+                                  title="Tahrirlash"
+                                >
+                                  <Edit2 size={14} />
+                                </button>
+                                <button 
+                                  className={`${styles.scheduleActionBtn} ${styles.danger}`}
+                                  onClick={() => handleDelete(sch.id)}
+                                  title="O'chirish"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
-        )}
-      </div>
+
+          {/* Malaka Oshirish Column */}
+          <div className={styles.column}>
+            <h2 className={`${styles.columnTitle} ${styles.malaka}`}>
+              Malaka oshirish guruhlari ({malakaGroups.length})
+            </h2>
+            {malakaGroups.length === 0 ? (
+              <div className={styles.emptyText}>Guruhlar topilmadi</div>
+            ) : (
+              malakaGroups.map(group => (
+                <div key={group.id} className={styles.groupCard}>
+                  <div className={styles.groupCardHeader}>
+                    <div>
+                      <h3 className={styles.groupName}>{group.name}</h3>
+                      <span className={styles.courseName}>{group.course_name || 'Kurs nomi kiritilmagan'}</span>
+                    </div>
+                  </div>
+                  <div className={styles.scheduleList}>
+                    {group.schedules.length === 0 ? (
+                      <p className={styles.noScheduleText}>Hali dars jadvali belgilanmagan</p>
+                    ) : (
+                      group.schedules.map(sch => {
+                        const start = sch.start_time.substring(0, 5);
+                        const end = sch.end_time.substring(0, 5);
+                        return (
+                          <div key={sch.id} className={styles.scheduleItem}>
+                            <div className={styles.scheduleTime}>
+                              <span className={styles.scheduleDay}>{DAYS[sch.day_of_week]}</span>
+                              <span className={styles.scheduleHours}>{start} - {end}</span>
+                            </div>
+                            {isWriteEnabled && (
+                              <div className={styles.scheduleActions}>
+                                <button 
+                                  className={styles.scheduleActionBtn}
+                                  onClick={() => { setEditingSchedule(sch); setShowModal(true); }}
+                                  title="Tahrirlash"
+                                >
+                                  <Edit2 size={14} />
+                                </button>
+                                <button 
+                                  className={`${styles.scheduleActionBtn} ${styles.danger}`}
+                                  onClick={() => handleDelete(sch.id)}
+                                  title="O'chirish"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
 
       <ScheduleModal
         isOpen={showModal}

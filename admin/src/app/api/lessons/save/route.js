@@ -12,13 +12,50 @@ export async function POST(req) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const { id, group_id, lesson_date, title, start_time, end_time, subject_id, teacher_id } = await req.json();
+    const { id, group_id, lesson_date, title, start_time, end_time, subject_id, teacher_id, custom_subject_name } = await req.json();
 
-    if (!group_id || !lesson_date || !title || !start_time || !end_time) {
+    if (!group_id || !lesson_date || !start_time || !end_time) {
       return NextResponse.json({ error: 'Barcha maydonlar to\'ldirilishi shart' }, { status: 400 });
     }
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
+    let finalSubjectId = subject_id || null;
+
+    if (custom_subject_name && custom_subject_name.trim() !== '') {
+      // Find organization_id from group
+      const { data: groupData } = await supabaseAdmin
+        .from('groups')
+        .select('organization_id')
+        .eq('id', group_id)
+        .single();
+      const orgId = groupData?.organization_id || '11111111-1111-1111-1111-111111111111';
+
+      const trimmedName = custom_subject_name.trim();
+
+      // Look up subject by name (case-insensitive)
+      const { data: existingSub } = await supabaseAdmin
+        .from('subjects')
+        .select('id')
+        .eq('organization_id', orgId)
+        .ilike('name', trimmedName)
+        .maybeSingle();
+
+      if (existingSub) {
+        finalSubjectId = existingSub.id;
+      } else {
+        const { data: newSub, error: subErr } = await supabaseAdmin
+          .from('subjects')
+          .insert({
+            organization_id: orgId,
+            name: trimmedName
+          })
+          .select('id')
+          .single();
+        if (subErr) throw subErr;
+        finalSubjectId = newSub.id;
+      }
+    }
 
     // 1. Calculate day of week of lesson_date (1 = Monday, ..., 7 = Sunday)
     const dateObj = new Date(lesson_date);
@@ -48,7 +85,7 @@ export async function POST(req) {
           day_of_week: dayOfWeek,
           start_time: start,
           end_time: end,
-          subject_id: subject_id || null,
+          subject_id: finalSubjectId,
           teacher_id: teacher_id || null
         })
         .select('id')
@@ -71,7 +108,7 @@ export async function POST(req) {
           lesson_date,
           title: finalTitle,
           schedule_id: scheduleId,
-          subject_id: subject_id || null,
+          subject_id: finalSubjectId,
           teacher_id: teacher_id || null
         })
         .eq('id', id);
@@ -87,7 +124,7 @@ export async function POST(req) {
           title: finalTitle,
           schedule_id: scheduleId,
           created_by: auth.user.id,
-          subject_id: subject_id || null,
+          subject_id: finalSubjectId,
           teacher_id: teacher_id || null
         });
 

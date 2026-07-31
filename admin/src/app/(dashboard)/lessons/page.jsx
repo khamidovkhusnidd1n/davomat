@@ -34,7 +34,8 @@ export default function LessonsPage() {
     start_time: '09:00',
     end_time: '13:00',
     subject_id: '',
-    teacher_id: ''
+    teacher_id: '',
+    custom_subject_name: ''
   });
   const [editFormData, setEditFormData] = useState({
     id: '',
@@ -44,7 +45,8 @@ export default function LessonsPage() {
     start_time: '09:00',
     end_time: '13:00',
     subject_id: '',
-    teacher_id: ''
+    teacher_id: '',
+    custom_subject_name: ''
   });
 
   useEffect(() => {
@@ -152,7 +154,7 @@ export default function LessonsPage() {
 
   async function handleSaveLesson(e) {
     e.preventDefault();
-    if (!formData.group_id || !formData.lesson_date || !formData.title || !formData.start_time || !formData.end_time) return;
+    if (!formData.group_id || !formData.lesson_date || !formData.start_time || !formData.end_time) return;
     
     try {
       setSaving(true);
@@ -179,7 +181,8 @@ export default function LessonsPage() {
         start_time: '09:00',
         end_time: '13:00',
         subject_id: '',
-        teacher_id: ''
+        teacher_id: '',
+        custom_subject_name: ''
       });
       fetchLessons();
       fetchSchedules();
@@ -193,6 +196,11 @@ export default function LessonsPage() {
 
   const handleEditClick = (lesson) => {
     const { startTime, endTime, cleanTitle } = parseLessonTitle(lesson.title, lesson.schedule_id, schedules);
+    const assigned = lesson.teacher_id 
+      ? teacherSubjects.filter(ts => ts.teacher_id === lesson.teacher_id).map(ts => ts.subject_id)
+      : [];
+    const isAssigned = assigned.includes(lesson.subject_id);
+
     setEditFormData({
       id: lesson.id,
       group_id: lesson.group_id || '',
@@ -200,15 +208,16 @@ export default function LessonsPage() {
       title: cleanTitle,
       start_time: startTime,
       end_time: endTime,
-      subject_id: lesson.subject_id || '',
-      teacher_id: lesson.teacher_id || ''
+      subject_id: (lesson.subject_id && isAssigned) ? lesson.subject_id : (lesson.subject_id ? 'custom_subject' : ''),
+      teacher_id: lesson.teacher_id || '',
+      custom_subject_name: (!isAssigned && lesson.subject_id) ? (subjects.find(s => s.id === lesson.subject_id)?.name || '') : ''
     });
     setShowEditModal(true);
   };
 
   const handleUpdateLesson = async (e) => {
     e.preventDefault();
-    if (!editFormData.group_id || !editFormData.lesson_date || !editFormData.title || !editFormData.start_time || !editFormData.end_time) return;
+    if (!editFormData.group_id || !editFormData.lesson_date || !editFormData.start_time || !editFormData.end_time) return;
     try {
       setEditing(true);
       const { data: { session } } = await supabase.auth.getSession();
@@ -257,36 +266,34 @@ export default function LessonsPage() {
   const selectedGroup = groups.find(g => g.id === formData.group_id);
   const groupEduType = selectedGroup?.education_type;
   
-  const groupFilteredTeachers = groupEduType
+  const displayTeachers = groupEduType
     ? teachers.filter(t => t.education_type === groupEduType)
     : teachers;
-
-  const formFilteredTeachers = formData.subject_id
-    ? groupFilteredTeachers.filter(t => 
-        teacherSubjects.some(ts => ts.teacher_id === t.id && ts.subject_id === formData.subject_id)
-      )
-    : groupFilteredTeachers;
-
-  const displayTeachers = formFilteredTeachers.length > 0 ? formFilteredTeachers : groupFilteredTeachers;
 
   const selectedEditGroup = groups.find(g => g.id === editFormData.group_id);
   const editGroupEduType = selectedEditGroup?.education_type;
   
-  const editGroupFilteredTeachers = editGroupEduType
+  const displayEditTeachers = editGroupEduType
     ? teachers.filter(t => t.education_type === editGroupEduType)
     : teachers;
 
-  const editFilteredTeachers = editFormData.subject_id
-    ? editGroupFilteredTeachers.filter(t => 
-        teacherSubjects.some(ts => ts.teacher_id === t.id && ts.subject_id === editFormData.subject_id)
-      )
-    : editGroupFilteredTeachers;
+  const addAssignedSubs = formData.teacher_id
+    ? teacherSubjects
+        .filter(ts => ts.teacher_id === formData.teacher_id)
+        .map(ts => subjects.find(s => s.id === ts.subject_id))
+        .filter(Boolean)
+    : [];
 
-  const displayEditTeachers = editFilteredTeachers.length > 0 ? editFilteredTeachers : editGroupFilteredTeachers;
+  const addHasAssignedSubs = addAssignedSubs.length > 0;
 
-  if (userRole === 'director') {
-    return <div style={{ padding: '2rem', textAlign: 'center' }}>Sizda ushbu sahifaga kirish huquqi yo'q.</div>;
-  }
+  const editAssignedSubs = editFormData.teacher_id
+    ? teacherSubjects
+        .filter(ts => ts.teacher_id === editFormData.teacher_id)
+        .map(ts => subjects.find(s => s.id === ts.subject_id))
+        .filter(Boolean)
+    : [];
+
+  const editHasAssignedSubs = editAssignedSubs.length > 0;
 
   return (
     <div className={styles.container}>
@@ -473,26 +480,24 @@ export default function LessonsPage() {
           </div>
 
           <div className="form-group">
-            <label>Fan</label>
-            <select 
-              className="input" 
-              value={formData.subject_id}
-              onChange={(e) => setFormData({...formData, subject_id: e.target.value})}
-              required
-            >
-              <option value="">Fanni tanlang</option>
-              {subjects.map(s => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-group">
             <label>O'qituvchi</label>
             <select 
               className="input" 
               value={formData.teacher_id}
-              onChange={(e) => setFormData({...formData, teacher_id: e.target.value})}
+              onChange={(e) => {
+                const tId = e.target.value;
+                const assigned = teacherSubjects
+                  .filter(ts => ts.teacher_id === tId)
+                  .map(ts => subjects.find(s => s.id === ts.subject_id))
+                  .filter(Boolean);
+                
+                setFormData({
+                  ...formData,
+                  teacher_id: tId,
+                  subject_id: assigned.length > 0 ? '' : 'custom_subject',
+                  custom_subject_name: ''
+                });
+              }}
               required
             >
               <option value="">O'qituvchini tanlang</option>
@@ -502,6 +507,57 @@ export default function LessonsPage() {
             </select>
           </div>
 
+          {formData.teacher_id && (
+            <div className="form-group">
+              <label>Fan</label>
+              {addHasAssignedSubs ? (
+                <>
+                  <select 
+                    className="input" 
+                    value={formData.subject_id}
+                    onChange={(e) => setFormData({
+                      ...formData, 
+                      subject_id: e.target.value,
+                      custom_subject_name: e.target.value === 'custom_subject' ? formData.custom_subject_name : ''
+                    })}
+                    required
+                  >
+                    <option value="">Fanni tanlang</option>
+                    {addAssignedSubs.map(s => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                    <option value="custom_subject">+ Yangi fan yozish</option>
+                  </select>
+                  
+                  {formData.subject_id === 'custom_subject' && (
+                    <input 
+                      type="text"
+                      className="input"
+                      style={{ marginTop: '0.5rem' }}
+                      placeholder="Fan nomini kiriting..."
+                      value={formData.custom_subject_name}
+                      onChange={(e) => setFormData({...formData, custom_subject_name: e.target.value})}
+                      required
+                    />
+                  )}
+                </>
+              ) : (
+                <input 
+                  type="text"
+                  className="input"
+                  placeholder="Fan nomini kiriting..."
+                  value={formData.custom_subject_name}
+                  onChange={(e) => setFormData({
+                    ...formData, 
+                    subject_id: 'custom_subject', 
+                    custom_subject_name: e.target.value
+                  })}
+                  required
+                />
+              )}
+            </div>
+          )}
+
           <div className="form-group">
             <label>Mavzu</label>
             <input 
@@ -510,7 +566,6 @@ export default function LessonsPage() {
               placeholder="Mavzuni kiriting..."
               value={formData.title}
               onChange={(e) => setFormData({...formData, title: e.target.value})}
-              required
             />
           </div>
 
@@ -581,26 +636,24 @@ export default function LessonsPage() {
           </div>
 
           <div className="form-group">
-            <label>Fan</label>
-            <select 
-              className="input" 
-              value={editFormData.subject_id}
-              onChange={(e) => setEditFormData({...editFormData, subject_id: e.target.value})}
-              required
-            >
-              <option value="">Fanni tanlang</option>
-              {subjects.map(s => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-group">
             <label>O'qituvchi</label>
             <select 
               className="input" 
               value={editFormData.teacher_id}
-              onChange={(e) => setEditFormData({...editFormData, teacher_id: e.target.value})}
+              onChange={(e) => {
+                const tId = e.target.value;
+                const assigned = teacherSubjects
+                  .filter(ts => ts.teacher_id === tId)
+                  .map(ts => subjects.find(s => s.id === ts.subject_id))
+                  .filter(Boolean);
+                
+                setEditFormData({
+                  ...editFormData,
+                  teacher_id: tId,
+                  subject_id: assigned.length > 0 ? '' : 'custom_subject',
+                  custom_subject_name: ''
+                });
+              }}
               required
             >
               <option value="">O'qituvchini tanlang</option>
@@ -610,6 +663,57 @@ export default function LessonsPage() {
             </select>
           </div>
 
+          {editFormData.teacher_id && (
+            <div className="form-group">
+              <label>Fan</label>
+              {editHasAssignedSubs ? (
+                <>
+                  <select 
+                    className="input" 
+                    value={editFormData.subject_id}
+                    onChange={(e) => setEditFormData({
+                      ...editFormData, 
+                      subject_id: e.target.value,
+                      custom_subject_name: e.target.value === 'custom_subject' ? editFormData.custom_subject_name : ''
+                    })}
+                    required
+                  >
+                    <option value="">Fanni tanlang</option>
+                    {editAssignedSubs.map(s => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                    <option value="custom_subject">+ Yangi fan yozish</option>
+                  </select>
+                  
+                  {editFormData.subject_id === 'custom_subject' && (
+                    <input 
+                      type="text"
+                      className="input"
+                      style={{ marginTop: '0.5rem' }}
+                      placeholder="Fan nomini kiriting..."
+                      value={editFormData.custom_subject_name}
+                      onChange={(e) => setEditFormData({...editFormData, custom_subject_name: e.target.value})}
+                      required
+                    />
+                  )}
+                </>
+              ) : (
+                <input 
+                  type="text"
+                  className="input"
+                  placeholder="Fan nomini kiriting..."
+                  value={editFormData.custom_subject_name}
+                  onChange={(e) => setEditFormData({
+                    ...editFormData, 
+                    subject_id: 'custom_subject', 
+                    custom_subject_name: e.target.value
+                  })}
+                  required
+                />
+              )}
+            </div>
+          )}
+
           <div className="form-group">
             <label>Mavzu</label>
             <input 
@@ -618,7 +722,6 @@ export default function LessonsPage() {
               placeholder="Mavzuni kiriting..."
               value={editFormData.title}
               onChange={(e) => setEditFormData({...editFormData, title: e.target.value})}
-              required
             />
           </div>
 

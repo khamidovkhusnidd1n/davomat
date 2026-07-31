@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Search, Plus, Upload, ChevronDown, ChevronUp, Edit, LayoutGrid, TableProperties, Download } from 'lucide-react';
+import { Search, Plus, Upload, ChevronDown, ChevronUp, Edit, LayoutGrid, TableProperties, Download, Trash2 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import TeacherImportModal from './TeacherImportModal';
 import TeacherModal from './TeacherModal';
@@ -80,6 +80,17 @@ export default function TeachersPage() {
       setLoading(false);
     }
   }
+
+  const handleDeleteTeacher = async (id) => {
+    if (!confirm("Haqiqatan ham ushbu o'qituvchini o'chirmoqchimisiz? Uning barcha biriktirilgan darslaridagi statistikalar ham o'chadi!")) return;
+    try {
+      const { error } = await supabase.from('teachers').delete().eq('id', id);
+      if (error) throw error;
+      fetchData();
+    } catch (err) {
+      alert("Xatolik yuz berdi: " + err.message);
+    }
+  };
 
   const handleExportExcel = () => {
     const dataToExport = filtered.map((t, idx) => ({
@@ -250,17 +261,30 @@ export default function TeachersPage() {
                   </div>
                   <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                     {canWrite && (
-                      <button
-                        className={styles.editBtn}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedTeacher(teacher);
-                          setShowAddModal(true);
-                        }}
-                        title="O'qituvchini tahrirlash"
-                      >
-                        <Edit size={16} />
-                      </button>
+                      <>
+                        <button
+                          className={styles.editBtn}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedTeacher(teacher);
+                            setShowAddModal(true);
+                          }}
+                          title="O'qituvchini tahrirlash"
+                        >
+                          <Edit size={16} />
+                        </button>
+                        <button
+                          className={styles.editBtn}
+                          style={{ color: '#ef4444', marginLeft: '4px' }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteTeacher(teacher.id);
+                          }}
+                          title="O'qituvchini o'chirish"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </>
                     )}
                     <button
                       className={styles.expandBtn}
@@ -377,16 +401,26 @@ export default function TeachersPage() {
                       </td>
                       {canWrite && (
                         <td>
-                          <button
-                            className={styles.actionBtn}
-                            onClick={() => {
-                              setSelectedTeacher(teacher);
-                              setShowAddModal(true);
-                            }}
-                            title="Tahrirlash"
-                          >
-                            <Edit size={16} />
-                          </button>
+                          <div style={{ display: 'flex', gap: '4px' }}>
+                            <button
+                              className={styles.actionBtn}
+                              onClick={() => {
+                                setSelectedTeacher(teacher);
+                                setShowAddModal(true);
+                              }}
+                              title="Tahrirlash"
+                            >
+                              <Edit size={16} />
+                            </button>
+                            <button
+                              className={styles.actionBtn}
+                              style={{ color: '#ef4444' }}
+                              onClick={() => handleDeleteTeacher(teacher.id)}
+                              title="O'chirish"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
                         </td>
                       )}
                     </tr>

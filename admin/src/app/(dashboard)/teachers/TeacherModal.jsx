@@ -13,7 +13,7 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
     phone: '',
     education_type: 'qayta_tayyorlov'
   });
-  const [assignedSubjects, setAssignedSubjects] = useState([]); // Array of { id, subject_id, new_subject_name, allocated_hours }
+  const [assignedSubjects, setAssignedSubjects] = useState([]); // Array of { id, subject_id, new_subject_name, allocated_hours, completed_hours }
   const [allSubjects, setAllSubjects] = useState([]);
   const [loading, setLoading] = useState(false);
   const [orgId, setOrgId] = useState(null);
@@ -33,7 +33,8 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
           id: ts.id,
           subject_id: ts.subjects?.id || '',
           new_subject_name: '',
-          allocated_hours: ts.allocated_hours || 120
+          allocated_hours: ts.allocated_hours || 120,
+          completed_hours: ts.completed_hours || 0
         })) || [];
         
         if (subjectsList.length === 0) {
@@ -41,7 +42,8 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
             id: 'new-' + Date.now(),
             subject_id: '',
             new_subject_name: '',
-            allocated_hours: 120
+            allocated_hours: 120,
+            completed_hours: 0
           });
         }
         setAssignedSubjects(subjectsList);
@@ -56,7 +58,8 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
             id: 'new-' + Date.now(),
             subject_id: '',
             new_subject_name: '',
-            allocated_hours: 120
+            allocated_hours: 120,
+            completed_hours: 0
           }
         ]);
       }
@@ -79,7 +82,7 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
   const handleAddSubjectRow = () => {
     setAssignedSubjects([
       ...assignedSubjects,
-      { id: 'new-' + Date.now(), subject_id: '', new_subject_name: '', allocated_hours: 120 }
+      { id: 'new-' + Date.now(), subject_id: '', new_subject_name: '', allocated_hours: 120, completed_hours: 0 }
     ]);
   };
 
@@ -172,6 +175,7 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
               teacher_id: teacherId,
               subject_id: finalSubjectId,
               allocated_hours: parseInt(as.allocated_hours) || 0,
+              completed_hours: parseInt(as.completed_hours) || 0,
               academic_year: academicYear
             });
           if (tsErr) throw tsErr;
@@ -294,17 +298,33 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
                       />
                     )}
                   </div>
-                  <div className={styles.hoursCol}>
-                    <input
-                      type="number"
-                      className="input"
-                      style={{ width: '100px' }}
-                      placeholder="Soat"
-                      value={as.allocated_hours}
-                      onChange={e => handleSubjectChange(index, 'allocated_hours', e.target.value)}
-                      min="1"
-                      required
-                    />
+                  <div className={styles.hoursCol} style={{ display: 'flex', gap: '8px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '2px' }}>Ajratilgan</span>
+                      <input
+                        type="number"
+                        className="input"
+                        style={{ width: '80px' }}
+                        placeholder="Ajratilgan"
+                        value={as.allocated_hours}
+                        onChange={e => handleSubjectChange(index, 'allocated_hours', e.target.value)}
+                        min="0"
+                        required
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '2px' }}>O'tilgan</span>
+                      <input
+                        type="number"
+                        className="input"
+                        style={{ width: '80px' }}
+                        placeholder="O'tilgan"
+                        value={as.completed_hours}
+                        onChange={e => handleSubjectChange(index, 'completed_hours', e.target.value)}
+                        min="0"
+                        required
+                      />
+                    </div>
                   </div>
                   <button
                     type="button"

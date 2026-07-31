@@ -43,6 +43,7 @@ export default function TeachersPage() {
           teacher_subjects(
             id,
             allocated_hours,
+            completed_hours,
             academic_year,
             subjects(id, name)
           )
@@ -58,10 +59,11 @@ export default function TeachersPage() {
           .select('id', { count: 'exact', head: true })
           .eq('teacher_id', t.id);
         
-        const completedHours = (count || 0) * 2; // 1 lesson = 2 hours
-        
         // Filter teacher_subjects by academic year
         const subjectsThisYear = t.teacher_subjects?.filter(ts => ts.academic_year === academicYear) || [];
+        const manualCompleted = subjectsThisYear.reduce((sum, ts) => sum + (ts.completed_hours || 0), 0);
+        const completedHours = ((count || 0) * 2) + manualCompleted; // 1 lesson = 2 hours + manual completed hours
+        
         const totalAllocated = subjectsThisYear.reduce((sum, ts) => sum + (ts.allocated_hours || 0), 0);
 
         return {

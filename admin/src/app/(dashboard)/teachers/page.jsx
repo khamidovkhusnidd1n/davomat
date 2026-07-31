@@ -72,7 +72,7 @@ export default function TeachersPage() {
           teacher_subjects: subjectsThisYear,
           completed_hours: completedHours,
           total_allocated: totalAllocated,
-          remaining_hours: Math.max(0, totalAllocated - completedHours),
+          remaining_hours: Math.max(0, (t.max_hours || 120) - completedHours),
         };
       }));
 
@@ -102,11 +102,11 @@ export default function TeachersPage() {
       "Ilmiy daraja": t.degree || 'Kiritilmagan',
       "Ta'lim turi": t.education_type === 'malaka_oshirish' ? 'Malaka oshirish' : 'Qayta tayyorlov',
       "Telefon": t.phone || 'Kiritilmagan',
-      "Fanlar": t.teacher_subjects.map(ts => ts.subjects?.name).filter(Boolean).join(', ') || 'Fan biriktirilmagan',
-      "Ajratilgan soat": t.total_allocated,
+      "Yillik limit soati": t.max_hours || 120,
+      "Biriktirilgan soatlar (jami)": t.total_allocated,
       "O'tilgan soat": t.completed_hours,
       "Qoldiq soat": t.remaining_hours,
-      "Bajarilishi (%)": t.total_allocated > 0 ? Math.round((t.completed_hours / t.total_allocated) * 100) : 0
+      "Bajarilishi (%)": t.max_hours > 0 ? Math.round((t.completed_hours / t.max_hours) * 100) : 0
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
@@ -246,8 +246,8 @@ export default function TeachersPage() {
         <div className={styles.cardsGrid}>
           {filtered.map(teacher => {
             const isExpanded = expandedId === teacher.id;
-            const pct = teacher.total_allocated > 0
-              ? Math.min(100, Math.round((teacher.completed_hours / teacher.total_allocated) * 100))
+            const pct = teacher.max_hours > 0
+              ? Math.min(100, Math.round((teacher.completed_hours / teacher.max_hours) * 100))
               : 0;
 
             return (
@@ -309,8 +309,8 @@ export default function TeachersPage() {
                 {/* Progress Bar */}
                 <div className={styles.progressSection}>
                   <div className={styles.progressInfo}>
-                    <span>{teacher.completed_hours} soat o'tildi</span>
-                    <span>{teacher.total_allocated} soat ajratilgan</span>
+                    <span>{teacher.completed_hours} / {teacher.max_hours} soat o'tildi</span>
+                    <span>Ajratilgan: {teacher.total_allocated} soat</span>
                   </div>
                   <div className={styles.progressBar}>
                     <div
@@ -321,7 +321,7 @@ export default function TeachersPage() {
                       }}
                     />
                   </div>
-                  <div className={styles.progressPct}>{pct}% — Qoldiq: {teacher.remaining_hours} soat</div>
+                  <div className={styles.progressPct}>{pct}% — Qoldiq limit: {teacher.remaining_hours} soat</div>
                 </div>
 
                 {/* Expanded: Subject breakdown */}
@@ -367,17 +367,18 @@ export default function TeachersPage() {
                   <th>O'qituvchi (F.I.Sh.)</th>
                   <th>Ta'lim turi</th>
                   <th>Biriktirilgan fanlar</th>
+                  <th>Yillik limit</th>
                   <th>Ajratilgan soat</th>
                   <th>O'tilgan soat</th>
-                  <th>Qoldiq soat</th>
+                  <th>Qoldiq limit</th>
                   <th>Bajarilishi (%)</th>
                   {canWrite && <th>Amal</th>}
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((teacher, idx) => {
-                  const pct = teacher.total_allocated > 0
-                    ? Math.min(100, Math.round((teacher.completed_hours / teacher.total_allocated) * 100))
+                  const pct = teacher.max_hours > 0
+                    ? Math.min(100, Math.round((teacher.completed_hours / teacher.max_hours) * 100))
                     : 0;
                   return (
                     <tr key={teacher.id}>
@@ -398,6 +399,7 @@ export default function TeachersPage() {
                       <td style={{ maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {teacher.teacher_subjects.map(ts => ts.subjects?.name).filter(Boolean).join(', ') || '—'}
                       </td>
+                      <td style={{ fontWeight: '500' }}>{teacher.max_hours} soat</td>
                       <td style={{ fontWeight: '500' }}>{teacher.total_allocated} soat</td>
                       <td style={{ color: 'var(--primary)', fontWeight: '500' }}>{teacher.completed_hours} soat</td>
                       <td style={{ color: teacher.remaining_hours > 0 ? '#f59e0b' : 'var(--text-muted)' }}>{teacher.remaining_hours} soat</td>

@@ -30,9 +30,35 @@ export default function ScheduleModal({ isOpen, onClose, schedule, groups, onSuc
   useEffect(() => {
     async function loadData() {
       try {
-        const { data: tData } = await supabase.from('teachers').select('id, full_name').order('full_name');
+        const { data: tData } = await supabase
+          .from('teachers')
+          .select(`
+            id, 
+            full_name,
+            max_hours,
+            teacher_subjects(completed_hours)
+          `)
+          .order('full_name');
         const { data: sData } = await supabase.from('subjects').select('id, name').order('name');
-        if (tData) setTeachers(tData);
+        
+        if (tData) {
+          const teachersWithStats = await Promise.all(tData.map(async (t) => {
+            const { count } = await supabase
+              .from('lessons')
+              .select('id', { count: 'exact', head: true })
+              .eq('teacher_id', t.id);
+            
+            const manualCompleted = t.teacher_subjects?.reduce((sum, ts) => sum + (ts.completed_hours || 0), 0) || 0;
+            const completedHours = ((count || 0) * 2) + manualCompleted;
+            
+            return {
+              ...t,
+              completed_hours: completedHours,
+              limit_reached: completedHours >= (t.max_hours || 120)
+            };
+          }));
+          setTeachers(teachersWithStats);
+        }
         if (sData) setSubjects(sData);
       } catch (err) {
         console.error("Error loading modal dropdowns:", err);
@@ -60,6 +86,13 @@ export default function ScheduleModal({ isOpen, onClose, schedule, groups, onSuc
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+
+    const selectedTeacher = teachers.find(t => t.id === formData.teacher_id);
+    if (selectedTeacher && selectedTeacher.limit_reached && selectedTeacher.id !== schedule?.teacher_id) {
+      alert(`Xatolik: ${selectedTeacher.full_name} yillik dars soati limitini (${selectedTeacher.max_hours} soat) to'ldirib bo'lgan!`);
+      setLoading(false);
+      return;
+    }
 
     try {
       const payload = {
@@ -146,7 +179,9 @@ export default function ScheduleModal({ isOpen, onClose, schedule, groups, onSuc
           >
             <option value="">— Tanlanmagan —</option>
             {teachers.map(t => (
-              <option key={t.id} value={t.id}>{t.full_name}</option>
+              <option key={t.id} value={t.id} disabled={t.limit_reached && t.id !== formData.teacher_id}>
+                {t.full_name} {t.limit_reached ? `(Limit to'lgan: ${t.completed_hours}/${t.max_hours} s)` : `(${t.completed_hours}/${t.max_hours} s)`}
+              </option>
             ))}
           </select>
         </div>

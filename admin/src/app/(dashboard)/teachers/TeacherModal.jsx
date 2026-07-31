@@ -6,18 +6,19 @@ import { Trash2, Plus, AlertCircle } from 'lucide-react';
 import styles from './TeacherModal.module.css';
 
 const DEFAULT_SUBJECT_HOURS = {
-  "Ta'lim jarayoniga raqamli texnologiyalarni joriy etish": 12,
-  "Art marketing": 20,
-  "Tasviriy san'atning umumiy tarixi": 54,
-  "Tasviriy san'atda an'anaviy va zamonaviy uslublar": 30,
-  "Jonli odam qomatidan anatomik chizmatasvir": 56,
-  "Materialshunoslik va rangtasvir texnika texnologiyasi": 80,
-  "Chizmatasvir": 228,
-  "Rangtasvir": 228,
-  "Kompozitsiya": 114,
-  "San'at estetikasi": 16,
-  "Nutq madaniyati": 14,
-  "Yakuniy attestatsiya": 12
+  "Ta'lim jarayoniga raqamli texnologiyalarni joriy etish": { theory: 4, practice: 8 },
+  "Art marketing": { theory: 10, practice: 10 },
+  "Tasviriy san'atning umumiy tarixi": { theory: 26, practice: 28 },
+  "Tasviriy san'atda an'anaviy va zamonaviy uslublar": { theory: 8, practice: 22 },
+  "Jonli odam qomatidan anatomik chizmatasvir": { theory: 6, practice: 50 },
+  "Materialshunoslik va rangtasvir texnika texnologiyasi": { theory: 10, practice: 70 },
+  "Chizmatasvir": { theory: 0, practice: 228 },
+  "Rangtasvir": { theory: 0, practice: 228 },
+  "Kompozitsiya": { theory: 0, practice: 114 },
+  "Kompazitsiya": { theory: 0, practice: 114 },
+  "San'at estetikasi": { theory: 16, practice: 0 },
+  "Nutq madaniyati": { theory: 0, practice: 14 },
+  "Yakuniy attestatsiya": { theory: 0, practice: 12 }
 };
 
 export default function TeacherModal({ isOpen, onClose, teacher, academicYear, onSuccess }) {
@@ -52,8 +53,10 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
           id: ts.id,
           subject_id: ts.subjects?.id || '',
           new_subject_name: '',
-          allocated_hours: ts.allocated_hours || 120,
-          completed_hours: ts.completed_hours || 0
+          allocated_theory_hours: ts.allocated_theory_hours || 0,
+          allocated_practice_hours: ts.allocated_practice_hours || 0,
+          completed_theory_hours: ts.completed_theory_hours || 0,
+          completed_practice_hours: ts.completed_practice_hours || 0
         })) || [];
         
         if (subjectsList.length === 0) {
@@ -61,8 +64,10 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
             id: 'new-' + Date.now(),
             subject_id: '',
             new_subject_name: '',
-            allocated_hours: 120,
-            completed_hours: 0
+            allocated_theory_hours: 0,
+            allocated_practice_hours: 0,
+            completed_theory_hours: 0,
+            completed_practice_hours: 0
           });
         }
         setAssignedSubjects(subjectsList);
@@ -79,8 +84,10 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
             id: 'new-' + Date.now(),
             subject_id: '',
             new_subject_name: '',
-            allocated_hours: 120,
-            completed_hours: 0
+            allocated_theory_hours: 0,
+            allocated_practice_hours: 0,
+            completed_theory_hours: 0,
+            completed_practice_hours: 0
           }
         ]);
       }
@@ -103,7 +110,7 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
   const handleAddSubjectRow = () => {
     setAssignedSubjects([
       ...assignedSubjects,
-      { id: 'new-' + Date.now(), subject_id: '', new_subject_name: '', allocated_hours: 120, completed_hours: 0 }
+      { id: 'new-' + Date.now(), subject_id: '', new_subject_name: '', allocated_theory_hours: 0, allocated_practice_hours: 0, completed_theory_hours: 0, completed_practice_hours: 0 }
     ]);
   };
 
@@ -115,11 +122,13 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
     const updated = [...assignedSubjects];
     updated[index][field] = value;
 
-    // Auto-fill allocated_hours if subject_id is changed
+    // Auto-fill allocated theory and practice hours if subject_id is changed
     if (field === 'subject_id' && value && value !== 'new_subject') {
       const selectedSub = allSubjects.find(s => s.id === value);
       if (selectedSub && DEFAULT_SUBJECT_HOURS[selectedSub.name] !== undefined) {
-        updated[index]['allocated_hours'] = DEFAULT_SUBJECT_HOURS[selectedSub.name];
+        const hoursObj = DEFAULT_SUBJECT_HOURS[selectedSub.name];
+        updated[index]['allocated_theory_hours'] = hoursObj.theory;
+        updated[index]['allocated_practice_hours'] = hoursObj.practice;
       }
     }
 
@@ -204,13 +213,22 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
         }
 
         if (finalSubjectId) {
+          const theoryAlloc = parseInt(as.allocated_theory_hours) || 0;
+          const practiceAlloc = parseInt(as.allocated_practice_hours) || 0;
+          const theoryComp = parseInt(as.completed_theory_hours) || 0;
+          const practiceComp = parseInt(as.completed_practice_hours) || 0;
+
           const { error: tsErr } = await supabase
             .from('teacher_subjects')
             .insert({
               teacher_id: teacherId,
               subject_id: finalSubjectId,
-              allocated_hours: parseInt(as.allocated_hours) || 0,
-              completed_hours: parseInt(as.completed_hours) || 0,
+              allocated_hours: theoryAlloc + practiceAlloc,
+              completed_hours: theoryComp + practiceComp,
+              allocated_theory_hours: theoryAlloc,
+              allocated_practice_hours: practiceAlloc,
+              completed_theory_hours: theoryComp,
+              completed_practice_hours: practiceComp,
               academic_year: academicYear
             });
           if (tsErr) throw tsErr;
@@ -357,29 +375,51 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
                       />
                     )}
                   </div>
-                  <div className={styles.hoursCol} style={{ display: 'flex', gap: '8px' }}>
+                  <div className={styles.hoursCol} style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '2px' }}>Ajratilgan</span>
+                      <span style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', marginBottom: '2px', whiteSpace: 'nowrap' }}>Nazariy Ajr.</span>
                       <input
                         type="number"
                         className="input"
-                        style={{ width: '80px' }}
-                        placeholder="Ajratilgan"
-                        value={as.allocated_hours}
-                        onChange={e => handleSubjectChange(index, 'allocated_hours', e.target.value)}
+                        style={{ width: '80px', padding: '10px 8px' }}
+                        value={as.allocated_theory_hours}
+                        onChange={e => handleSubjectChange(index, 'allocated_theory_hours', e.target.value)}
                         min="0"
                         required
                       />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '2px' }}>O'tilgan</span>
+                      <span style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', marginBottom: '2px', whiteSpace: 'nowrap' }}>Nazariy O't.</span>
                       <input
                         type="number"
                         className="input"
-                        style={{ width: '80px' }}
-                        placeholder="O'tilgan"
-                        value={as.completed_hours}
-                        onChange={e => handleSubjectChange(index, 'completed_hours', e.target.value)}
+                        style={{ width: '80px', padding: '10px 8px' }}
+                        value={as.completed_theory_hours}
+                        onChange={e => handleSubjectChange(index, 'completed_theory_hours', e.target.value)}
+                        min="0"
+                        required
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', marginBottom: '2px', whiteSpace: 'nowrap' }}>Amaliy Ajr.</span>
+                      <input
+                        type="number"
+                        className="input"
+                        style={{ width: '80px', padding: '10px 8px' }}
+                        value={as.allocated_practice_hours}
+                        onChange={e => handleSubjectChange(index, 'allocated_practice_hours', e.target.value)}
+                        min="0"
+                        required
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', marginBottom: '2px', whiteSpace: 'nowrap' }}>Amaliy O't.</span>
+                      <input
+                        type="number"
+                        className="input"
+                        style={{ width: '80px', padding: '10px 8px' }}
+                        value={as.completed_practice_hours}
+                        onChange={e => handleSubjectChange(index, 'completed_practice_hours', e.target.value)}
                         min="0"
                         required
                       />

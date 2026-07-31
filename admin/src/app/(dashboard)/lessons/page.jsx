@@ -35,7 +35,8 @@ export default function LessonsPage() {
     end_time: '13:00',
     subject_id: '',
     teacher_id: '',
-    custom_subject_name: ''
+    custom_subject_name: '',
+    lesson_type: 'practice'
   });
   const [editFormData, setEditFormData] = useState({
     id: '',
@@ -46,7 +47,8 @@ export default function LessonsPage() {
     end_time: '13:00',
     subject_id: '',
     teacher_id: '',
-    custom_subject_name: ''
+    custom_subject_name: '',
+    lesson_type: 'practice'
   });
 
   useEffect(() => {
@@ -147,6 +149,7 @@ export default function LessonsPage() {
           schedule_id,
           teacher_id,
           subject_id,
+          lesson_type,
           groups ( name, course_name, education_type ),
           users!lessons_created_by_fkey ( full_name ),
           teachers ( full_name ),
@@ -223,7 +226,8 @@ export default function LessonsPage() {
         end_time: '13:00',
         subject_id: '',
         teacher_id: '',
-        custom_subject_name: ''
+        custom_subject_name: '',
+        lesson_type: 'practice'
       });
       fetchLessons(true);
       fetchSchedules();
@@ -251,7 +255,8 @@ export default function LessonsPage() {
       end_time: endTime,
       subject_id: (lesson.subject_id && isAssigned) ? lesson.subject_id : (lesson.subject_id ? 'custom_subject' : ''),
       teacher_id: lesson.teacher_id || '',
-      custom_subject_name: (!isAssigned && lesson.subject_id) ? (subjects.find(s => s.id === lesson.subject_id)?.name || '') : ''
+      custom_subject_name: (!isAssigned && lesson.subject_id) ? (subjects.find(s => s.id === lesson.subject_id)?.name || '') : '',
+      lesson_type: lesson.lesson_type || 'practice'
     });
     setShowEditModal(true);
   };
@@ -408,9 +413,21 @@ export default function LessonsPage() {
                         <td>
                           <div className={styles.subjectTopicWrapper}>
                             {lesson.subjects?.name && (
-                              <span className={styles.subjectBadge}>
-                                {lesson.subjects.name}
-                              </span>
+                              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                <span className={styles.subjectBadge}>
+                                  {lesson.subjects.name}
+                                </span>
+                                <span style={{ 
+                                  fontSize: '0.68rem', 
+                                  padding: '1px 5px', 
+                                  borderRadius: '3px', 
+                                  background: lesson.lesson_type === 'theory' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(16, 185, 129, 0.15)', 
+                                  color: lesson.lesson_type === 'theory' ? '#3b82f6' : '#10b981',
+                                  fontWeight: '600'
+                                }}>
+                                  {lesson.lesson_type === 'theory' ? 'Nazariy' : 'Amaliy'}
+                                </span>
+                              </div>
                             )}
                             <div className={styles.topicText}>
                               {lesson.title || 'Mavzusiz'}
@@ -511,15 +528,29 @@ export default function LessonsPage() {
             </div>
           </div>
 
-          <div className="form-group">
-            <label>Sana</label>
-            <input 
-              type="date" 
-              className="input" 
-              value={formData.lesson_date}
-              onChange={(e) => setFormData({...formData, lesson_date: e.target.value})}
-              required
-            />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div className="form-group">
+              <label>Sana</label>
+              <input 
+                type="date" 
+                className="input" 
+                value={formData.lesson_date}
+                onChange={(e) => setFormData({...formData, lesson_date: e.target.value})}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Dars turi</label>
+              <select
+                className="input"
+                value={formData.lesson_type}
+                onChange={(e) => setFormData({...formData, lesson_type: e.target.value})}
+                required
+              >
+                <option value="practice">Amaliy (Practice)</option>
+                <option value="theory">Nazariy (Theory)</option>
+              </select>
+            </div>
           </div>
 
           <div className="form-group">
@@ -669,15 +700,29 @@ export default function LessonsPage() {
             </div>
           </div>
 
-          <div className="form-group">
-            <label>Sana</label>
-            <input 
-              type="date" 
-              className="input" 
-              value={editFormData.lesson_date}
-              onChange={(e) => setEditFormData({...editFormData, lesson_date: e.target.value})}
-              required
-            />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div className="form-group">
+              <label>Sana</label>
+              <input 
+                type="date" 
+                className="input" 
+                value={editFormData.lesson_date}
+                onChange={(e) => setEditFormData({...editFormData, lesson_date: e.target.value})}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Dars turi</label>
+              <select
+                className="input"
+                value={editFormData.lesson_type}
+                onChange={(e) => setEditFormData({...editFormData, lesson_type: e.target.value})}
+                required
+              >
+                <option value="practice">Amaliy (Practice)</option>
+                <option value="theory">Nazariy (Theory)</option>
+              </select>
+            </div>
           </div>
 
           <div className="form-group">

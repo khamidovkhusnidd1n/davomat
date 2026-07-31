@@ -47,6 +47,10 @@ export default function TeachersPage() {
             allocated_hours,
             completed_hours,
             academic_year,
+            allocated_theory_hours,
+            allocated_practice_hours,
+            completed_theory_hours,
+            completed_practice_hours,
             subjects(id, name)
           )
         `)
@@ -59,27 +63,55 @@ export default function TeachersPage() {
       const teachersWithStats = await Promise.all((data || []).map(async (t) => {
         const { data: lesData } = await supabase
           .from('lessons')
-          .select('lesson_date, start_time, end_time')
+          .select('lesson_date, start_time, end_time, subject_id, lesson_type')
           .eq('teacher_id', t.id);
         
         // Filter teacher_subjects by academic year
-        const subjectsThisYear = t.teacher_subjects?.filter(ts => ts.academic_year === academicYear) || [];
-        const manualCompleted = subjectsThisYear.reduce((sum, ts) => sum + (ts.completed_hours || 0), 0);
+        const rawSubjectsThisYear = t.teacher_subjects?.filter(ts => ts.academic_year === academicYear) || [];
 
         // Only lessons starting from tomorrow (future) are dynamically added to the manual count
         const futureLessons = (lesData || []).filter(l => l.lesson_date > todayStr);
-        const dynamicHours = futureLessons.reduce((sum, l) => {
-          const start = l.start_time || '09:00';
-          const end = l.end_time || '13:00';
-          const [startH, startM] = start.substring(0, 5).split(':').map(Number);
-          const [endH, endM] = end.substring(0, 5).split(':').map(Number);
-          const diffHours = ((endH * 60 + endM) - (startH * 60 + startM)) / 60;
-          const hours = diffHours > 0 ? Math.round(diffHours * 1.5) : 6;
-          return sum + hours;
-        }, 0);
+        
+        const subjectsThisYear = rawSubjectsThisYear.map(ts => {
+          const subFutureLessons = futureLessons.filter(l => l.subject_id === ts.subjects?.id);
+          
+          // Calculate dynamic theory hours
+          const dynamicTheory = subFutureLessons
+            .filter(l => l.lesson_type === 'theory')
+            .reduce((sum, l) => {
+              const start = l.start_time || '09:00';
+              const end = l.end_time || '13:00';
+              const [startH, startM] = start.substring(0, 5).split(':').map(Number);
+              const [endH, endM] = end.substring(0, 5).split(':').map(Number);
+              const diffHours = ((endH * 60 + endM) - (startH * 60 + startM)) / 60;
+              return sum + (diffHours > 0 ? Math.round(diffHours * 1.5) : 6);
+            }, 0);
 
-        const completedHours = manualCompleted + dynamicHours;
-        const totalAllocated = subjectsThisYear.reduce((sum, ts) => sum + (ts.allocated_hours || 0), 0);
+          // Calculate dynamic practice hours
+          const dynamicPractice = subFutureLessons
+            .filter(l => l.lesson_type === 'practice')
+            .reduce((sum, l) => {
+              const start = l.start_time || '09:00';
+              const end = l.end_time || '13:00';
+              const [startH, startM] = start.substring(0, 5).split(':').map(Number);
+              const [endH, endM] = end.substring(0, 5).split(':').map(Number);
+              const diffHours = ((endH * 60 + endM) - (startH * 60 + startM)) / 60;
+              return sum + (diffHours > 0 ? Math.round(diffHours * 1.5) : 6);
+            }, 0);
+
+          const totalTheory = (ts.completed_theory_hours || 0) + dynamicTheory;
+          const totalPractice = (ts.completed_practice_hours || 0) + dynamicPractice;
+
+          return {
+            ...ts,
+            total_theory_completed: totalTheory,
+            total_practice_completed: totalPractice,
+            total_completed: totalTheory + totalPractice
+          };
+        });
+
+        const completedHours = subjectsThisYear.reduce((sum, ts) => sum + ts.total_completed, 0);
+        const totalAllocated = subjectsThisYear.reduce((sum, ts) => sum + (ts.allocated_theory_hours || 0) + (ts.allocated_practice_hours || 0), 0);
 
         return {
           ...t,
@@ -118,7 +150,9 @@ export default function TeachersPage() {
       "Telefon": t.phone || 'Kiritilmagan',
       "Yillik limit soati": t.max_hours || 120,
       "Biriktirilgan soatlar (jami)": t.total_allocated,
-      "O'tilgan soat": t.completed_hours,
+      "O'tilgan soat (jami)": t.completed_hours,
+      "Nazariy soat (Ajr/O't)": `${t.teacher_subjects.reduce((sum, ts) => sum + (ts.allocated_theory_hours || 0), 0)} / ${t.teacher_subjects.reduce((sum, ts) => sum + (ts.total_theory_completed || 0), 0)}`,
+      "Amaliy soat (Ajr/O't)": `${t.teacher_subjects.reduce((sum, ts) => sum + (ts.allocated_practice_hours || 0), 0)} / ${t.teacher_subjects.reduce((sum, ts) => sum + (ts.total_practice_completed || 0), 0)}`,
       "Qoldiq soat": t.remaining_hours,
       "Bajarilishi (%)": t.max_hours > 0 ? Math.round((t.completed_hours / t.max_hours) * 100) : 0
     }));
@@ -348,19 +382,25 @@ export default function TeachersPage() {
                         <thead>
                           <tr>
                             <th>Fan</th>
-                            <th>Ajratilgan soat</th>
+                            <th>Nazariy (Ajr / O't)</th>
+                            <th>Amaliy (Ajr / O't)</th>
+                            <th>Jami (Ajr / O't)</th>
                           </tr>
                         </thead>
                         <tbody>
                           {teacher.teacher_subjects.map(ts => (
                             <tr key={ts.id}>
                               <td>{ts.subjects?.name || '—'}</td>
-                              <td>{ts.allocated_hours} soat</td>
+                              <td>{ts.allocated_theory_hours || 0} / {ts.total_theory_completed || 0} soat</td>
+                              <td>{ts.allocated_practice_hours || 0} / {ts.total_practice_completed || 0} soat</td>
+                              <td>{(ts.allocated_theory_hours || 0) + (ts.allocated_practice_hours || 0)} / {ts.total_completed || 0} soat</td>
                             </tr>
                           ))}
                           <tr className={styles.totalRow}>
                             <td><strong>Jami</strong></td>
-                            <td><strong>{teacher.total_allocated} soat</strong></td>
+                            <td><strong>{teacher.teacher_subjects.reduce((sum, ts) => sum + (ts.allocated_theory_hours || 0), 0)} / {teacher.teacher_subjects.reduce((sum, ts) => sum + (ts.total_theory_completed || 0), 0)} soat</strong></td>
+                            <td><strong>{teacher.teacher_subjects.reduce((sum, ts) => sum + (ts.allocated_practice_hours || 0), 0)} / {teacher.teacher_subjects.reduce((sum, ts) => sum + (ts.total_practice_completed || 0), 0)} soat</strong></td>
+                            <td><strong>{teacher.total_allocated} / {teacher.completed_hours} soat</strong></td>
                           </tr>
                         </tbody>
                       </table>
@@ -384,6 +424,8 @@ export default function TeachersPage() {
                   <th>Yillik limit</th>
                   <th>Ajratilgan soat</th>
                   <th>O'tilgan soat</th>
+                  <th>Nazariy (Ajr/O't)</th>
+                  <th>Amaliy (Ajr/O't)</th>
                   <th>Qoldiq limit</th>
                   <th>Bajarilishi (%)</th>
                   {canWrite && <th>Amal</th>}
@@ -416,6 +458,12 @@ export default function TeachersPage() {
                       <td style={{ fontWeight: '500' }}>{teacher.max_hours} soat</td>
                       <td style={{ fontWeight: '500' }}>{teacher.total_allocated} soat</td>
                       <td style={{ color: 'var(--primary)', fontWeight: '500' }}>{teacher.completed_hours} soat</td>
+                      <td style={{ fontWeight: '500' }}>
+                        {teacher.teacher_subjects.reduce((sum, ts) => sum + (ts.allocated_theory_hours || 0), 0)} / {teacher.teacher_subjects.reduce((sum, ts) => sum + (ts.total_theory_completed || 0), 0)}
+                      </td>
+                      <td style={{ fontWeight: '500' }}>
+                        {teacher.teacher_subjects.reduce((sum, ts) => sum + (ts.allocated_practice_hours || 0), 0)} / {teacher.teacher_subjects.reduce((sum, ts) => sum + (ts.total_practice_completed || 0), 0)}
+                      </td>
                       <td style={{ color: teacher.remaining_hours > 0 ? '#f59e0b' : 'var(--text-muted)' }}>{teacher.remaining_hours} soat</td>
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

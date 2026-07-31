@@ -26,6 +26,8 @@ export default function SchedulesPage() {
   const [showImport, setShowImport] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState(null);
   const [userRole, setUserRole] = useState(null);
+  const [expandedGroupId, setExpandedGroupId] = useState(null);
+  const [expandedDayKey, setExpandedDayKey] = useState(null); // 'groupId-dayOfWeek'
   
   // Fake organizationId hozircha
   const organizationId = '11111111-1111-1111-1111-111111111111';
@@ -54,7 +56,11 @@ export default function SchedulesPage() {
             day_of_week,
             start_time,
             end_time,
-            groups ( id, name, course_name, education_type )
+            subject_id,
+            teacher_id,
+            groups ( id, name, course_name, education_type ),
+            subjects ( id, name ),
+            teachers ( id, full_name )
           `)
           .order('day_of_week', { ascending: true })
           .order('start_time', { ascending: true }),
@@ -143,52 +149,113 @@ export default function SchedulesPage() {
             {qaytaGroups.length === 0 ? (
               <div className={styles.emptyText}>Guruhlar topilmadi</div>
             ) : (
-              qaytaGroups.map(group => (
-                <div key={group.id} className={styles.groupCard}>
-                  <div className={styles.groupCardHeader}>
-                    <div>
-                      <h3 className={styles.groupName}>{group.name}</h3>
-                      <span className={styles.courseName}>{group.course_name || 'Yo\'nalish kiritilmagan'}</span>
+              qaytaGroups.map(group => {
+                const isGroupExpanded = expandedGroupId === group.id;
+                const uniqueDays = Array.from(new Set(group.schedules.map(s => s.day_of_week))).sort((a, b) => a - b);
+
+                return (
+                  <div key={group.id} className={styles.groupCard}>
+                    <div 
+                      className={styles.groupCardHeader} 
+                      onClick={() => {
+                        setExpandedGroupId(isGroupExpanded ? null : group.id);
+                        setExpandedDayKey(null);
+                      }}
+                      style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: 0, paddingBottom: isGroupExpanded ? '8px' : 0, borderBottom: isGroupExpanded ? '1px solid var(--border)' : 'none' }}
+                    >
+                      <div>
+                        <h3 className={styles.groupName}>{group.name}</h3>
+                        <span className={styles.courseName}>{group.course_name || 'Yo\'nalish kiritilmagan'}</span>
+                      </div>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                        {isGroupExpanded ? '▲ Yopish' : '▼ Haftalik kunlar'}
+                      </span>
                     </div>
-                  </div>
-                  <div className={styles.scheduleList}>
-                    {group.schedules.length === 0 ? (
-                      <p className={styles.noScheduleText}>Hali dars jadvali belgilanmagan</p>
-                    ) : (
-                      group.schedules.map(sch => {
-                        const start = sch.start_time.substring(0, 5);
-                        const end = sch.end_time.substring(0, 5);
-                        return (
-                          <div key={sch.id} className={styles.scheduleItem}>
-                            <div className={styles.scheduleTime}>
-                              <span className={styles.scheduleDay}>{DAYS[sch.day_of_week]}</span>
-                              <span className={styles.scheduleHours}>{start} - {end}</span>
-                            </div>
-                            {isWriteEnabled && (
-                              <div className={styles.scheduleActions}>
-                                <button 
-                                  className={styles.scheduleActionBtn}
-                                  onClick={() => { setEditingSchedule(sch); setShowModal(true); }}
-                                  title="Tahrirlash"
+
+                    {isGroupExpanded && (
+                      <div className={styles.scheduleList} style={{ marginTop: '12px' }}>
+                        {group.schedules.length === 0 ? (
+                          <p className={styles.noScheduleText}>Hali dars jadvali belgilanmagan</p>
+                        ) : (
+                          uniqueDays.map(dayOfWeek => {
+                            const dayKey = `${group.id}-${dayOfWeek}`;
+                            const isDayExpanded = expandedDayKey === dayKey;
+                            const daySchedules = group.schedules.filter(s => s.day_of_week === dayOfWeek);
+
+                            return (
+                              <div key={dayOfWeek} className={styles.dayGroup}>
+                                <div 
+                                  className={styles.dayHeader}
+                                  onClick={() => setExpandedDayKey(isDayExpanded ? null : dayKey)}
+                                  style={{
+                                    padding: '10px 12px',
+                                    background: isDayExpanded ? 'var(--primary-light)' : 'var(--bg-sidebar)',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    borderRadius: '8px',
+                                    border: '1px solid var(--border)',
+                                    color: isDayExpanded ? 'var(--primary)' : 'inherit',
+                                    marginBottom: isDayExpanded ? '4px' : '8px'
+                                  }}
                                 >
-                                  <Edit2 size={14} />
-                                </button>
-                                <button 
-                                  className={`${styles.scheduleActionBtn} ${styles.danger}`}
-                                  onClick={() => handleDelete(sch.id)}
-                                  title="O'chirish"
-                                >
-                                  <Trash2 size={14} />
-                                </button>
+                                  <span className={styles.scheduleDay} style={{ fontWeight: '600', color: isDayExpanded ? 'var(--primary)' : 'inherit', minWidth: 'auto' }}>
+                                    {DAYS[dayOfWeek]}
+                                  </span>
+                                  <span style={{ fontSize: '0.8rem', opacity: 0.8 }}>
+                                    {isDayExpanded ? '▲ Darslarni yopish' : `▼ ${daySchedules.length} ta dars`}
+                                  </span>
+                                </div>
+
+                                {isDayExpanded && (
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingLeft: '8px', marginBottom: '8px' }}>
+                                    {daySchedules.map(sch => {
+                                      const start = sch.start_time.substring(0, 5);
+                                      const end = sch.end_time.substring(0, 5);
+                                      return (
+                                        <div key={sch.id} className={styles.scheduleItem} style={{ borderLeft: '3px solid var(--primary)', padding: '10px 12px' }}>
+                                          <div className={styles.scheduleTimeDetail} style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                            <span className={styles.scheduleHours} style={{ fontWeight: '600' }}>{start} - {end}</span>
+                                            <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                                              <strong>Fan:</strong> {sch.subjects?.name || '—'}
+                                            </span>
+                                            <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                                              <strong>Ustoz:</strong> {sch.teachers?.full_name || '—'}
+                                            </span>
+                                          </div>
+                                          {isWriteEnabled && (
+                                            <div className={styles.scheduleActions}>
+                                              <button 
+                                                className={styles.scheduleActionBtn}
+                                                onClick={(e) => { e.stopPropagation(); setEditingSchedule(sch); setShowModal(true); }}
+                                                title="Tahrirlash"
+                                              >
+                                                <Edit2 size={14} />
+                                              </button>
+                                              <button 
+                                                className={`${styles.scheduleActionBtn} ${styles.danger}`}
+                                                onClick={(e) => { e.stopPropagation(); handleDelete(sch.id); }}
+                                                title="O'chirish"
+                                              >
+                                                <Trash2 size={14} />
+                                              </button>
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                )}
                               </div>
-                            )}
-                          </div>
-                        );
-                      })
+                            );
+                          })
+                        )}
+                      </div>
                     )}
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
 
@@ -200,52 +267,113 @@ export default function SchedulesPage() {
             {malakaGroups.length === 0 ? (
               <div className={styles.emptyText}>Guruhlar topilmadi</div>
             ) : (
-              malakaGroups.map(group => (
-                <div key={group.id} className={styles.groupCard}>
-                  <div className={styles.groupCardHeader}>
-                    <div>
-                      <h3 className={styles.groupName}>{group.name}</h3>
-                      <span className={styles.courseName}>{group.course_name || 'Kurs nomi kiritilmagan'}</span>
+              malakaGroups.map(group => {
+                const isGroupExpanded = expandedGroupId === group.id;
+                const uniqueDays = Array.from(new Set(group.schedules.map(s => s.day_of_week))).sort((a, b) => a - b);
+
+                return (
+                  <div key={group.id} className={styles.groupCard}>
+                    <div 
+                      className={styles.groupCardHeader} 
+                      onClick={() => {
+                        setExpandedGroupId(isGroupExpanded ? null : group.id);
+                        setExpandedDayKey(null);
+                      }}
+                      style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: 0, paddingBottom: isGroupExpanded ? '8px' : 0, borderBottom: isGroupExpanded ? '1px solid var(--border)' : 'none' }}
+                    >
+                      <div>
+                        <h3 className={styles.groupName}>{group.name}</h3>
+                        <span className={styles.courseName}>{group.course_name || 'Kurs nomi kiritilmagan'}</span>
+                      </div>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                        {isGroupExpanded ? '▲ Yopish' : '▼ Haftalik kunlar'}
+                      </span>
                     </div>
-                  </div>
-                  <div className={styles.scheduleList}>
-                    {group.schedules.length === 0 ? (
-                      <p className={styles.noScheduleText}>Hali dars jadvali belgilanmagan</p>
-                    ) : (
-                      group.schedules.map(sch => {
-                        const start = sch.start_time.substring(0, 5);
-                        const end = sch.end_time.substring(0, 5);
-                        return (
-                          <div key={sch.id} className={styles.scheduleItem}>
-                            <div className={styles.scheduleTime}>
-                              <span className={styles.scheduleDay}>{DAYS[sch.day_of_week]}</span>
-                              <span className={styles.scheduleHours}>{start} - {end}</span>
-                            </div>
-                            {isWriteEnabled && (
-                              <div className={styles.scheduleActions}>
-                                <button 
-                                  className={styles.scheduleActionBtn}
-                                  onClick={() => { setEditingSchedule(sch); setShowModal(true); }}
-                                  title="Tahrirlash"
+
+                    {isGroupExpanded && (
+                      <div className={styles.scheduleList} style={{ marginTop: '12px' }}>
+                        {group.schedules.length === 0 ? (
+                          <p className={styles.noScheduleText}>Hali dars jadvali belgilanmagan</p>
+                        ) : (
+                          uniqueDays.map(dayOfWeek => {
+                            const dayKey = `${group.id}-${dayOfWeek}`;
+                            const isDayExpanded = expandedDayKey === dayKey;
+                            const daySchedules = group.schedules.filter(s => s.day_of_week === dayOfWeek);
+
+                            return (
+                              <div key={dayOfWeek} className={styles.dayGroup}>
+                                <div 
+                                  className={styles.dayHeader}
+                                  onClick={() => setExpandedDayKey(isDayExpanded ? null : dayKey)}
+                                  style={{
+                                    padding: '10px 12px',
+                                    background: isDayExpanded ? 'var(--primary-light)' : 'var(--bg-sidebar)',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    borderRadius: '8px',
+                                    border: '1px solid var(--border)',
+                                    color: isDayExpanded ? 'var(--primary)' : 'inherit',
+                                    marginBottom: isDayExpanded ? '4px' : '8px'
+                                  }}
                                 >
-                                  <Edit2 size={14} />
-                                </button>
-                                <button 
-                                  className={`${styles.scheduleActionBtn} ${styles.danger}`}
-                                  onClick={() => handleDelete(sch.id)}
-                                  title="O'chirish"
-                                >
-                                  <Trash2 size={14} />
-                                </button>
+                                  <span className={styles.scheduleDay} style={{ fontWeight: '600', color: isDayExpanded ? 'var(--primary)' : 'inherit', minWidth: 'auto' }}>
+                                    {DAYS[dayOfWeek]}
+                                  </span>
+                                  <span style={{ fontSize: '0.8rem', opacity: 0.8 }}>
+                                    {isDayExpanded ? '▲ Darslarni yopish' : `▼ ${daySchedules.length} ta dars`}
+                                  </span>
+                                </div>
+
+                                {isDayExpanded && (
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingLeft: '8px', marginBottom: '8px' }}>
+                                    {daySchedules.map(sch => {
+                                      const start = sch.start_time.substring(0, 5);
+                                      const end = sch.end_time.substring(0, 5);
+                                      return (
+                                        <div key={sch.id} className={styles.scheduleItem} style={{ borderLeft: '3px solid var(--primary)', padding: '10px 12px' }}>
+                                          <div className={styles.scheduleTimeDetail} style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                            <span className={styles.scheduleHours} style={{ fontWeight: '600' }}>{start} - {end}</span>
+                                            <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                                              <strong>Fan:</strong> {sch.subjects?.name || '—'}
+                                            </span>
+                                            <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                                              <strong>Ustoz:</strong> {sch.teachers?.full_name || '—'}
+                                            </span>
+                                          </div>
+                                          {isWriteEnabled && (
+                                            <div className={styles.scheduleActions}>
+                                              <button 
+                                                className={styles.scheduleActionBtn}
+                                                onClick={(e) => { e.stopPropagation(); setEditingSchedule(sch); setShowModal(true); }}
+                                                title="Tahrirlash"
+                                              >
+                                                <Edit2 size={14} />
+                                              </button>
+                                              <button 
+                                                className={`${styles.scheduleActionBtn} ${styles.danger}`}
+                                                onClick={(e) => { e.stopPropagation(); handleDelete(sch.id); }}
+                                                title="O'chirish"
+                                              >
+                                                <Trash2 size={14} />
+                                              </button>
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                )}
                               </div>
-                            )}
-                          </div>
-                        );
-                      })
+                            );
+                          })
+                        )}
+                      </div>
                     )}
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>

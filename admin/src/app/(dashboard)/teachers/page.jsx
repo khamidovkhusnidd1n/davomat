@@ -40,6 +40,7 @@ export default function TeachersPage() {
           full_name,
           phone,
           education_type,
+          degree,
           teacher_subjects(
             id,
             allocated_hours,
@@ -98,6 +99,7 @@ export default function TeachersPage() {
     const dataToExport = filtered.map((t, idx) => ({
       "№": idx + 1,
       "O'qituvchi": t.full_name,
+      "Ilmiy daraja": t.degree || 'Kiritilmagan',
       "Ta'lim turi": t.education_type === 'malaka_oshirish' ? 'Malaka oshirish' : 'Qayta tayyorlov',
       "Telefon": t.phone || 'Kiritilmagan',
       "Fanlar": t.teacher_subjects.map(ts => ts.subjects?.name).filter(Boolean).join(', ') || 'Fan biriktirilmagan',
@@ -257,9 +259,16 @@ export default function TeachersPage() {
                   </div>
                   <div className={styles.cardInfo}>
                     <h3 className={styles.cardName}>{teacher.full_name}</h3>
-                    <span className={`${styles.typeBadge} ${teacher.education_type === 'malaka_oshirish' ? styles.malaka : styles.qayta}`}>
-                      {teacher.education_type === 'malaka_oshirish' ? 'Malaka oshirish' : 'Qayta tayyorlov'}
-                    </span>
+                    <div style={{ display: 'flex', gap: '6px', marginTop: '4px', flexWrap: 'wrap', alignItems: 'center' }}>
+                      <span className={`${styles.typeBadge} ${teacher.education_type === 'malaka_oshirish' ? styles.malaka : styles.qayta}`}>
+                        {teacher.education_type === 'malaka_oshirish' ? 'Malaka oshirish' : 'Qayta tayyorlov'}
+                      </span>
+                      {teacher.degree && (
+                        <span style={{ fontSize: '0.75rem', padding: '2px 6px', borderRadius: '4px', background: 'rgba(255, 255, 255, 0.1)', color: 'var(--text-secondary)', border: '1px solid var(--border)', fontWeight: '500' }}>
+                          {teacher.degree}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                     {canWrite && (
@@ -373,7 +382,14 @@ export default function TeachersPage() {
                   return (
                     <tr key={teacher.id}>
                       <td>{idx + 1}</td>
-                      <td style={{ fontWeight: '600' }}>{teacher.full_name}</td>
+                      <td style={{ fontWeight: '600' }}>
+                        {teacher.full_name}
+                        {teacher.degree && (
+                          <span style={{ fontSize: '0.75rem', padding: '1px 5px', borderRadius: '3px', background: '#f3f4f6', color: '#4b5563', marginLeft: '6px', fontWeight: 'normal', border: '1px solid #e5e7eb' }}>
+                            {teacher.degree}
+                          </span>
+                        )}
+                      </td>
                       <td>
                         <span className={`${styles.typeBadge} ${teacher.education_type === 'malaka_oshirish' ? styles.malaka : styles.qayta}`}>
                           {teacher.education_type === 'malaka_oshirish' ? 'Malaka oshirish' : 'Qayta tayyorlov'}

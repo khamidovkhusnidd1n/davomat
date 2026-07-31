@@ -11,7 +11,8 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
   const [formData, setFormData] = useState({
     full_name: '',
     phone: '',
-    education_type: 'qayta_tayyorlov'
+    education_type: 'qayta_tayyorlov',
+    degree: ''
   });
   const [assignedSubjects, setAssignedSubjects] = useState([]); // Array of { id, subject_id, new_subject_name, allocated_hours, completed_hours }
   const [allSubjects, setAllSubjects] = useState([]);
@@ -26,7 +27,8 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
         setFormData({
           full_name: teacher.full_name || '',
           phone: teacher.phone || '',
-          education_type: teacher.education_type || 'qayta_tayyorlov'
+          education_type: teacher.education_type || 'qayta_tayyorlov',
+          degree: teacher.degree || ''
         });
         // Map existing subjects
         const subjectsList = teacher.teacher_subjects?.map(ts => ({
@@ -51,7 +53,8 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
         setFormData({
           full_name: '',
           phone: '',
-          education_type: 'qayta_tayyorlov'
+          education_type: 'qayta_tayyorlov',
+          degree: ''
         });
         setAssignedSubjects([
           {
@@ -121,7 +124,8 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
           .update({
             full_name: formData.full_name,
             phone: formData.phone,
-            education_type: formData.education_type
+            education_type: formData.education_type,
+            degree: formData.degree || null
           })
           .eq('id', teacher.id);
         if (error) throw error;
@@ -132,7 +136,8 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
             organization_id: currentOrgId,
             full_name: formData.full_name,
             phone: formData.phone,
-            education_type: formData.education_type
+            education_type: formData.education_type,
+            degree: formData.degree || null
           })
           .select('id')
           .single();
@@ -244,6 +249,19 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
             >
               <option value="qayta_tayyorlov">Qayta tayyorlov</option>
               <option value="malaka_oshirish">Malaka oshirish</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label>Ilmiy daraja</label>
+            <select
+              className="input"
+              value={formData.degree}
+              onChange={e => setFormData({ ...formData, degree: e.target.value })}
+            >
+              <option value="">— Tanlanmagan —</option>
+              <option value="PhD">PhD</option>
+              <option value="Academic">Academic</option>
+              <option value="Professor">Professor</option>
             </select>
           </div>
         </div>

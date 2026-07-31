@@ -35,6 +35,15 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
           new_subject_name: '',
           allocated_hours: ts.allocated_hours || 120
         })) || [];
+        
+        if (subjectsList.length === 0) {
+          subjectsList.push({
+            id: 'new-' + Date.now(),
+            subject_id: '',
+            new_subject_name: '',
+            allocated_hours: 120
+          });
+        }
         setAssignedSubjects(subjectsList);
       } else {
         setFormData({
@@ -42,7 +51,14 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
           phone: '',
           education_type: 'qayta_tayyorlov'
         });
-        setAssignedSubjects([]);
+        setAssignedSubjects([
+          {
+            id: 'new-' + Date.now(),
+            subject_id: '',
+            new_subject_name: '',
+            allocated_hours: 120
+          }
+        ]);
       }
     }
   }, [isOpen, teacher]);

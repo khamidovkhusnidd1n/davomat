@@ -100,8 +100,6 @@ export default function ScheduleModal({ isOpen, onClose, schedule, groups, onSuc
     e.preventDefault();
     setLoading(true);
 
-
-
     try {
       const payload = {
         group_id: formData.group_id,
@@ -112,17 +110,86 @@ export default function ScheduleModal({ isOpen, onClose, schedule, groups, onSuc
         subject_id: formData.subject_id || null,
       };
 
+      let savedScheduleId = formData.id;
       let error;
+
       if (isEdit) {
         const { error: err } = await supabase.from('schedules').update(payload).eq('id', formData.id);
         error = err;
       } else {
-        const { error: err } = await supabase.from('schedules').insert(payload);
+        const { data: insertedRows, error: err } = await supabase
+          .from('schedules')
+          .insert(payload)
+          .select('id');
         error = err;
+        if (!error && insertedRows?.length) {
+          savedScheduleId = insertedRows[0].id;
+        }
       }
 
       if (error) throw error;
-      
+
+      // Auto-create lessons for next 16 weeks (only for new schedules)
+      if (!isEdit && savedScheduleId) {
+        const lessonDates = [];
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // day_of_week: 1=Monday ... 7=Sunday (JS getDay: 0=Sunday, 1=Monday ...)
+        // Map our day_of_week (1-7) to JS getDay (0-6)
+        const targetJsDay = formData.day_of_week % 7; // 1->1, 7->0
+
+        // Find the next occurrence of targetJsDay
+        const startDate = new Date(today);
+        const todayJs = today.getDay();
+        let daysUntilTarget = (targetJsDay - todayJs + 7) % 7;
+        if (daysUntilTarget === 0) daysUntilTarget = 0; // include today if it matches
+
+        startDate.setDate(startDate.getDate() + daysUntilTarget);
+
+        for (let week = 0; week < 16; week++) {
+          const d = new Date(startDate);
+          d.setDate(d.getDate() + week * 7);
+          const dateStr = d.toISOString().split('T')[0];
+
+          const subject = subjects.find(s => s.id === formData.subject_id);
+          const titleParts = [];
+          if (formData.start_time && formData.end_time) {
+            titleParts.push(`${formData.start_time}-${formData.end_time} |`);
+          }
+          if (subject) titleParts.push(subject.name);
+          const title = titleParts.join(' ');
+
+          lessonDates.push({
+            group_id: formData.group_id,
+            lesson_date: dateStr,
+            title,
+            start_time: formData.start_time || null,
+            end_time: formData.end_time || null,
+            teacher_id: formData.teacher_id || null,
+            subject_id: formData.subject_id || null,
+            schedule_id: savedScheduleId,
+            lesson_type: 'practice',
+          });
+        }
+
+        if (lessonDates.length > 0) {
+          // Check existing lessons for this schedule to avoid duplicates
+          const { data: existing } = await supabase
+            .from('lessons')
+            .select('lesson_date')
+            .eq('group_id', formData.group_id)
+            .eq('schedule_id', savedScheduleId);
+
+          const existingDates = new Set((existing || []).map(l => l.lesson_date));
+          const toInsert = lessonDates.filter(l => !existingDates.has(l.lesson_date));
+
+          if (toInsert.length > 0) {
+            await supabase.from('lessons').insert(toInsert);
+          }
+        }
+      }
+
       onSuccess?.();
       onClose();
     } catch (err) {
@@ -131,6 +198,7 @@ export default function ScheduleModal({ isOpen, onClose, schedule, groups, onSuc
       setLoading(false);
     }
   };
+
 
   const footer = (
     <>

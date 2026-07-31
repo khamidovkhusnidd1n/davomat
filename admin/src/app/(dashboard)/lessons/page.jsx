@@ -182,11 +182,7 @@ export default function LessonsPage() {
     e.preventDefault();
     if (!formData.group_id || !formData.lesson_date || !formData.start_time || !formData.end_time) return;
     
-    const selectedTeacher = teachers.find(t => t.id === formData.teacher_id);
-    if (selectedTeacher && selectedTeacher.limit_reached) {
-      alert(`Xatolik: ${selectedTeacher.full_name} yillik dars soati limitini (${selectedTeacher.max_hours} soat) to'ldirib bo'lgan!`);
-      return;
-    }
+
 
     try {
       setSaving(true);
@@ -250,12 +246,7 @@ export default function LessonsPage() {
   const handleUpdateLesson = async (e) => {
     e.preventDefault();
     if (!editFormData.group_id || !editFormData.lesson_date || !editFormData.start_time || !editFormData.end_time) return;
-    const selectedTeacher = teachers.find(t => t.id === editFormData.teacher_id);
-    const originalTeacherId = lessons.find(l => l.id === editFormData.id)?.teacher_id;
-    if (selectedTeacher && selectedTeacher.limit_reached && selectedTeacher.id !== originalTeacherId) {
-      alert(`Xatolik: ${selectedTeacher.full_name} yillik dars soati limitini (${selectedTeacher.max_hours} soat) to'ldirib bo'lgan!`);
-      return;
-    }
+
 
     try {
       setEditing(true);
@@ -541,7 +532,7 @@ export default function LessonsPage() {
             >
               <option value="">O'qituvchini tanlang</option>
               {displayTeachers.map(t => (
-                <option key={t.id} value={t.id} disabled={t.limit_reached && t.id !== formData.teacher_id}>
+                <option key={t.id} value={t.id}>
                   {t.full_name} {t.limit_reached ? `(Limit to'lgan: ${t.completed_hours}/${t.max_hours} s)` : `(${t.completed_hours}/${t.max_hours} s)`}
                 </option>
               ))}
@@ -699,7 +690,7 @@ export default function LessonsPage() {
             >
               <option value="">O'qituvchini tanlang</option>
               {displayEditTeachers.map(t => (
-                <option key={t.id} value={t.id} disabled={t.limit_reached && t.id !== editFormData.teacher_id}>
+                <option key={t.id} value={t.id}>
                   {t.full_name} {t.limit_reached ? `(Limit to'lgan: ${t.completed_hours}/${t.max_hours} s)` : `(${t.completed_hours}/${t.max_hours} s)`}
                 </option>
               ))}

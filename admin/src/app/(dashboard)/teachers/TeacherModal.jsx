@@ -133,13 +133,6 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
       return;
     }
 
-    const totalAllocated = assignedSubjects.reduce((sum, as) => sum + (parseInt(as.allocated_hours) || 0), 0);
-    const maxHours = parseInt(formData.max_hours) || 120;
-    if (totalAllocated > maxHours) {
-      alert(`Xatolik: Fanlarga biriktirilgan soatlar yig'indisi (${totalAllocated} soat) o'qituvchining yillik limitidan (${maxHours} soat) oshib ketdi!`);
-      return;
-    }
-
     setLoading(true);
 
     try {

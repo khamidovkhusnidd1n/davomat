@@ -87,12 +87,7 @@ export default function ScheduleModal({ isOpen, onClose, schedule, groups, onSuc
     e.preventDefault();
     setLoading(true);
 
-    const selectedTeacher = teachers.find(t => t.id === formData.teacher_id);
-    if (selectedTeacher && selectedTeacher.limit_reached && selectedTeacher.id !== schedule?.teacher_id) {
-      alert(`Xatolik: ${selectedTeacher.full_name} yillik dars soati limitini (${selectedTeacher.max_hours} soat) to'ldirib bo'lgan!`);
-      setLoading(false);
-      return;
-    }
+
 
     try {
       const payload = {
@@ -179,7 +174,7 @@ export default function ScheduleModal({ isOpen, onClose, schedule, groups, onSuc
           >
             <option value="">— Tanlanmagan —</option>
             {teachers.map(t => (
-              <option key={t.id} value={t.id} disabled={t.limit_reached && t.id !== formData.teacher_id}>
+              <option key={t.id} value={t.id}>
                 {t.full_name} {t.limit_reached ? `(Limit to'lgan: ${t.completed_hours}/${t.max_hours} s)` : `(${t.completed_hours}/${t.max_hours} s)`}
               </option>
             ))}

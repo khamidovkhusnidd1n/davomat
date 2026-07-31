@@ -262,6 +262,7 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
       onClose={onClose}
       title={isEdit ? "O'qituvchini tahrirlash" : "Yangi o'qituvchi qo'shish"}
       footer={footer}
+      large={true}
     >
       <form onSubmit={handleSubmit} className={styles.form}>
         <div className="form-group">

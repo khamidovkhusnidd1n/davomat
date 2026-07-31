@@ -20,11 +20,27 @@ export default function ScheduleModal({ isOpen, onClose, schedule, groups, onSuc
     day_of_week: 1,
     start_time: '',
     end_time: '',
+    teacher_id: '',
+    subject_id: ''
   });
+  const [teachers, setTeachers] = useState([]);
+  const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    async function loadData() {
+      try {
+        const { data: tData } = await supabase.from('teachers').select('id, full_name').order('full_name');
+        const { data: sData } = await supabase.from('subjects').select('id, name').order('name');
+        if (tData) setTeachers(tData);
+        if (sData) setSubjects(sData);
+      } catch (err) {
+        console.error("Error loading modal dropdowns:", err);
+      }
+    }
+
     if (isOpen) {
+      loadData();
       if (isEdit) {
         setFormData({
           id: schedule.id,
@@ -32,12 +48,14 @@ export default function ScheduleModal({ isOpen, onClose, schedule, groups, onSuc
           day_of_week: schedule.day_of_week || 1,
           start_time: schedule.start_time ? schedule.start_time.substring(0, 5) : '',
           end_time: schedule.end_time ? schedule.end_time.substring(0, 5) : '',
+          teacher_id: schedule.teacher_id || '',
+          subject_id: schedule.subject_id || '',
         });
       } else {
-        setFormData({ group_id: '', day_of_week: 1, start_time: '', end_time: '' });
+        setFormData({ group_id: '', day_of_week: 1, start_time: '', end_time: '', teacher_id: '', subject_id: '' });
       }
     }
-  }, [isOpen, schedule]);
+  }, [isOpen, schedule, isEdit]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -49,6 +67,8 @@ export default function ScheduleModal({ isOpen, onClose, schedule, groups, onSuc
         day_of_week: formData.day_of_week,
         start_time: formData.start_time,
         end_time: formData.end_time,
+        teacher_id: formData.teacher_id || null,
+        subject_id: formData.subject_id || null,
       };
 
       let error;
@@ -113,6 +133,34 @@ export default function ScheduleModal({ isOpen, onClose, schedule, groups, onSuc
           >
             {DAYS.map(d => (
               <option key={d.val} value={d.val}>{d.label}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label>O'qituvchi</label>
+          <select 
+            className="input" 
+            value={formData.teacher_id}
+            onChange={e => setFormData({...formData, teacher_id: e.target.value})}
+          >
+            <option value="">— Tanlanmagan —</option>
+            {teachers.map(t => (
+              <option key={t.id} value={t.id}>{t.full_name}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label>Fan</label>
+          <select 
+            className="input" 
+            value={formData.subject_id}
+            onChange={e => setFormData({...formData, subject_id: e.target.value})}
+          >
+            <option value="">— Tanlanmagan —</option>
+            {subjects.map(s => (
+              <option key={s.id} value={s.id}>{s.name}</option>
             ))}
           </select>
         </div>

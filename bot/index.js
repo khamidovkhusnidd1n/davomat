@@ -708,6 +708,22 @@ bot.action(/start_lesson_opt:(\d+)/, async (ctx) => {
       });
       if (rpcError) throw rpcError;
       lessonId = data;
+
+      // Sync teacher_id and subject_id from schedule
+      const { data: schData } = await supabase
+        .from('schedules')
+        .select('teacher_id, subject_id')
+        .eq('id', opt.scheduleId)
+        .single();
+      if (schData) {
+        await supabase
+          .from('lessons')
+          .update({
+            teacher_id: schData.teacher_id,
+            subject_id: schData.subject_id
+          })
+          .eq('id', lessonId);
+      }
     }
 
     await startAttendanceWizard(ctx, opt.groupId, lessonId, opt.title);
@@ -941,6 +957,15 @@ bot.action(/wiz_start:(.+)/, async (ctx) => {
       p_schedule_id: sch.id
     });
     if (rpcError) throw rpcError;
+
+    // Sync teacher_id and subject_id from schedule
+    await supabase
+      .from('lessons')
+      .update({
+        teacher_id: sch.teacher_id,
+        subject_id: sch.subject_id
+      })
+      .eq('id', lessonId);
 
     await startAttendanceWizard(ctx, sch.group_id, lessonId, title);
     await ctx.answerCbQuery();

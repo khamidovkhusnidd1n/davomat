@@ -5,6 +5,21 @@ import Modal from '@/components/Modal/Modal';
 import { Trash2, Plus, AlertCircle } from 'lucide-react';
 import styles from './TeacherModal.module.css';
 
+const DEFAULT_SUBJECT_HOURS = {
+  "Ta'lim jarayoniga raqamli texnologiyalarni joriy etish": 12,
+  "Art marketing": 20,
+  "Tasviriy san'atning umumiy tarixi": 54,
+  "Tasviriy san'atda an'anaviy va zamonaviy uslublar": 30,
+  "Jonli odam qomatidan anatomik chizmatasvir": 56,
+  "Materialshunoslik va rangtasvir texnika texnologiyasi": 80,
+  "Chizmatasvir": 228,
+  "Rangtasvir": 228,
+  "Kompozitsiya": 114,
+  "San'at estetikasi": 16,
+  "Nutq madaniyati": 14,
+  "Yakuniy attestatsiya": 12
+};
+
 export default function TeacherModal({ isOpen, onClose, teacher, academicYear, onSuccess }) {
   const isEdit = !!teacher;
 
@@ -96,6 +111,15 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
   const handleSubjectChange = (index, field, value) => {
     const updated = [...assignedSubjects];
     updated[index][field] = value;
+
+    // Auto-fill allocated_hours if subject_id is changed
+    if (field === 'subject_id' && value && value !== 'new_subject') {
+      const selectedSub = allSubjects.find(s => s.id === value);
+      if (selectedSub && DEFAULT_SUBJECT_HOURS[selectedSub.name] !== undefined) {
+        updated[index]['allocated_hours'] = DEFAULT_SUBJECT_HOURS[selectedSub.name];
+      }
+    }
+
     setAssignedSubjects(updated);
   };
 

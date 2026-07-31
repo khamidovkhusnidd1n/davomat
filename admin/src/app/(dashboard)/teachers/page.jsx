@@ -73,7 +73,7 @@ export default function TeachersPage() {
           teacher_subjects: subjectsThisYear,
           completed_hours: completedHours,
           total_allocated: totalAllocated,
-          remaining_hours: Math.max(0, (t.max_hours || 120) - completedHours),
+          remaining_hours: Math.max(0, totalAllocated - completedHours),
         };
       }));
 
@@ -247,8 +247,8 @@ export default function TeachersPage() {
         <div className={styles.cardsGrid}>
           {filtered.map(teacher => {
             const isExpanded = expandedId === teacher.id;
-            const pct = teacher.max_hours > 0
-              ? Math.min(100, Math.round((teacher.completed_hours / teacher.max_hours) * 100))
+            const pct = teacher.total_allocated > 0
+              ? Math.min(100, Math.round((teacher.completed_hours / teacher.total_allocated) * 100))
               : 0;
 
             return (
@@ -310,19 +310,19 @@ export default function TeachersPage() {
                 {/* Progress Bar */}
                 <div className={styles.progressSection}>
                   <div className={styles.progressInfo}>
-                    <span>{teacher.completed_hours} / {teacher.max_hours} soat o'tildi</span>
-                    <span>Ajratilgan: {teacher.total_allocated} soat</span>
+                    <span>{teacher.completed_hours} soat o'tildi</span>
+                    <span>Ajratilgan: {teacher.total_allocated} soat (Limit: {teacher.max_hours} s)</span>
                   </div>
                   <div className={styles.progressBar}>
                     <div
                       className={styles.progressFill}
                       style={{
                         width: `${pct}%`,
-                        background: pct >= 90 ? '#ef4444' : pct >= 60 ? '#f59e0b' : '#22c55e'
+                        background: teacher.completed_hours >= teacher.max_hours ? '#ef4444' : pct >= 90 ? '#ef4444' : pct >= 60 ? '#f59e0b' : '#22c55e'
                       }}
                     />
                   </div>
-                  <div className={styles.progressPct}>{pct}% — Qoldiq limit: {teacher.remaining_hours} soat</div>
+                  <div className={styles.progressPct}>{pct}% — Qoldiq: {teacher.remaining_hours} soat</div>
                 </div>
 
                 {/* Expanded: Subject breakdown */}
@@ -378,8 +378,8 @@ export default function TeachersPage() {
               </thead>
               <tbody>
                 {filtered.map((teacher, idx) => {
-                  const pct = teacher.max_hours > 0
-                    ? Math.min(100, Math.round((teacher.completed_hours / teacher.max_hours) * 100))
+                  const pct = teacher.total_allocated > 0
+                    ? Math.min(100, Math.round((teacher.completed_hours / teacher.total_allocated) * 100))
                     : 0;
                   return (
                     <tr key={teacher.id}>
@@ -411,7 +411,7 @@ export default function TeachersPage() {
                               className={styles.tableProgressFill}
                               style={{
                                 width: `${pct}%`,
-                                background: pct >= 90 ? '#ef4444' : pct >= 60 ? '#f59e0b' : '#22c55e',
+                                background: teacher.completed_hours >= teacher.max_hours ? '#ef4444' : pct >= 90 ? '#ef4444' : pct >= 60 ? '#f59e0b' : '#22c55e',
                                 height: '100%',
                                 borderRadius: '4px'
                               }}

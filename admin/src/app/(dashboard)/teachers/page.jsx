@@ -41,6 +41,7 @@ export default function TeachersPage() {
           phone,
           education_type,
           degree,
+          max_hours,
           teacher_subjects(
             id,
             allocated_hours,

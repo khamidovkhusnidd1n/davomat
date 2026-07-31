@@ -42,14 +42,27 @@ export default function ScheduleModal({ isOpen, onClose, schedule, groups, onSuc
         const { data: sData } = await supabase.from('subjects').select('id, name').order('name');
         
         if (tData) {
+          const todayStr = new Date(new Date().getTime() + 5 * 60 * 60 * 1000).toISOString().split('T')[0];
           const teachersWithStats = await Promise.all(tData.map(async (t) => {
-            const { count } = await supabase
+            const { data: lesData } = await supabase
               .from('lessons')
-              .select('id', { count: 'exact', head: true })
+              .select('lesson_date, start_time, end_time')
               .eq('teacher_id', t.id);
             
             const manualCompleted = t.teacher_subjects?.reduce((sum, ts) => sum + (ts.completed_hours || 0), 0) || 0;
-            const completedHours = ((count || 0) * 2) + manualCompleted;
+
+            const futureLessons = (lesData || []).filter(l => l.lesson_date > todayStr);
+            const dynamicHours = futureLessons.reduce((sum, l) => {
+              const start = l.start_time || '09:00';
+              const end = l.end_time || '13:00';
+              const [startH, startM] = start.substring(0, 5).split(':').map(Number);
+              const [endH, endM] = end.substring(0, 5).split(':').map(Number);
+              const diffHours = ((endH * 60 + endM) - (startH * 60 + startM)) / 60;
+              const hours = diffHours > 0 ? Math.round(diffHours * 1.5) : 6;
+              return sum + hours;
+            }, 0);
+
+            const completedHours = manualCompleted + dynamicHours;
             
             return {
               ...t,

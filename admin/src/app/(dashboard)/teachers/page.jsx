@@ -54,18 +54,31 @@ export default function TeachersPage() {
 
       if (error) throw error;
 
-      // For each teacher, calculate completed hours from lessons
+      // For each teacher, calculate completed hours from future lessons (starting from tomorrow)
+      const todayStr = new Date(new Date().getTime() + 5 * 60 * 60 * 1000).toISOString().split('T')[0];
       const teachersWithStats = await Promise.all((data || []).map(async (t) => {
-        const { count } = await supabase
+        const { data: lesData } = await supabase
           .from('lessons')
-          .select('id', { count: 'exact', head: true })
+          .select('lesson_date, start_time, end_time')
           .eq('teacher_id', t.id);
         
         // Filter teacher_subjects by academic year
         const subjectsThisYear = t.teacher_subjects?.filter(ts => ts.academic_year === academicYear) || [];
         const manualCompleted = subjectsThisYear.reduce((sum, ts) => sum + (ts.completed_hours || 0), 0);
-        const completedHours = ((count || 0) * 2) + manualCompleted; // 1 lesson = 2 hours + manual completed hours
-        
+
+        // Only lessons starting from tomorrow (future) are dynamically added to the manual count
+        const futureLessons = (lesData || []).filter(l => l.lesson_date > todayStr);
+        const dynamicHours = futureLessons.reduce((sum, l) => {
+          const start = l.start_time || '09:00';
+          const end = l.end_time || '13:00';
+          const [startH, startM] = start.substring(0, 5).split(':').map(Number);
+          const [endH, endM] = end.substring(0, 5).split(':').map(Number);
+          const diffHours = ((endH * 60 + endM) - (startH * 60 + startM)) / 60;
+          const hours = diffHours > 0 ? Math.round(diffHours * 1.5) : 6;
+          return sum + hours;
+        }, 0);
+
+        const completedHours = manualCompleted + dynamicHours;
         const totalAllocated = subjectsThisYear.reduce((sum, ts) => sum + (ts.allocated_hours || 0), 0);
 
         return {

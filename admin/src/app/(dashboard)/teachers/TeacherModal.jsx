@@ -27,7 +27,8 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
     full_name: '',
     phone: '',
     education_type: 'qayta_tayyorlov',
-    degree: ''
+    degree: '',
+    max_hours: 120
   });
   const [assignedSubjects, setAssignedSubjects] = useState([]); // Array of { id, subject_id, new_subject_name, allocated_hours, completed_hours }
   const [allSubjects, setAllSubjects] = useState([]);
@@ -43,7 +44,8 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
           full_name: teacher.full_name || '',
           phone: teacher.phone || '',
           education_type: teacher.education_type || 'qayta_tayyorlov',
-          degree: teacher.degree || ''
+          degree: teacher.degree || '',
+          max_hours: teacher.max_hours || 120
         });
         // Map existing subjects
         const subjectsList = teacher.teacher_subjects?.map(ts => ({
@@ -69,7 +71,8 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
           full_name: '',
           phone: '',
           education_type: 'qayta_tayyorlov',
-          degree: ''
+          degree: '',
+          max_hours: 120
         });
         setAssignedSubjects([
           {
@@ -149,7 +152,8 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
             full_name: formData.full_name,
             phone: formData.phone,
             education_type: formData.education_type,
-            degree: formData.degree || null
+            degree: formData.degree || null,
+            max_hours: parseInt(formData.max_hours) || 120
           })
           .eq('id', teacher.id);
         if (error) throw error;
@@ -161,7 +165,8 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
             full_name: formData.full_name,
             phone: formData.phone,
             education_type: formData.education_type,
-            degree: formData.degree || null
+            degree: formData.degree || null,
+            max_hours: parseInt(formData.max_hours) || 120
           })
           .select('id')
           .single();
@@ -287,6 +292,17 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
               <option value="Academic">Academic</option>
               <option value="Professor">Professor</option>
             </select>
+          </div>
+          <div className="form-group">
+            <label>Yillik limit soati *</label>
+            <input
+              type="number"
+              className="input"
+              value={formData.max_hours}
+              onChange={e => setFormData({ ...formData, max_hours: Number(e.target.value) })}
+              min="0"
+              required
+            />
           </div>
         </div>
 

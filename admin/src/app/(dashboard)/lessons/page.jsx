@@ -13,6 +13,7 @@ export default function LessonsPage() {
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [selectedGroup, setSelectedGroup] = useState('all');
   
   // Modal states
   const [showModal, setShowModal] = useState(false);
@@ -168,12 +169,15 @@ export default function LessonsPage() {
   }
   const isWriteEnabled = userRole === 'sysadmin' || userRole === 'admin' || userRole === 'academic';
 
-  const filteredLessons = lessons.filter(l => 
-    l.title?.toLowerCase().includes(search.toLowerCase()) || 
-    l.groups?.name?.toLowerCase().includes(search.toLowerCase()) ||
-    l.subjects?.name?.toLowerCase().includes(search.toLowerCase()) ||
-    l.teachers?.full_name?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredLessons = lessons.filter(l => {
+    const matchesSearch = 
+      l.title?.toLowerCase().includes(search.toLowerCase()) || 
+      l.groups?.name?.toLowerCase().includes(search.toLowerCase()) ||
+      l.subjects?.name?.toLowerCase().includes(search.toLowerCase()) ||
+      l.teachers?.full_name?.toLowerCase().includes(search.toLowerCase());
+    const matchesGroup = selectedGroup === 'all' || l.group_id === selectedGroup;
+    return matchesSearch && matchesGroup;
+  });
   const parseLessonTitle = (rawTitle, scheduleId, schedulesList) => {
     let startTime = '09:00';
     let endTime = '13:00';
@@ -358,6 +362,17 @@ export default function LessonsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+          <select
+            className="input"
+            style={{ maxWidth: '200px' }}
+            value={selectedGroup}
+            onChange={(e) => setSelectedGroup(e.target.value)}
+          >
+            <option value="all">Barcha guruhlar</option>
+            {groups.map(g => (
+              <option key={g.id} value={g.id}>{g.name}</option>
+            ))}
+          </select>
         </div>
         {isWriteEnabled && (
           <div style={{ display: 'flex', gap: '10px' }}>

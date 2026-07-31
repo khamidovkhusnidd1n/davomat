@@ -154,7 +154,7 @@ export default function ExcelImport({ isOpen, onClose, groups, organizationId, o
         <div className={styles.header}>
           <div className={styles.titleRow}>
             <FileSpreadsheet size={22} className={styles.titleIcon} />
-            <h2>Excel orqali O'quvchilar Import</h2>
+            <h2>Excel orqali Tinglovchilar Import</h2>
           </div>
           <button className={styles.closeBtn} onClick={handleClose}><X size={18} /></button>
         </div>
@@ -212,7 +212,7 @@ export default function ExcelImport({ isOpen, onClose, groups, organizationId, o
             <div className={styles.previewSection}>
               <div className={styles.previewMeta}>
                 <span className={styles.fileChip}><FileSpreadsheet size={14} />{fileName}</span>
-                <span className={styles.countChip}>{parsedData.length} ta o'quvchi topildi</span>
+                <span className={styles.countChip}>{parsedData.length} ta tinglovchi topildi</span>
                 <button className={styles.changeFile} onClick={() => { reset(); }}>Faylni almashtirish</button>
               </div>
 
@@ -266,7 +266,7 @@ export default function ExcelImport({ isOpen, onClose, groups, organizationId, o
               >
                 {importing
                   ? <><Loader size={16} className={styles.spin} /> Import qilinmoqda...</>
-                  : `${parsedData.length} ta o'quvchi import qilish`
+                  : `${parsedData.length} ta tinglovchi import qilish`
                 }
               </button>
             </div>

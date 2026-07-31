@@ -166,7 +166,7 @@ export default function Dashboard() {
           <div className={styles.statInfo}>
             <p className={styles.statTitle}>Jami Tinglovchilar</p>
             <h3 className={styles.statValue}>{loading ? '...' : stats.students}</h3>
-            <span className={styles.statTrend} data-trend="neutral">Faol o'quvchilar</span>
+            <span className={styles.statTrend} data-trend="neutral">Faol tinglovchilar</span>
           </div>
         </div>
 

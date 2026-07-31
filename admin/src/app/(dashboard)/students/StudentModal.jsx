@@ -155,7 +155,7 @@ export default function StudentModal({ isOpen, onClose, student, groups, organiz
             checked={formData.isMonitor}
             onChange={e => setFormData({...formData, isMonitor: e.target.checked})}
           />
-          <label htmlFor="isMonitor" style={{ margin: 0 }}>Ushbu o'quvchi sinf sardori (monitor) mi?</label>
+          <label htmlFor="isMonitor" style={{ margin: 0 }}>Ushbu tinglovchi guruh sardori (monitor) mi?</label>
         </div>
       </form>
     </Modal>

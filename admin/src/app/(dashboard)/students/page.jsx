@@ -113,7 +113,7 @@ export default function StudentsPage() {
             value={filterBot}
             onChange={(e) => setFilterBot(e.target.value)}
           >
-            <option value="all">Barcha o'quvchilar</option>
+            <option value="all">Barcha tinglovchilar</option>
             <option value="connected">Botga ulanganlar</option>
             <option value="not_connected">Botga ulanmaganlar</option>
           </select>

@@ -152,8 +152,8 @@ export default function ExcelGroupsImport({ isOpen, onClose, organizationId, onS
                 <ul>
                   <li><code>Guruh Nomi</code> — Guruhning nomi (masalan, Matematika-1)</li>
                   <li><code>Fan Nomi</code> — Guruh o'tadigan fanning nomi (masalan, Matematika)</li>
-                  <li><code>Talaba F.I.Sh</code> — O'quvchining ismi familiyasi (ixtiyoriy, bo'sh bo'lsa faqat guruh yaratiladi)</li>
-                  <li><code>Telefon raqami</code> — O'quvchining telefon raqami (ixtiyoriy)</li>
+                  <li><code>Talaba F.I.Sh</code> — Tinglovchining ismi familiyasi (ixtiyoriy, bo'sh bo'lsa faqat guruh yaratiladi)</li>
+                  <li><code>Telefon raqami</code> — Tinglovchining telefon raqami (ixtiyoriy)</li>
                 </ul>
               </div>
             </div>

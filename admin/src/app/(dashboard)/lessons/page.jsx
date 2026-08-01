@@ -315,8 +315,8 @@ export default function LessonsPage() {
   };
 
   // Filter logic for teachers
-  const selectedGroup = groups.find(g => g.id === formData.group_id);
-  const groupEduType = selectedGroup?.education_type;
+  const selectedFormGroup = groups.find(g => g.id === formData.group_id);
+  const groupEduType = selectedFormGroup?.education_type;
   
   const displayTeachers = groupEduType
     ? teachers.filter(t => t.education_type === groupEduType)

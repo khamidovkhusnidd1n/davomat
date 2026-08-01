@@ -70,7 +70,7 @@ export default function TeachersPage() {
         const rawSubjectsThisYear = t.teacher_subjects?.filter(ts => ts.academic_year === academicYear) || [];
 
         // Only lessons starting from tomorrow (future) are dynamically added to the manual count
-        const futureLessons = (lesData || []).filter(l => l.lesson_date > todayStr);
+        const futureLessons = (lesData || []).filter(l => l.lesson_date >= todayStr);
         
         const subjectsThisYear = rawSubjectsThisYear.map(ts => {
           const subFutureLessons = futureLessons.filter(l => l.subject_id === ts.subjects?.id);

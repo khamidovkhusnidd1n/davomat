@@ -51,7 +51,7 @@ export default function ScheduleModal({ isOpen, onClose, schedule, groups, onSuc
             
             const manualCompleted = t.teacher_subjects?.reduce((sum, ts) => sum + (ts.completed_hours || 0), 0) || 0;
 
-            const futureLessons = (lesData || []).filter(l => l.lesson_date > todayStr);
+            const futureLessons = (lesData || []).filter(l => l.lesson_date >= todayStr);
             const dynamicHours = futureLessons.reduce((sum, l) => {
               const start = l.start_time || '09:00';
               const end = l.end_time || '13:00';

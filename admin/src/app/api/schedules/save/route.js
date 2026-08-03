@@ -51,9 +51,12 @@ export async function POST(req) {
       const toInsert = lessonsToInsert.filter(l => !existingDates.has(l.lesson_date));
 
       if (toInsert.length > 0) {
-        const { error: lesErr } = await supabaseAdmin.from('lessons').insert(toInsert);
+        const { error: lesErr } = await supabaseAdmin
+          .from('lessons')
+          .upsert(toInsert, { onConflict: 'group_id,lesson_date,schedule_id' });
         if (lesErr) throw lesErr;
       }
+
     }
 
     return NextResponse.json({ success: true });

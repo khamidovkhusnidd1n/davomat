@@ -447,11 +447,13 @@ export default function SchedulesPage() {
                         <div className={styles.noScheduleText} style={{ textAlign: 'center', margin: 'auto' }}>
                           Dars kiritilmagan
                         </div>
+                      ) : (
                         dayLessons.map(lesson => {
                           const start = lesson.start_time?.substring(0, 5) || '09:00';
                           const end = lesson.end_time?.substring(0, 5) || '13:00';
                           const parts = lesson.title ? lesson.title.split(' | ') : [];
                           const subjectName = lesson.subjects?.name || parts[1] || parts[0] || 'Dars';
+
 
                           // Check if lesson is finished
                           let isFinished = false;

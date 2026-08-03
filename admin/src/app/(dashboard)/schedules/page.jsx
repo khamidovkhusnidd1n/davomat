@@ -431,20 +431,32 @@ export default function SchedulesPage() {
                         <div className={styles.noScheduleText} style={{ textAlign: 'center', margin: 'auto' }}>
                           Dars kiritilmagan
                         </div>
-                      ) : (
                         dayLessons.map(lesson => {
                           const start = lesson.start_time?.substring(0, 5) || '09:00';
                           const end = lesson.end_time?.substring(0, 5) || '13:00';
                           const parts = lesson.title ? lesson.title.split(' | ') : [];
                           const subjectName = lesson.subjects?.name || parts[1] || parts[0] || 'Dars';
 
+                          // Check if lesson is finished
+                          let isFinished = false;
+                          if (lesson.lesson_date && lesson.end_time) {
+                            const [yr, mo, dy] = lesson.lesson_date.split('-').map(Number);
+                            const [hr, mn] = lesson.end_time.substring(0, 5).split(':').map(Number);
+                            const lessonEnd = new Date(yr, mo - 1, dy, hr, mn, 0);
+                            isFinished = new Date() > lessonEnd;
+                          }
+
                           return (
-                            <div key={lesson.id} className={`${styles.timetableLessonCard} ${lesson.lesson_type === 'theory' ? styles.theory : ''}`}>
-                              <div className={styles.timetableLessonTime}>{start} - {end}</div>
+                            <div key={lesson.id} className={`${styles.timetableLessonCard} ${lesson.lesson_type === 'theory' ? styles.theory : ''} ${isFinished ? styles.finished : ''}`}>
+                              <div className={styles.timetableLessonTime}>
+                                {start} - {end}
+                                {isFinished && <span className={styles.finishedBadge}>Tugadi</span>}
+                              </div>
                               <div className={styles.timetableLessonSub}>{subjectName}</div>
                               <div className={styles.timetableLessonTeacher}>
                                 {lesson.teachers?.full_name || 'Ustoz biriktirilmagan'}
                               </div>
+
 
                               {isWriteEnabled && (
                                 <div className={styles.timetableLessonFooter}>

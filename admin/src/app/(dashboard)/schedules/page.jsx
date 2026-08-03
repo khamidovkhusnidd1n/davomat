@@ -103,7 +103,10 @@ export default function SchedulesPage() {
       for (let week = 0; week < 16; week++) {
         const d = new Date(startDate);
         d.setDate(d.getDate() + week * 7);
-        const dateStr = d.toISOString().split('T')[0];
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        const dateStr = `${year}-${month}-${day}`;
         const start = sch.start_time?.substring(0, 5) || '09:00';
         const end = sch.end_time?.substring(0, 5) || '13:00';
         const title = `${start}-${end} | ${sch.subjects?.name || ''}`;

@@ -138,7 +138,10 @@ export default function ScheduleModal({ isOpen, onClose, schedule, groups, onSuc
         for (let week = 0; week < 16; week++) {
           const d = new Date(startDate);
           d.setDate(d.getDate() + week * 7);
-          const dateStr = d.toISOString().split('T')[0];
+          const year = d.getFullYear();
+          const month = String(d.getMonth() + 1).padStart(2, '0');
+          const day = String(d.getDate()).padStart(2, '0');
+          const dateStr = `${year}-${month}-${day}`;
 
           const subject = subjects.find(s => s.id === formData.subject_id);
           const titleParts = [];

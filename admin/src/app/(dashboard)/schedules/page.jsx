@@ -30,6 +30,7 @@ export default function SchedulesPage() {
 
   // Timetable states
   const [selectedGroupId, setSelectedGroupId] = useState('');
+  const [educationType, setEducationType] = useState(''); // '' = hammasi
   const [currentDate, setCurrentDate] = useState(new Date());
   const [weeklyLessons, setWeeklyLessons] = useState([]);
   const [showLessonModal, setShowLessonModal] = useState(false);
@@ -246,10 +247,13 @@ export default function SchedulesPage() {
   };
 
   // Filtered groups for group selector
-  const filteredGroups = groups.filter(g =>
-    g.name?.toLowerCase().includes(search.toLowerCase()) ||
-    g.course_name?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredGroups = groups.filter(g => {
+    const nameMatch =
+      g.name?.toLowerCase().includes(search.toLowerCase()) ||
+      g.course_name?.toLowerCase().includes(search.toLowerCase());
+    const typeMatch = !educationType || g.education_type === educationType;
+    return nameMatch && typeMatch;
+  });
 
   const handleWeekLabelClick = () => {
     const monday = getMonday(currentDate);
@@ -305,6 +309,21 @@ export default function SchedulesPage() {
       {/* Filters: Group selector + Week nav */}
       <div className={styles.filtersWrapper}>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <label style={{ fontWeight: '600', color: 'var(--text-primary)' }}>Ta'lim turi:</label>
+          <select
+            className="input"
+            style={{ width: '200px', padding: '8px 12px' }}
+            value={educationType}
+            onChange={(e) => {
+              setEducationType(e.target.value);
+              setSelectedGroupId(''); // reset group on type change
+            }}
+          >
+            <option value="">— Hammasi —</option>
+            <option value="qayta_tayyorlov">Qayta tayyorlov</option>
+            <option value="malaka_oshirish">Malaka oshirish</option>
+          </select>
+
           <label style={{ fontWeight: '600', color: 'var(--text-primary)' }}>Guruh:</label>
           <select
             className="input"
@@ -312,6 +331,9 @@ export default function SchedulesPage() {
             value={selectedGroupId}
             onChange={(e) => setSelectedGroupId(e.target.value)}
           >
+            {filteredGroups.length === 0 && (
+              <option value="">— Guruh topilmadi —</option>
+            )}
             {filteredGroups.map(g => (
               <option key={g.id} value={g.id}>{g.name}</option>
             ))}

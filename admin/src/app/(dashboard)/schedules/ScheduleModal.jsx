@@ -18,6 +18,7 @@ export default function ScheduleModal({ isOpen, onClose, schedule, groups, onSuc
   const [formData, setFormData] = useState({
     group_id: '',
     day_of_week: 1,
+    start_date: '',
     start_time: '',
     end_time: '',
     teacher_id: '',
@@ -85,13 +86,14 @@ export default function ScheduleModal({ isOpen, onClose, schedule, groups, onSuc
           id: schedule.id,
           group_id: schedule.group_id || '',
           day_of_week: schedule.day_of_week || 1,
+          start_date: '',
           start_time: schedule.start_time ? schedule.start_time.substring(0, 5) : '',
           end_time: schedule.end_time ? schedule.end_time.substring(0, 5) : '',
           teacher_id: schedule.teacher_id || '',
           subject_id: schedule.subject_id || '',
         });
       } else {
-        setFormData({ group_id: '', day_of_week: 1, start_time: '', end_time: '', teacher_id: '', subject_id: '' });
+        setFormData({ group_id: '', day_of_week: 1, start_date: '', start_time: '', end_time: '', teacher_id: '', subject_id: '' });
       }
     }
   }, [isOpen, schedule, isEdit]);
@@ -127,13 +129,17 @@ export default function ScheduleModal({ isOpen, onClose, schedule, groups, onSuc
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        const targetJsDay = formData.day_of_week % 7; 
-        const startDate = new Date(today);
-        const todayJs = today.getDay();
-        let daysUntilTarget = (targetJsDay - todayJs + 7) % 7;
-        if (daysUntilTarget === 0) daysUntilTarget = 0; 
-
-        startDate.setDate(startDate.getDate() + daysUntilTarget);
+        // If start_date is provided, use it as startDate; otherwise derive from day_of_week
+        let startDate;
+        if (formData.start_date) {
+          startDate = new Date(formData.start_date + 'T12:00:00');
+        } else {
+          const targetJsDay = formData.day_of_week % 7;
+          const todayJs = today.getDay();
+          let daysUntilTarget = (targetJsDay - todayJs + 7) % 7;
+          startDate = new Date(today);
+          startDate.setDate(startDate.getDate() + daysUntilTarget);
+        }
 
         for (let week = 0; week < 16; week++) {
           const d = new Date(startDate);
@@ -227,16 +233,39 @@ export default function ScheduleModal({ isOpen, onClose, schedule, groups, onSuc
         
         <div className="form-group">
           <label>Hafta kuni *</label>
-          <select 
-            className="input" 
-            value={formData.day_of_week}
-            onChange={e => setFormData({...formData, day_of_week: Number(e.target.value)})}
-            required
-          >
-            {DAYS.map(d => (
-              <option key={d.val} value={d.val}>{d.label}</option>
-            ))}
-          </select>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <input
+              type="date"
+              className="input"
+              style={{ flex: 1 }}
+              value={formData.start_date}
+              onChange={e => {
+                const val = e.target.value;
+                let dayOfWeek = formData.day_of_week;
+                if (val) {
+                  // getDay(): 0=Sun,1=Mon,...,6=Sat; our system: 1=Mon,...,6=Sat
+                  const jsDay = new Date(val + 'T12:00:00').getDay();
+                  dayOfWeek = jsDay === 0 ? 7 : jsDay;
+                }
+                setFormData({ ...formData, start_date: val, day_of_week: dayOfWeek });
+              }}
+              placeholder="Sana tanlang"
+            />
+            <select
+              className="input"
+              style={{ flex: 1 }}
+              value={formData.day_of_week}
+              onChange={e => setFormData({ ...formData, day_of_week: Number(e.target.value), start_date: '' })}
+              required
+            >
+              {DAYS.map(d => (
+                <option key={d.val} value={d.val}>{d.label}</option>
+              ))}
+            </select>
+          </div>
+          <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>
+            Sana tanlasangiz hafta kuni avtomatik belgilanadi
+          </small>
         </div>
 
         <div className="form-group">

@@ -94,6 +94,20 @@ const handlePhoneSubmit = async (ctx, phoneStr) => {
       if (user2) user = user2;
     }
 
+    // If STILL not found, try a fuzzy match in case of spaces/dashes in DB
+    if (!user) {
+      const digitsOnly = phone.replace(/\D/g, '');
+      if (digitsOnly) {
+         const pattern = '%' + digitsOnly.split('').join('%') + '%';
+         const { data: user3 } = await supabase
+           .from('users')
+           .select('id, full_name, role')
+           .ilike('phone', pattern)
+           .limit(1);
+         if (user3 && user3.length > 0) user = user3[0];
+      }
+    }
+
     if (!user) {
       return ctx.reply("Kechirasiz, sizning raqamingiz tizimda topilmadi. Iltimos o'qituvchingizga murojaat qiling.", Markup.removeKeyboard());
     }

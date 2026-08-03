@@ -133,9 +133,13 @@ export default function SchedulesPage() {
   };
 
   async function fetchWeeklyLessons() {
-    if (!selectedGroupId) return;
+    if (!selectedGroupId) {
+      setWeeklyLessons([]);
+      return;
+    }
     try {
       const monday = getMonday(currentDate);
+
       const startOfWeek = formatDateStr(monday);
       const saturday = new Date(monday);
       saturday.setDate(monday.getDate() + 5);
@@ -315,10 +319,22 @@ export default function SchedulesPage() {
             style={{ width: '200px', padding: '8px 12px' }}
             value={educationType}
             onChange={(e) => {
-              setEducationType(e.target.value);
-              setSelectedGroupId(''); // reset group on type change
+              const val = e.target.value;
+              setEducationType(val);
+              // Filter groups and pick first
+              const filtered = groups.filter(g => {
+                const nameMatch = g.name?.toLowerCase().includes(search.toLowerCase()) || g.course_name?.toLowerCase().includes(search.toLowerCase());
+                const typeMatch = !val || g.education_type === val;
+                return nameMatch && typeMatch;
+              });
+              if (filtered.length > 0) {
+                setSelectedGroupId(filtered[0].id);
+              } else {
+                setSelectedGroupId('');
+              }
             }}
           >
+
             <option value="">— Hammasi —</option>
             <option value="qayta_tayyorlov">Qayta tayyorlov</option>
             <option value="malaka_oshirish">Malaka oshirish</option>

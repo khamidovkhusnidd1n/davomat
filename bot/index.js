@@ -61,26 +61,40 @@ bot.command('test_reminder', async (ctx) => {
 });
 
 const handlePhoneSubmit = async (ctx, phoneStr) => {
-  let phone = phoneStr.replace(/\\s+/g, ''); // Remove spaces
+  // Remove spaces, dashes, parentheses
+  let phone = phoneStr.replace(/[\s\-\(\)]/g, '');
   if (!phone.startsWith('+')) {
     phone = '+' + phone;
   }
-  if (!phone.startsWith('+998')) {
-     if (phone.startsWith('998')) {
-        phone = '+' + phone;
-     }
+  // Handle 998... without +
+  if (!phone.startsWith('+998') && phone.startsWith('+') && phone.substring(1).startsWith('998')) {
+    // already fine
+  } else if (phone.startsWith('998')) {
+    phone = '+' + phone;
   }
 
   const tgId = ctx.from.id.toString();
 
   try {
-    const { data: user, error } = await supabase
+    // Try exact match first, then try without + prefix as fallback
+    let { data: user, error } = await supabase
       .from('users')
       .select('id, full_name, role')
       .eq('phone', phone)
-      .single();
+      .maybeSingle();
 
-    if (error || !user) {
+    // If not found, try without leading +
+    if (!user) {
+      const phoneNoPlus = phone.startsWith('+') ? phone.slice(1) : phone;
+      const { data: user2 } = await supabase
+        .from('users')
+        .select('id, full_name, role')
+        .eq('phone', phoneNoPlus)
+        .maybeSingle();
+      if (user2) user = user2;
+    }
+
+    if (!user) {
       return ctx.reply("Kechirasiz, sizning raqamingiz tizimda topilmadi. Iltimos o'qituvchingizga murojaat qiling.", Markup.removeKeyboard());
     }
 
@@ -92,7 +106,7 @@ const handlePhoneSubmit = async (ctx, phoneStr) => {
         ['📅 Mening darslarim', '📋 Guruhlarim ro\'yxati'],
         ['📊 Davomat hisobotlari']
       ];
-    } else if (user.role === 'admin' || user.role === 'tutor') {
+    } else if (user.role === 'admin' || user.role === 'tutor' || user.role === 'sysadmin') {
       kb = [
         ['📅 Mening davomatim', '📅 Dars jadvali'],
         ['🏆 Oylik reyting'],

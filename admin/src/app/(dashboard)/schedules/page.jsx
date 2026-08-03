@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Search, Plus, Trash2, Edit2, Clock, FileSpreadsheet, RefreshCw, ChevronLeft, ChevronRight, Edit, Trash, Calendar } from 'lucide-react';
 import ScheduleModal from './ScheduleModal';
@@ -27,11 +27,8 @@ export default function SchedulesPage() {
   const [showImport, setShowImport] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState(null);
   const [userRole, setUserRole] = useState(null);
-  const [expandedGroupId, setExpandedGroupId] = useState(null);
-  const [expandedDayKey, setExpandedDayKey] = useState(null); // 'groupId-dayOfWeek'
 
-  // Timetable and Tab states
-  const [activeTab, setActiveTab] = useState('timetable'); // 'timetable' or 'template'
+  // Timetable states
   const [selectedGroupId, setSelectedGroupId] = useState('');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [weeklyLessons, setWeeklyLessons] = useState([]);
@@ -39,7 +36,12 @@ export default function SchedulesPage() {
   const [editingLesson, setEditingLesson] = useState(null);
   const [prefilledDate, setPrefilledDate] = useState('');
   const [prefilledGroupId, setPrefilledGroupId] = useState('');
-  
+
+  // Date picker state
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [datePickerValue, setDatePickerValue] = useState('');
+  const datePickerRef = useRef(null);
+
   // Fake organizationId hozircha
   const organizationId = '11111111-1111-1111-1111-111111111111';
 
@@ -48,11 +50,21 @@ export default function SchedulesPage() {
   }, []);
 
   useEffect(() => {
-    if (activeTab === 'timetable' && selectedGroupId) {
+    if (selectedGroupId) {
       fetchWeeklyLessons();
     }
-  }, [activeTab, selectedGroupId, currentDate]);
+  }, [selectedGroupId, currentDate]);
 
+  // Close date picker on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (datePickerRef.current && !datePickerRef.current.contains(e.target)) {
+        setShowDatePicker(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   async function fetchData(silent = false) {
     try {
@@ -166,7 +178,6 @@ export default function SchedulesPage() {
     }
   };
 
-
   const handleDelete = async (id) => {
     if (!confirm('Rostdan ham o\'chirasizmi?')) return;
     try {
@@ -234,23 +245,26 @@ export default function SchedulesPage() {
     }
   };
 
-  const filteredGroups = groups.filter(g => 
-    g.name?.toLowerCase().includes(search.toLowerCase()) || 
+  // Filtered groups for group selector
+  const filteredGroups = groups.filter(g =>
+    g.name?.toLowerCase().includes(search.toLowerCase()) ||
     g.course_name?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const groupsWithSchedules = filteredGroups.map(g => {
-    const groupSchedules = schedules
-      .filter(s => s.group_id === g.id)
-      .sort((a, b) => a.day_of_week - b.day_of_week || a.start_time.localeCompare(b.start_time));
-    return {
-      ...g,
-      schedules: groupSchedules
-    };
-  });
+  const handleWeekLabelClick = () => {
+    const monday = getMonday(currentDate);
+    setDatePickerValue(formatDateStr(monday));
+    setShowDatePicker(true);
+  };
 
-  const qaytaGroups = groupsWithSchedules.filter(g => g.education_type === 'qayta_tayyorlov');
-  const malakaGroups = groupsWithSchedules.filter(g => g.education_type === 'malaka_oshirish');
+  const handleDatePickerChange = (e) => {
+    const val = e.target.value;
+    setDatePickerValue(val);
+    if (val) {
+      setCurrentDate(new Date(val + 'T12:00:00'));
+      setShowDatePicker(false);
+    }
+  };
 
   if (userRole === 'director') {
     return <div style={{ padding: '2rem', textAlign: 'center' }}>Sizda ushbu sahifaga kirish huquqi yo'q.</div>;
@@ -258,453 +272,206 @@ export default function SchedulesPage() {
 
   const isWriteEnabled = userRole === 'sysadmin' || userRole === 'admin' || userRole === 'academic';
 
+  const monday = getMonday(currentDate);
+  const saturday = new Date(monday);
+  saturday.setDate(monday.getDate() + 5);
+
   return (
     <div className={styles.container}>
-      <div className={styles.tabs}>
-        <button 
-          className={`${styles.tab} ${activeTab === 'timetable' ? styles.active : ''}`}
-          onClick={() => setActiveTab('timetable')}
-        >
-          📅 Haftalik darslar
-        </button>
-        <button 
-          className={`${styles.tab} ${activeTab === 'template' ? styles.active : ''}`}
-          onClick={() => setActiveTab('template')}
-        >
-          ⚙️ Shablon dars jadvali
-        </button>
+      {/* Header: Search + Buttons */}
+      <div className={styles.header}>
+        <div className={styles.searchWrapper}>
+          <Search size={20} className={styles.searchIcon} />
+          <input
+            type="text"
+            placeholder="Guruh nomi orqali izlash..."
+            className="input"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        {isWriteEnabled && (
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button className="btn btn-secondary" onClick={() => setShowImport(true)}>
+              <FileSpreadsheet size={18} /> Excel Import
+            </button>
+            <button className="btn btn-primary" onClick={() => { setEditingSchedule(null); setShowModal(true); }}>
+              <Plus size={18} /> Yangi Dars Vaqti
+            </button>
+          </div>
+        )}
       </div>
 
-      {activeTab === 'timetable' ? (
-        <>
-          <div className={styles.filtersWrapper}>
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-              <label style={{ fontWeight: '600', color: 'var(--text-primary)' }}>Guruh:</label>
-              <select 
-                className="input"
-                style={{ width: '220px', padding: '8px 12px' }}
-                value={selectedGroupId}
-                onChange={(e) => setSelectedGroupId(e.target.value)}
-              >
-                {groups.map(g => (
-                  <option key={g.id} value={g.id}>{g.name}</option>
-                ))}
-              </select>
-            </div>
-            
-            <div className={styles.weekNav}>
-              <button 
-                className={styles.weekBtn}
-                onClick={() => {
-                  const d = new Date(currentDate);
-                  d.setDate(d.getDate() - 7);
-                  setCurrentDate(d);
-                }}
-              >
-                <ChevronLeft size={18} />
-              </button>
-              <span className={styles.weekLabel}>
-                {(() => {
-                  const mon = getMonday(currentDate);
-                  const sat = new Date(mon);
-                  sat.setDate(mon.getDate() + 5);
-                  return `${formatDateStr(mon)} — ${formatDateStr(sat)}`;
-                })()}
-              </span>
-              <button 
-                className={styles.weekBtn}
-                onClick={() => {
-                  const d = new Date(currentDate);
-                  d.setDate(d.getDate() + 7);
-                  setCurrentDate(d);
-                }}
-              >
-                <ChevronRight size={18} />
-              </button>
-              <button 
-                className="btn btn-secondary" 
-                style={{ padding: '6px 12px', fontSize: '0.85rem' }}
-                onClick={() => setCurrentDate(new Date())}
-              >
-                Bugungi hafta
-              </button>
-            </div>
-          </div>
+      {/* Filters: Group selector + Week nav */}
+      <div className={styles.filtersWrapper}>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <label style={{ fontWeight: '600', color: 'var(--text-primary)' }}>Guruh:</label>
+          <select
+            className="input"
+            style={{ width: '220px', padding: '8px 12px' }}
+            value={selectedGroupId}
+            onChange={(e) => setSelectedGroupId(e.target.value)}
+          >
+            {filteredGroups.map(g => (
+              <option key={g.id} value={g.id}>{g.name}</option>
+            ))}
+          </select>
+        </div>
 
-          {loading ? (
-            <div className={styles.loading}>Yuklanmoqda...</div>
-          ) : (
-            (() => {
-              const mon = getMonday(currentDate);
-              const daysArray = [];
-              for (let i = 0; i < 6; i++) {
-                const d = new Date(mon);
-                d.setDate(mon.getDate() + i);
-                daysArray.push(d);
-              }
-              
-              const todayStr = formatDateStr(new Date());
+        <div className={styles.weekNav}>
+          <button
+            className={styles.weekBtn}
+            onClick={() => {
+              const d = new Date(currentDate);
+              d.setDate(d.getDate() - 7);
+              setCurrentDate(d);
+            }}
+          >
+            <ChevronLeft size={18} />
+          </button>
 
-              return (
-                <div className={styles.timetableGrid}>
-                  {daysArray.map((dayDate, index) => {
-                    const dayNum = index + 1; // 1 to 6
-                    const dateStr = formatDateStr(dayDate);
-                    const isToday = dateStr === todayStr;
-                    const dayLessons = weeklyLessons.filter(l => l.lesson_date === dateStr);
-
-                    return (
-                      <div key={index} className={`${styles.timetableDay} ${isToday ? styles.today : ''}`}>
-                        <div className={styles.timetableDayHeader}>
-                          <span className={styles.timetableDayName}>{DAYS[dayNum]}</span>
-                          <span className={styles.timetableDayDate}>{formatShortDate(dayDate)}</span>
-                        </div>
-                        
-                        <div className={styles.timetableLessons}>
-                          {dayLessons.length === 0 ? (
-                            <div className={styles.noScheduleText} style={{ textAlign: 'center', margin: 'auto' }}>
-                              Dars kiritilmagan
-                            </div>
-                          ) : (
-                            dayLessons.map(lesson => {
-                              const start = lesson.start_time?.substring(0, 5) || '09:00';
-                              const end = lesson.end_time?.substring(0, 5) || '13:00';
-                              const parts = lesson.title ? lesson.title.split(' | ') : [];
-                              const subjectName = lesson.subjects?.name || parts[1] || parts[0] || 'Dars';
-                              
-                              return (
-                                <div key={lesson.id} className={`${styles.timetableLessonCard} ${lesson.lesson_type === 'theory' ? styles.theory : ''}`}>
-                                  <div className={styles.timetableLessonTime}>{start} - {end}</div>
-                                  <div className={styles.timetableLessonSub}>{subjectName}</div>
-                                  <div className={styles.timetableLessonTeacher}>
-                                    {lesson.teachers?.full_name || 'Ustoz biriktirilmagan'}
-                                  </div>
-                                  
-                                  {isWriteEnabled && (
-                                    <div className={styles.timetableLessonFooter}>
-                                      <button 
-                                        className={styles.scheduleActionBtn}
-                                        onClick={() => {
-                                          setEditingLesson(lesson);
-                                          setPrefilledGroupId(selectedGroupId);
-                                          setPrefilledDate(dateStr);
-                                          setShowLessonModal(true);
-                                        }}
-                                        title="Tahrirlash"
-                                      >
-                                        <Edit size={14} />
-                                      </button>
-                                      <button 
-                                        className={`${styles.scheduleActionBtn} ${styles.danger}`}
-                                        onClick={() => handleDeleteLesson(lesson.id)}
-                                        title="O'chirish"
-                                      >
-                                        <Trash size={14} />
-                                      </button>
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            })
-                          )}
-                        </div>
-                        
-                        {isWriteEnabled && (
-                          <button 
-                            className={styles.timetableAddBtn}
-                            onClick={() => {
-                              setEditingLesson(null);
-                              setPrefilledGroupId(selectedGroupId);
-                              setPrefilledDate(dateStr);
-                              setShowLessonModal(true);
-                            }}
-                          >
-                            <Plus size={14} /> Dars qo'shish
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })()
-          )}
-        </>
-      ) : (
-        <>
-          <div className={styles.header}>
-            <div className={styles.searchWrapper}>
-              <Search size={20} className={styles.searchIcon} />
-              <input 
-                type="text" 
-                placeholder="Guruh nomi orqali izlash..." 
-                className="input" 
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-            {isWriteEnabled && (
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <button className="btn btn-secondary" onClick={() => setShowImport(true)}>
-                  <FileSpreadsheet size={18} /> Excel Import
-                </button>
-                <button className="btn btn-primary" onClick={() => { setEditingSchedule(null); setShowModal(true); }}>
-                  <Plus size={18} /> Yangi Dars Vaqti
-                </button>
+          {/* Clickable week label */}
+          <div className={styles.weekLabelWrapper} ref={datePickerRef}>
+            <button
+              className={styles.weekLabel}
+              onClick={handleWeekLabelClick}
+              title="Sanani o'zgartirish uchun bosing"
+            >
+              <Calendar size={14} style={{ marginRight: '4px', opacity: 0.7 }} />
+              {formatDateStr(monday)} — {formatDateStr(saturday)}
+            </button>
+            {showDatePicker && (
+              <div className={styles.datePickerPopup}>
+                <input
+                  type="date"
+                  className={styles.datePickerInput}
+                  value={datePickerValue}
+                  onChange={handleDatePickerChange}
+                  autoFocus
+                />
+                <span className={styles.datePickerHint}>Istalgan kunni tanlang — jadval o'sha haftaga o'tadi</span>
               </div>
             )}
           </div>
 
-          {loading ? (
-            <div className={styles.loading}>Yuklanmoqda...</div>
-          ) : (
-            <div className={styles.dashboard}>
-              {/* Qayta Tayyorlov Column */}
-              <div className={styles.column}>
-                <h2 className={`${styles.columnTitle} ${styles.qayta}`}>
-                  Qayta tayyorlov guruhlari ({qaytaGroups.length})
-                </h2>
-                {qaytaGroups.length === 0 ? (
-                  <div className={styles.emptyText}>Guruhlar topilmadi</div>
-                ) : (
-                  qaytaGroups.map(group => {
-                    const isGroupExpanded = expandedGroupId === group.id;
-                    const uniqueDays = Array.from(new Set(group.schedules.map(s => s.day_of_week))).sort((a, b) => a - b);
+          <button
+            className={styles.weekBtn}
+            onClick={() => {
+              const d = new Date(currentDate);
+              d.setDate(d.getDate() + 7);
+              setCurrentDate(d);
+            }}
+          >
+            <ChevronRight size={18} />
+          </button>
+          <button
+            className="btn btn-secondary"
+            style={{ padding: '6px 12px', fontSize: '0.85rem' }}
+            onClick={() => setCurrentDate(new Date())}
+          >
+            Bugungi hafta
+          </button>
+        </div>
+      </div>
 
-                    return (
-                      <div key={group.id} className={styles.groupCard}>
-                        <div 
-                          className={styles.groupCardHeader} 
-                          onClick={() => {
-                            setExpandedGroupId(isGroupExpanded ? null : group.id);
-                            setExpandedDayKey(null);
-                          }}
-                          style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: 0, paddingBottom: isGroupExpanded ? '8px' : 0, borderBottom: isGroupExpanded ? '1px solid var(--border)' : 'none' }}
-                        >
-                          <div>
-                            <h3 className={styles.groupName}>{group.name}</h3>
-                            <span className={styles.courseName}>{group.course_name || 'Yo\'nalish kiritilmagan'}</span>
-                          </div>
-                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                            {isGroupExpanded ? '▲ Yopish' : '▼ Haftalik kunlar'}
-                          </span>
+      {/* Weekly Timetable Grid */}
+      {loading ? (
+        <div className={styles.loading}>Yuklanmoqda...</div>
+      ) : (
+        (() => {
+          const mon = getMonday(currentDate);
+          const daysArray = [];
+          for (let i = 0; i < 6; i++) {
+            const d = new Date(mon);
+            d.setDate(mon.getDate() + i);
+            daysArray.push(d);
+          }
+
+          const todayStr = formatDateStr(new Date());
+
+          return (
+            <div className={styles.timetableGrid}>
+              {daysArray.map((dayDate, index) => {
+                const dayNum = index + 1; // 1 to 6
+                const dateStr = formatDateStr(dayDate);
+                const isToday = dateStr === todayStr;
+                const dayLessons = weeklyLessons.filter(l => l.lesson_date === dateStr);
+
+                return (
+                  <div key={index} className={`${styles.timetableDay} ${isToday ? styles.today : ''}`}>
+                    <div className={styles.timetableDayHeader}>
+                      <span className={styles.timetableDayName}>{DAYS[dayNum]}</span>
+                      <span className={styles.timetableDayDate}>{formatShortDate(dayDate)}</span>
+                    </div>
+
+                    <div className={styles.timetableLessons}>
+                      {dayLessons.length === 0 ? (
+                        <div className={styles.noScheduleText} style={{ textAlign: 'center', margin: 'auto' }}>
+                          Dars kiritilmagan
                         </div>
+                      ) : (
+                        dayLessons.map(lesson => {
+                          const start = lesson.start_time?.substring(0, 5) || '09:00';
+                          const end = lesson.end_time?.substring(0, 5) || '13:00';
+                          const parts = lesson.title ? lesson.title.split(' | ') : [];
+                          const subjectName = lesson.subjects?.name || parts[1] || parts[0] || 'Dars';
 
-                        {isGroupExpanded && (
-                          <div className={styles.scheduleList} style={{ marginTop: '12px' }}>
-                            {group.schedules.length === 0 ? (
-                              <p className={styles.noScheduleText}>Hali dars jadvali belgilanmagan</p>
-                            ) : (
-                              uniqueDays.map(dayOfWeek => {
-                                const dayKey = `${group.id}-${dayOfWeek}`;
-                                const isDayExpanded = expandedDayKey === dayKey;
-                                const daySchedules = group.schedules.filter(s => s.day_of_week === dayOfWeek);
+                          return (
+                            <div key={lesson.id} className={`${styles.timetableLessonCard} ${lesson.lesson_type === 'theory' ? styles.theory : ''}`}>
+                              <div className={styles.timetableLessonTime}>{start} - {end}</div>
+                              <div className={styles.timetableLessonSub}>{subjectName}</div>
+                              <div className={styles.timetableLessonTeacher}>
+                                {lesson.teachers?.full_name || 'Ustoz biriktirilmagan'}
+                              </div>
 
-                                return (
-                                  <div key={dayOfWeek} className={styles.dayGroup}>
-                                    <div 
-                                      className={styles.dayHeader}
-                                      onClick={() => setExpandedDayKey(isDayExpanded ? null : dayKey)}
-                                      style={{
-                                        padding: '10px 12px',
-                                        background: isDayExpanded ? 'var(--primary-light)' : 'var(--bg-sidebar)',
-                                        cursor: 'pointer',
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        alignItems: 'center',
-                                        borderRadius: '8px',
-                                        border: '1px solid var(--border)',
-                                        color: isDayExpanded ? 'var(--primary)' : 'inherit',
-                                        marginBottom: isDayExpanded ? '4px' : '8px'
-                                      }}
-                                    >
-                                      <span className={styles.scheduleDay} style={{ fontWeight: '600', color: isDayExpanded ? 'var(--primary)' : 'inherit', minWidth: 'auto' }}>
-                                        {DAYS[dayOfWeek]}
-                                      </span>
-                                      <span style={{ fontSize: '0.8rem', opacity: 0.8 }}>
-                                        {isDayExpanded ? '▲ Darslarni yopish' : `▼ ${daySchedules.length} ta dars`}
-                                      </span>
-                                    </div>
+                              {isWriteEnabled && (
+                                <div className={styles.timetableLessonFooter}>
+                                  <button
+                                    className={styles.scheduleActionBtn}
+                                    onClick={() => {
+                                      setEditingLesson(lesson);
+                                      setPrefilledGroupId(selectedGroupId);
+                                      setPrefilledDate(dateStr);
+                                      setShowLessonModal(true);
+                                    }}
+                                    title="Tahrirlash"
+                                  >
+                                    <Edit size={14} />
+                                  </button>
+                                  <button
+                                    className={`${styles.scheduleActionBtn} ${styles.danger}`}
+                                    onClick={() => handleDeleteLesson(lesson.id)}
+                                    title="O'chirish"
+                                  >
+                                    <Trash size={14} />
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
 
-                                    {isDayExpanded && (
-                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingLeft: '8px', marginBottom: '8px' }}>
-                                        {daySchedules.map(sch => {
-                                          const start = sch.start_time.substring(0, 5);
-                                          const end = sch.end_time.substring(0, 5);
-                                          return (
-                                            <div key={sch.id} className={styles.scheduleItem} style={{ borderLeft: '3px solid var(--primary)', padding: '10px 12px' }}>
-                                              <div className={styles.scheduleTimeDetail} style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                                                <span className={styles.scheduleHours} style={{ fontWeight: '600' }}>{start} - {end}</span>
-                                                <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
-                                                  <strong>Fan:</strong> {sch.subjects?.name || '—'}
-                                                </span>
-                                                <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
-                                                  <strong>Ustoz:</strong> {sch.teachers?.full_name || '—'}
-                                                </span>
-                                              </div>
-                                              {isWriteEnabled && (
-                                                <div className={styles.scheduleActions}>
-                                                  <button 
-                                                    className={`${styles.scheduleActionBtn}`}
-                                                    style={{ color: '#22c55e' }}
-                                                    onClick={(e) => { e.stopPropagation(); handleGenerateLessons(sch); }}
-                                                    title="Darslar yaratish"
-                                                  >
-                                                    <RefreshCw size={14} />
-                                                  </button>
-                                                  <button 
-                                                    className={styles.scheduleActionBtn}
-                                                    onClick={(e) => { e.stopPropagation(); setEditingSchedule(sch); setShowModal(true); }}
-                                                    title="Tahrirlash"
-                                                  >
-                                                    <Edit2 size={14} />
-                                                  </button>
-                                                  <button 
-                                                    className={`${styles.scheduleActionBtn} ${styles.danger}`}
-                                                    onClick={(e) => { e.stopPropagation(); handleDelete(sch.id); }}
-                                                    title="O'chirish"
-                                                  >
-                                                    <Trash2 size={14} />
-                                                  </button>
-                                                </div>
-                                              )}
-                                            </div>
-                                          );
-                                        })}
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              })
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-
-              {/* Malaka Oshirish Column */}
-              <div className={styles.column}>
-                <h2 className={`${styles.columnTitle} ${styles.malaka}`}>
-                  Malaka oshirish guruhlari ({malakaGroups.length})
-                </h2>
-                {malakaGroups.length === 0 ? (
-                  <div className={styles.emptyText}>Guruhlar topilmadi</div>
-                ) : (
-                  malakaGroups.map(group => {
-                    const isGroupExpanded = expandedGroupId === group.id;
-                    const uniqueDays = Array.from(new Set(group.schedules.map(s => s.day_of_week))).sort((a, b) => a - b);
-
-                    return (
-                      <div key={group.id} className={styles.groupCard}>
-                        <div 
-                          className={styles.groupCardHeader} 
-                          onClick={() => {
-                            setExpandedGroupId(isGroupExpanded ? null : group.id);
-                            setExpandedDayKey(null);
-                          }}
-                          style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: 0, paddingBottom: isGroupExpanded ? '8px' : 0, borderBottom: isGroupExpanded ? '1px solid var(--border)' : 'none' }}
-                        >
-                          <div>
-                            <h3 className={styles.groupName}>{group.name}</h3>
-                            <span className={styles.courseName}>{group.course_name || 'Kurs nomi kiritilmagan'}</span>
-                          </div>
-                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                            {isGroupExpanded ? '▲ Yopish' : '▼ Haftalik kunlar'}
-                          </span>
-                        </div>
-
-                        {isGroupExpanded && (
-                          <div className={styles.scheduleList} style={{ marginTop: '12px' }}>
-                            {group.schedules.length === 0 ? (
-                              <p className={styles.noScheduleText}>Hali dars jadvali belgilanmagan</p>
-                            ) : (
-                              uniqueDays.map(dayOfWeek => {
-                                const dayKey = `${group.id}-${dayOfWeek}`;
-                                const isDayExpanded = expandedDayKey === dayKey;
-                                const daySchedules = group.schedules.filter(s => s.day_of_week === dayOfWeek);
-
-                                return (
-                                  <div key={dayOfWeek} className={styles.dayGroup}>
-                                    <div 
-                                      className={styles.dayHeader}
-                                      onClick={() => setExpandedDayKey(isDayExpanded ? null : dayKey)}
-                                      style={{
-                                        padding: '10px 12px',
-                                        background: isDayExpanded ? 'var(--primary-light)' : 'var(--bg-sidebar)',
-                                        cursor: 'pointer',
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        alignItems: 'center',
-                                        borderRadius: '8px',
-                                        border: '1px solid var(--border)',
-                                        color: isDayExpanded ? 'var(--primary)' : 'inherit',
-                                        marginBottom: isDayExpanded ? '4px' : '8px'
-                                      }}
-                                    >
-                                      <span className={styles.scheduleDay} style={{ fontWeight: '600', color: isDayExpanded ? 'var(--primary)' : 'inherit', minWidth: 'auto' }}>
-                                        {DAYS[dayOfWeek]}
-                                      </span>
-                                      <span style={{ fontSize: '0.8rem', opacity: 0.8 }}>
-                                        {isDayExpanded ? '▲ Darslarni yopish' : `▼ ${daySchedules.length} ta dars`}
-                                      </span>
-                                    </div>
-
-                                    {isDayExpanded && (
-                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingLeft: '8px', marginBottom: '8px' }}>
-                                        {daySchedules.map(sch => {
-                                          const start = sch.start_time.substring(0, 5);
-                                          const end = sch.end_time.substring(0, 5);
-                                          return (
-                                            <div key={sch.id} className={styles.scheduleItem} style={{ borderLeft: '3px solid var(--primary)', padding: '10px 12px' }}>
-                                              <div className={styles.scheduleTimeDetail} style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                                                <span className={styles.scheduleHours} style={{ fontWeight: '600' }}>{start} - {end}</span>
-                                                <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
-                                                  <strong>Fan:</strong> {sch.subjects?.name || '—'}
-                                                </span>
-                                                <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
-                                                  <strong>Ustoz:</strong> {sch.teachers?.full_name || '—'}
-                                                </span>
-                                              </div>
-                                              {isWriteEnabled && (
-                                                <div className={styles.scheduleActions}>
-                                                  <button 
-                                                    className={styles.scheduleActionBtn}
-                                                    onClick={(e) => { e.stopPropagation(); setEditingSchedule(sch); setShowModal(true); }}
-                                                    title="Tahrirlash"
-                                                  >
-                                                    <Edit2 size={14} />
-                                                  </button>
-                                                  <button 
-                                                    className={`${styles.scheduleActionBtn} ${styles.danger}`}
-                                                    onClick={(e) => { e.stopPropagation(); handleDelete(sch.id); }}
-                                                    title="O'chirish"
-                                                  >
-                                                    <Trash2 size={14} />
-                                                  </button>
-                                                </div>
-                                              )}
-                                            </div>
-                                          );
-                                        })}
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              })
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })
-                )}
-              </div>
+                    {isWriteEnabled && (
+                      <button
+                        className={styles.timetableAddBtn}
+                        onClick={() => {
+                          setEditingLesson(null);
+                          setPrefilledGroupId(selectedGroupId);
+                          setPrefilledDate(dateStr);
+                          setShowLessonModal(true);
+                        }}
+                      >
+                        <Plus size={14} /> Dars qo'shish
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          )}
-        </>
+          );
+        })()
       )}
 
       <ScheduleModal

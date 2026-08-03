@@ -120,7 +120,13 @@ const handlePhoneSubmit = async (ctx, phoneStr) => {
         ['📅 Mening darslarim', '📋 Guruhlarim ro\'yxati'],
         ['📊 Davomat hisobotlari']
       ];
-    } else if (user.role === 'admin' || user.role === 'tutor' || user.role === 'sysadmin') {
+    } else if (user.role === 'sysadmin' || user.role === 'admin') {
+      kb = [
+        ['📅 Mening davomatim', '📅 Dars jadvali'],
+        ['🏆 Oylik reyting', '📢 Xabar tarqatish'],
+        ['⚙️ Admin panel']
+      ];
+    } else if (user.role === 'tutor') {
       kb = [
         ['📅 Mening davomatim', '📅 Dars jadvali'],
         ['🏆 Oylik reyting'],
@@ -148,10 +154,24 @@ bot.on('contact', async (ctx) => {
   await handlePhoneSubmit(ctx, ctx.message.contact.phone_number);
 });
 
+bot.hears('⚙️ Admin panel', async (ctx) => {
+  const tgId = ctx.from.id.toString();
+  const { data: user } = await supabase.from('users').select('role').eq('telegram_id', tgId).single();
+  if (!user || (user.role !== 'admin' && user.role !== 'sysadmin')) return ctx.reply("Sizda admin huquqi yo'q.");
+  
+  const adminUrl = process.env.ADMIN_URL || 'https://davomat-admin.onrender.com';
+  ctx.replyWithHTML(
+    `⚙️ <b>Admin panel</b>\n\nQuyidagi havoladan admin paneliga kiring:`,
+    Markup.inlineKeyboard([[
+      Markup.button.url('🔗 Admin panelga kirish', adminUrl)
+    ]])
+  );
+});
+
 bot.hears('📢 Xabar tarqatish', async (ctx) => {
   const tgId = ctx.from.id.toString();
   const { data: user } = await supabase.from('users').select('role').eq('telegram_id', tgId).single();
-  if (!user || user.role !== 'admin') return ctx.reply("Sizda xabar yuborish huquqi yo'q.");
+  if (!user || (user.role !== 'admin' && user.role !== 'sysadmin' && user.role !== 'tutor')) return ctx.reply("Sizda xabar yuborish huquqi yo'q.");
   
   if (!ctx.session) ctx.session = {};
   ctx.session.awaitingBroadcast = true;
@@ -172,7 +192,13 @@ bot.hears('❌ Bekor qilish', async (ctx) => {
       ['📅 Mening darslarim', '📋 Guruhlarim ro\'yxati'],
       ['📊 Davomat hisobotlari']
     ];
-  } else if (user && (user.role === 'admin' || user.role === 'tutor')) {
+  } else if (user && (user.role === 'admin' || user.role === 'sysadmin')) {
+    kb = [
+      ['📅 Mening davomatim', '📅 Dars jadvali'],
+      ['🏆 Oylik reyting', '📢 Xabar tarqatish'],
+      ['⚙️ Admin panel']
+    ];
+  } else if (user && user.role === 'tutor') {
     kb = [
       ['📅 Mening davomatim', '📅 Dars jadvali'],
       ['🏆 Oylik reyting'],
@@ -221,7 +247,13 @@ bot.on('message', async (ctx, next) => {
         ['📅 Mening darslarim', '📋 Guruhlarim ro\'yxati'],
         ['📊 Davomat hisobotlari']
       ];
-    } else if (user && (user.role === 'admin' || user.role === 'tutor')) {
+    } else if (user && (user.role === 'admin' || user.role === 'sysadmin')) {
+      kb = [
+        ['📅 Mening davomatim', '📅 Dars jadvali'],
+        ['🏆 Oylik reyting', '📢 Xabar tarqatish'],
+        ['⚙️ Admin panel']
+      ];
+    } else if (user && user.role === 'tutor') {
       kb = [
         ['📅 Mening davomatim', '📅 Dars jadvali'],
         ['🏆 Oylik reyting'],

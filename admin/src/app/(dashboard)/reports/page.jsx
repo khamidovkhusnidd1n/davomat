@@ -227,7 +227,7 @@ export default function ReportsPage() {
     workbook.creator = 'Markaz Davomat Tizimi';
     workbook.created = new Date();
 
-    const exportLabel = filterType === 'month' ? selectedMonth : selectedDate;
+    const exportLabel = filterType === 'month' ? selectedMonth : filterType === 'date' ? selectedDate : 'Umumiy';
 
     for (const [groupName, rows] of Object.entries(sheetsData)) {
       if (rows.length === 0) continue;
@@ -304,7 +304,7 @@ export default function ReportsPage() {
 
     const doc = new jsPDF('landscape');
     
-    const exportLabel = filterType === 'month' ? selectedMonth : selectedDate;
+    const exportLabel = filterType === 'month' ? selectedMonth : filterType === 'date' ? selectedDate : 'Umumiy';
 
     // Add branding header
     doc.setFontSize(22);
@@ -412,6 +412,7 @@ export default function ReportsPage() {
           >
             <option value="month">Oy bo'yicha</option>
             <option value="date">Sana bo'yicha</option>
+            <option value="all">Umumiy</option>
           </select>
 
           {filterType === 'month' ? (
@@ -421,14 +422,14 @@ export default function ReportsPage() {
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
             />
-          ) : (
+          ) : filterType === 'date' ? (
             <input 
               type="date" 
               className="input" 
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
             />
-          )}
+          ) : null}
         </div>
 
         {loading ? (
@@ -519,7 +520,7 @@ export default function ReportsPage() {
             {/* EXPORT TAB */}
             {activeTab === 'export' && (
               <div className={styles.exportPanel}>
-                <h3>{filterType === 'month' ? selectedMonth : selectedDate} uchun barcha guruhlar hisobotini yuklab olish</h3>
+                <h3>{filterType === 'month' ? selectedMonth : filterType === 'date' ? selectedDate : 'Umumiy barcha vaqt'} uchun barcha guruhlar hisobotini yuklab olish</h3>
                 <p style={{ color: 'var(--text-secondary)' }}>Excel faylida har bir guruh alohida varaq (sheet) bo'lib tushadi.</p>
                 <div className={styles.exportButtons}>
                   <button className={`${styles.exportBtn} ${styles.btnExcel}`} onClick={exportExcel}>

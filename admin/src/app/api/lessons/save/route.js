@@ -108,6 +108,8 @@ export async function POST(req) {
           group_id,
           lesson_date,
           title: finalTitle,
+          start_time: start,
+          end_time: end,
           schedule_id: scheduleId,
           subject_id: finalSubjectId,
           teacher_id: teacher_id || null,
@@ -124,6 +126,8 @@ export async function POST(req) {
           group_id,
           lesson_date,
           title: finalTitle,
+          start_time: start,
+          end_time: end,
           schedule_id: scheduleId,
           created_by: auth.user.id,
           subject_id: finalSubjectId,
@@ -133,6 +137,7 @@ export async function POST(req) {
 
       if (insertErr) throw insertErr;
     }
+
 
     return NextResponse.json({ success: true });
   } catch (err) {

@@ -687,7 +687,7 @@ bot.hears('📅 Mening darslarim', async (ctx) => {
     // 1. Fetch today's already created/imported lessons
     const { data: todayLessons } = await supabase
       .from('lessons')
-      .select('id, group_id, title, schedule_id, groups(name)')
+      .select('id, group_id, title, schedule_id, start_time, end_time, groups(name)')
       .eq('lesson_date', todayStr)
       .in('group_id', groupIds);
 
@@ -720,6 +720,24 @@ bot.hears('📅 Mening darslarim', async (ctx) => {
     if (schedules) {
       for (const sch of schedules) {
         if (!existingScheduleIds.has(sch.id)) {
+          // Check for time overlap with existing lessons for the same group
+          let hasOverlap = false;
+          for (const les of todayLessons) {
+            if (les.group_id === sch.group_id && les.start_time && les.end_time) {
+              const lesStart = les.start_time;
+              const lesEnd = les.end_time;
+              const schStart = sch.start_time;
+              const schEnd = sch.end_time;
+              
+              if (lesStart < schEnd && schStart < lesEnd) {
+                hasOverlap = true;
+                break;
+              }
+            }
+          }
+
+          if (hasOverlap) continue;
+
           const title = `${sch.groups.course_name || sch.groups.name} (${sch.start_time.substring(0, 5)} - ${sch.end_time.substring(0, 5)})`;
           options.push({
             type: 'schedule',

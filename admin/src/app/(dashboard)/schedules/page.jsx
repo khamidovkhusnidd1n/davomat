@@ -449,17 +449,24 @@ export default function SchedulesPage() {
                         </div>
                       ) : (
                         dayLessons.map(lesson => {
-                          const start = lesson.start_time?.substring(0, 5) || '09:00';
-                          const end = lesson.end_time?.substring(0, 5) || '13:00';
                           const parts = lesson.title ? lesson.title.split(' | ') : [];
-                          const subjectName = lesson.subjects?.name || parts[1] || parts[0] || 'Dars';
+                          let parsedStart = '';
+                          let parsedEnd = '';
+                          if (parts[0] && parts[0].includes('-')) {
+                            const times = parts[0].split('-');
+                            parsedStart = times[0]?.trim();
+                            parsedEnd = times[1]?.trim();
+                          }
 
+                          const start = lesson.start_time?.substring(0, 5) || parsedStart || '09:00';
+                          const end = lesson.end_time?.substring(0, 5) || parsedEnd || '13:00';
+                          const subjectName = lesson.subjects?.name || parts[1] || parts[0] || 'Dars';
 
                           // Check if lesson is finished
                           let isFinished = false;
-                          if (lesson.lesson_date && lesson.end_time) {
+                          if (lesson.lesson_date && end) {
                             const [yr, mo, dy] = lesson.lesson_date.split('-').map(Number);
-                            const [hr, mn] = lesson.end_time.substring(0, 5).split(':').map(Number);
+                            const [hr, mn] = end.split(':').map(Number);
                             const lessonEnd = new Date(yr, mo - 1, dy, hr, mn, 0);
                             isFinished = new Date() > lessonEnd;
                           }

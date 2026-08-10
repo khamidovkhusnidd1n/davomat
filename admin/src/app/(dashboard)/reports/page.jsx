@@ -27,6 +27,8 @@ export default function ReportsPage() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   });
 
+  const [selectedExportGroup, setSelectedExportGroup] = useState('all');
+
   useEffect(() => {
     fetchData();
   }, [filterType, selectedMonth, selectedDate]);
@@ -174,7 +176,12 @@ export default function ReportsPage() {
     
     const sheetsData = {};
 
-    data.groups.forEach(g => {
+    let groupsToExport = data.groups;
+    if (selectedExportGroup !== 'all') {
+      groupsToExport = data.groups.filter(g => g.id === selectedExportGroup);
+    }
+
+    groupsToExport.forEach(g => {
       const gLessons = data.lessons.filter(l => l.group_id === g.id).sort((a, b) => new Date(a.lesson_date) - new Date(b.lesson_date));
       const gStudents = data.students.filter(s => s.group_id === g.id);
       
@@ -430,6 +437,20 @@ export default function ReportsPage() {
               onChange={(e) => setSelectedDate(e.target.value)}
             />
           ) : null}
+
+          {activeTab === 'export' && (
+            <select
+              className="input"
+              style={{ width: '220px', marginLeft: 'auto' }}
+              value={selectedExportGroup}
+              onChange={(e) => setSelectedExportGroup(e.target.value)}
+            >
+              <option value="all">Barcha guruhlar</option>
+              {data.groups.map(g => (
+                <option key={g.id} value={g.id}>{g.name}</option>
+              ))}
+            </select>
+          )}
         </div>
 
         {loading ? (
@@ -520,7 +541,7 @@ export default function ReportsPage() {
             {/* EXPORT TAB */}
             {activeTab === 'export' && (
               <div className={styles.exportPanel}>
-                <h3>{filterType === 'month' ? selectedMonth : filterType === 'date' ? selectedDate : 'Umumiy barcha vaqt'} uchun barcha guruhlar hisobotini yuklab olish</h3>
+                <h3>{filterType === 'month' ? selectedMonth : filterType === 'date' ? selectedDate : 'Umumiy barcha vaqt'} uchun {selectedExportGroup === 'all' ? 'barcha guruhlar' : 'tanlangan guruh'} hisobotini yuklab olish</h3>
                 <p style={{ color: 'var(--text-secondary)' }}>Excel faylida har bir guruh alohida varaq (sheet) bo'lib tushadi.</p>
                 <div className={styles.exportButtons}>
                   <button className={`${styles.exportBtn} ${styles.btnExcel}`} onClick={exportExcel}>

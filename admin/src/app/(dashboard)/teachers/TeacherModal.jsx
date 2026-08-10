@@ -298,6 +298,7 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
             >
               <option value="qayta_tayyorlov">Qayta tayyorlov</option>
               <option value="malaka_oshirish">Malaka oshirish</option>
+              <option value="ikkalasi">Barchasi (Ikkalasi)</option>
             </select>
           </div>
           <div className="form-group">

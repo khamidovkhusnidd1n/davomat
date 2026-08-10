@@ -224,7 +224,7 @@ export default function TeacherImportModal({ isOpen, onClose, onSuccess, academi
             <ul>
               <li><code>To'liq ism</code> — o'qituvchi ism-sharifi</li>
               <li><code>Telefon</code> — aloqa raqami</li>
-              <li><code>Ta'lim shakli</code> — <code>malaka_oshirish</code> yoki <code>qayta_tayyorlov</code></li>
+              <li><code>Ta'lim shakli</code> — <code>malaka_oshirish</code>, <code>qayta_tayyorlov</code> yoki <code>ikkalasi</code></li>
               <li><code>Fan 1</code>, <code>Fan 1 soat</code>, <code>Fan 2</code>, <code>Fan 2 soat</code></li>
             </ul>
           </div>

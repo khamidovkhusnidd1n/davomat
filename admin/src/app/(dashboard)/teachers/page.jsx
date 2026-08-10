@@ -146,7 +146,7 @@ export default function TeachersPage() {
       "№": idx + 1,
       "O'qituvchi": t.full_name,
       "Ilmiy daraja": t.degree || 'Kiritilmagan',
-      "Ta'lim turi": t.education_type === 'malaka_oshirish' ? 'Malaka oshirish' : 'Qayta tayyorlov',
+      "Ta'lim turi": t.education_type === 'ikkalasi' ? 'Barchasi' : (t.education_type === 'malaka_oshirish' ? 'Malaka oshirish' : 'Qayta tayyorlov'),
       "Telefon": t.phone || 'Kiritilmagan',
       "Yillik limit soati": t.max_hours || 120,
       "Nazariy soat (O'tilgan/Reja)": `${t.teacher_subjects.reduce((sum, ts) => sum + (ts.total_theory_completed || 0), 0)} / ${t.teacher_subjects.reduce((sum, ts) => sum + (ts.allocated_theory_hours || 0), 0)}`,
@@ -175,7 +175,7 @@ export default function TeachersPage() {
 
   const filtered = teachers.filter(t => {
     const matchSearch = t.full_name.toLowerCase().includes(search.toLowerCase());
-    const matchType = filterType === 'all' || t.education_type === filterType;
+    const matchType = filterType === 'all' || t.education_type === filterType || t.education_type === 'ikkalasi';
     return matchSearch && matchType;
   });
 
@@ -260,13 +260,13 @@ export default function TeachersPage() {
         </div>
         <div className={styles.statCard}>
           <span className={styles.statNum}>
-            {teachers.filter(t => t.education_type === 'malaka_oshirish').length}
+            {teachers.filter(t => t.education_type === 'malaka_oshirish' || t.education_type === 'ikkalasi').length}
           </span>
           <span className={styles.statLabel}>Malaka oshirish</span>
         </div>
         <div className={styles.statCard}>
           <span className={styles.statNum}>
-            {teachers.filter(t => t.education_type === 'qayta_tayyorlov').length}
+            {teachers.filter(t => t.education_type === 'qayta_tayyorlov' || t.education_type === 'ikkalasi').length}
           </span>
           <span className={styles.statLabel}>Qayta tayyorlov</span>
         </div>
@@ -307,8 +307,8 @@ export default function TeachersPage() {
                   <div className={styles.cardInfo}>
                     <h3 className={styles.cardName}>{teacher.full_name}</h3>
                     <div style={{ display: 'flex', gap: '6px', marginTop: '4px', flexWrap: 'wrap', alignItems: 'center' }}>
-                      <span className={`${styles.typeBadge} ${teacher.education_type === 'malaka_oshirish' ? styles.malaka : styles.qayta}`}>
-                        {teacher.education_type === 'malaka_oshirish' ? 'Malaka oshirish' : 'Qayta tayyorlov'}
+                      <span className={`${styles.typeBadge} ${teacher.education_type === 'malaka_oshirish' ? styles.malaka : teacher.education_type === 'ikkalasi' ? styles.ikkalasi : styles.qayta}`}>
+                        {teacher.education_type === 'ikkalasi' ? 'Barchasi' : (teacher.education_type === 'malaka_oshirish' ? 'Malaka oshirish' : 'Qayta tayyorlov')}
                       </span>
                       {teacher.degree && (
                         <span style={{ fontSize: '0.75rem', padding: '2px 6px', borderRadius: '4px', background: 'rgba(255, 255, 255, 0.1)', color: 'var(--text-secondary)', border: '1px solid var(--border)', fontWeight: '500' }}>
@@ -446,8 +446,8 @@ export default function TeachersPage() {
                         )}
                       </td>
                       <td>
-                        <span className={`${styles.typeBadge} ${teacher.education_type === 'malaka_oshirish' ? styles.malaka : styles.qayta}`}>
-                          {teacher.education_type === 'malaka_oshirish' ? 'Malaka oshirish' : 'Qayta tayyorlov'}
+                        <span className={`${styles.typeBadge} ${teacher.education_type === 'malaka_oshirish' ? styles.malaka : teacher.education_type === 'ikkalasi' ? styles.ikkalasi : styles.qayta}`}>
+                          {teacher.education_type === 'ikkalasi' ? 'Barchasi' : (teacher.education_type === 'malaka_oshirish' ? 'Malaka oshirish' : 'Qayta tayyorlov')}
                         </span>
                       </td>
                       <td style={{ maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

@@ -69,14 +69,19 @@ export default function TeachersPage() {
         // Filter teacher_subjects by academic year
         const rawSubjectsThisYear = t.teacher_subjects?.filter(ts => ts.academic_year === academicYear) || [];
 
-        // Only lessons starting from tomorrow (future) are dynamically added to the manual count
-        const futureLessons = (lesData || []).filter(l => l.lesson_date >= todayStr);
+        // Faqatgina vaqti o'tib bo'lgan (tugagan) darslarni "o'tildi" (completed) hisobiga qo'shamiz
+        const now = new Date(new Date().getTime() + 5 * 60 * 60 * 1000); // UZ time
+        const pastLessons = (lesData || []).filter(l => {
+          const end = l.end_time || '13:00';
+          const lessonEnd = new Date(`${l.lesson_date}T${end}:00+05:00`);
+          return lessonEnd < now;
+        });
         
         const subjectsThisYear = rawSubjectsThisYear.map(ts => {
-          const subFutureLessons = futureLessons.filter(l => l.subject_id === ts.subjects?.id);
+          const subPastLessons = pastLessons.filter(l => l.subject_id === ts.subjects?.id);
           
           // Calculate dynamic theory hours
-          const dynamicTheory = subFutureLessons
+          const dynamicTheory = subPastLessons
             .filter(l => l.lesson_type === 'theory')
             .reduce((sum, l) => {
               const start = l.start_time || '09:00';
@@ -88,7 +93,7 @@ export default function TeachersPage() {
             }, 0);
 
           // Calculate dynamic practice hours
-          const dynamicPractice = subFutureLessons
+          const dynamicPractice = subPastLessons
             .filter(l => l.lesson_type === 'practice')
             .reduce((sum, l) => {
               const start = l.start_time || '09:00';

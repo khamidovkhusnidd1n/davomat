@@ -173,9 +173,35 @@ bot.hears('📢 Xabar tarqatish', async (ctx) => {
   const { data: user } = await supabase.from('users').select('role').eq('telegram_id', tgId).single();
   if (!user || (user.role !== 'admin' && user.role !== 'sysadmin' && user.role !== 'tutor')) return ctx.reply("Sizda xabar yuborish huquqi yo'q.");
   
+  const { data: groups } = await supabase.from('groups').select('id, name').order('name');
   if (!ctx.session) ctx.session = {};
-  ctx.session.awaitingBroadcast = true;
-  ctx.reply("Iltimos, barchaga yuboriladigan xabarni yuboring (Rasm, video yoki matn):\n\nBekor qilish uchun pastdagi tugmani bosing.", Markup.keyboard([['❌ Bekor qilish']]).resize());
+  
+  const buttons = [];
+  buttons.push([Markup.button.callback('📢 Barcha guruhlarga', 'bc_target:all')]);
+  if (groups) {
+    groups.forEach(g => {
+      buttons.push([Markup.button.callback(`👥 ${g.name}`, `bc_target:${g.id}`)]);
+    });
+  }
+  
+  ctx.reply("Xabarni kimlarga yubormoqchisiz? Guruhni tanlang:", Markup.inlineKeyboard(buttons));
+  ctx.reply("Yoki bekor qilish tugmasini bosing:", Markup.keyboard([['❌ Bekor qilish']]).resize());
+});
+
+bot.action(/bc_target:(.+)/, async (ctx) => {
+  const target = ctx.match[1];
+  if (!ctx.session) ctx.session = {};
+  
+  let targetText = "Barcha guruhlarga";
+  if (target !== 'all') {
+    const { data: g } = await supabase.from('groups').select('name').eq('id', target).single();
+    if (g) targetText = g.name;
+  }
+
+  ctx.session.awaitingBroadcast = { target, targetText };
+  
+  await ctx.editMessageText(`Siz **${targetText}** ni tanladingiz.\n\nIltimos, yuboriladigan xabarni yuboring (Rasm, video yoki matn):`, { parse_mode: 'Markdown' });
+  await ctx.answerCbQuery();
 });
 
 bot.hears('❌ Bekor qilish', async (ctx) => {
@@ -224,12 +250,25 @@ bot.on('message', async (ctx, next) => {
   }
 
   if (ctx.session && ctx.session.awaitingBroadcast) {
-    ctx.session.awaitingBroadcast = false;
+    const target = ctx.session.awaitingBroadcast.target;
+    const targetText = ctx.session.awaitingBroadcast.targetText || "Barchaga";
+    ctx.session.awaitingBroadcast = null;
     
-    const { data: users } = await supabase.from('users').select('telegram_id').not('telegram_id', 'is', null);
+    let users = [];
+    if (target === 'all') {
+      const { data } = await supabase.from('users').select('telegram_id').not('telegram_id', 'is', null);
+      users = data || [];
+    } else {
+      const { data: students } = await supabase.from('students').select('user_id').eq('group_id', target);
+      if (students && students.length > 0) {
+        const userIds = students.map(s => s.user_id);
+        const { data } = await supabase.from('users').select('telegram_id').in('id', userIds).not('telegram_id', 'is', null);
+        users = data || [];
+      }
+    }
     
     let count = 0;
-    if (users) {
+    if (users && users.length > 0) {
       for (const u of users) {
         if (u.telegram_id === ctx.from.id.toString()) continue;
         try {

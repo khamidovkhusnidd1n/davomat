@@ -290,17 +290,39 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
             />
           </div>
           <div className="form-group">
-            <label>Ta'lim turi</label>
-            <select
-              className="input"
-              value={formData.education_type}
-              onChange={e => setFormData({ ...formData, education_type: e.target.value })}
-            >
-              <option value="qayta_tayyorlov">Qayta tayyorlov</option>
-              <option value="malaka_oshirish">Malaka oshirish</option>
-              <option value="otm">OTM</option>
-              <option value="ikkalasi">Barchasi (Ikkalasi)</option>
-            </select>
+            <label>Ta'lim turi (Bir nechtasini tanlash mumkin)</label>
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
+              {[
+                { id: 'qayta_tayyorlov', label: 'Qayta tayyorlov' },
+                { id: 'malaka_oshirish', label: 'Malaka oshirish' },
+                { id: 'otm', label: 'OTM' }
+              ].map(opt => {
+                let currentTypes = (formData.education_type || '').split(',').map(s => s.trim()).filter(Boolean);
+                if (currentTypes.includes('ikkalasi')) {
+                  currentTypes = ['qayta_tayyorlov', 'malaka_oshirish'];
+                }
+                const isChecked = currentTypes.includes(opt.id);
+                return (
+                  <label key={opt.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={isChecked}
+                      style={{ cursor: 'pointer' }}
+                      onChange={() => {
+                        let newTypes = [...currentTypes];
+                        if (isChecked) {
+                          newTypes = newTypes.filter(t => t !== opt.id);
+                        } else {
+                          newTypes.push(opt.id);
+                        }
+                        setFormData({ ...formData, education_type: newTypes.join(',') });
+                      }}
+                    />
+                    {opt.label}
+                  </label>
+                );
+              })}
+            </div>
           </div>
           <div className="form-group">
             <label>Ilmiy daraja</label>

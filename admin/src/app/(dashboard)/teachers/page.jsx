@@ -123,7 +123,7 @@ export default function TeachersPage() {
           teacher_subjects: subjectsThisYear,
           completed_hours: completedHours,
           total_allocated: totalAllocated,
-          remaining_hours: Math.max(0, (t.max_hours || 0) - completedHours),
+          remaining_hours: Math.max(0, (totalAllocated > 0 ? totalAllocated : (t.max_hours || 120)) - completedHours),
         };
       }));
 
@@ -158,7 +158,7 @@ export default function TeachersPage() {
       "Amaliy soat (O'tilgan/Reja)": `${t.teacher_subjects.reduce((sum, ts) => sum + (ts.total_practice_completed || 0), 0)} / ${t.teacher_subjects.reduce((sum, ts) => sum + (ts.allocated_practice_hours || 0), 0)}`,
       "Jami soat (O'tilgan/Reja)": `${t.completed_hours} / ${t.total_allocated}`,
       "Qoldiq soat": t.remaining_hours,
-      "Bajarilishi (%)": t.max_hours > 0 ? Math.round((t.completed_hours / t.max_hours) * 100) : 0
+      "Bajarilishi (%)": (t.total_allocated > 0 ? t.total_allocated : (t.max_hours || 120)) > 0 ? Math.round((t.completed_hours / (t.total_allocated > 0 ? t.total_allocated : (t.max_hours || 120))) * 100) : 0
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
@@ -319,8 +319,9 @@ export default function TeachersPage() {
         <div className={styles.cardsGrid}>
           {filtered.map(teacher => {
             const isExpanded = expandedId === teacher.id;
-            const pct = (teacher.max_hours || 0) > 0 
-              ? Math.min(100, Math.round((teacher.completed_hours / teacher.max_hours) * 100)) 
+            const targetHours = teacher.total_allocated > 0 ? teacher.total_allocated : (teacher.max_hours || 120);
+            const pct = targetHours > 0 
+              ? Math.min(100, Math.round((teacher.completed_hours / targetHours) * 100)) 
               : 0;
 
             return (
@@ -392,7 +393,7 @@ export default function TeachersPage() {
                       className={styles.progressFill}
                       style={{
                         width: `${pct}%`,
-                        background: teacher.completed_hours >= teacher.max_hours ? '#ef4444' : pct >= 90 ? '#ef4444' : pct >= 60 ? '#f59e0b' : '#22c55e'
+                        background: teacher.completed_hours >= targetHours ? '#ef4444' : pct >= 90 ? '#ef4444' : pct >= 60 ? '#f59e0b' : '#22c55e'
                       }}
                     />
                   </div>
@@ -459,8 +460,9 @@ export default function TeachersPage() {
               </thead>
               <tbody>
                 {filtered.map((teacher, idx) => {
-                  const pct = (teacher.max_hours || 0) > 0
-                    ? Math.min(100, Math.round((teacher.completed_hours / teacher.max_hours) * 100))
+                  const targetHours = teacher.total_allocated > 0 ? teacher.total_allocated : (teacher.max_hours || 120);
+                  const pct = targetHours > 0
+                    ? Math.min(100, Math.round((teacher.completed_hours / targetHours) * 100))
                     : 0;
                   return (
                     <tr key={teacher.id}>
@@ -503,7 +505,7 @@ export default function TeachersPage() {
                               className={styles.tableProgressFill}
                               style={{
                                 width: `${pct}%`,
-                                background: teacher.completed_hours >= teacher.max_hours ? '#ef4444' : pct >= 90 ? '#ef4444' : pct >= 60 ? '#f59e0b' : '#22c55e',
+                                background: teacher.completed_hours >= targetHours ? '#ef4444' : pct >= 90 ? '#ef4444' : pct >= 60 ? '#f59e0b' : '#22c55e',
                                 height: '100%',
                                 borderRadius: '4px'
                               }}

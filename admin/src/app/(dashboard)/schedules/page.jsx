@@ -95,7 +95,7 @@ export default function SchedulesPage() {
           `)
           .order('day_of_week', { ascending: true })
           .order('start_time', { ascending: true }),
-        supabase.from('groups').select('id, name, course_name, education_type')
+        supabase.from('groups').select('id, name, course_name, education_type').eq('status', 'active')
       ]);
       
       if (schedulesRes.error) throw schedulesRes.error;

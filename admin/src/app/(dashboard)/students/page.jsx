@@ -42,9 +42,9 @@ export default function StudentsPage() {
           joined_at,
           user_id,
           users ( id, full_name, phone, email, telegram_id ),
-          groups ( id, name, course_name )
+          groups ( id, name, course_name, status )
         `),
-        supabase.from('groups').select('id, name, course_name'),
+        supabase.from('groups').select('id, name, course_name, status'),
       ]);
 
       setStudents(studentsRes.data || []);
@@ -212,7 +212,7 @@ export default function StudentsPage() {
       <ExcelImport
         isOpen={showImport}
         onClose={() => setShowImport(false)}
-        groups={groups}
+        groups={groups.filter(g => g.status === 'active')}
         organizationId={organizationId}
         onSuccess={() => fetchAll(true)}
       />
@@ -221,7 +221,7 @@ export default function StudentsPage() {
         isOpen={showModal}
         onClose={() => setShowModal(false)}
         student={editingStudent}
-        groups={groups}
+        groups={groups.filter(g => g.status === 'active')}
         organizationId={organizationId}
         onSuccess={() => fetchAll(true)}
       />

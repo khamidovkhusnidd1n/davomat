@@ -45,7 +45,7 @@ export default function ReportsPage() {
       // Fetch groups
       const { data: groups, error: gErr } = await supabase
         .from('groups')
-        .select('id, name, course_name');
+        .select('id, name, course_name, education_type, status');
       if (gErr) throw gErr;
 
       // Fetch students
@@ -100,27 +100,26 @@ export default function ReportsPage() {
 
   // 1. Guruhlar reytingi
   const groupStats = useMemo(() => {
-    const stats = data.groups.map(g => {
-      // Find all lessons for this group
-      const gLessons = data.lessons.filter(l => l.group_id === g.id);
-      const lessonIds = gLessons.map(l => l.id);
-      
-      // Find all attendance for these lessons
+    return data.groups.map(g => {
+      const groupLessons = data.lessons.filter(l => l.group_id === g.id);
+      const lessonIds = groupLessons.map(l => l.id);
       const gAtt = data.attendance.filter(a => lessonIds.includes(a.lesson_id));
       
       const total = gAtt.length;
       const present = gAtt.filter(a => a.status === 'present').length;
-      const percentage = total === 0 ? 0 : Math.round((present / total) * 100);
+
+      // Adjust group name if archived
+      if (g.status === 'archived') {
+        g.name = `${g.name} (Arxivlangan)`;
+      }
 
       return {
         ...g,
-        totalLessons: gLessons.length,
-        totalChecks: total,
-        percentage
+        percentage: total > 0 ? Math.round((present / total) * 100) : 0,
+        totalLessons: groupLessons.length
       };
-    });
-
-    return stats.sort((a, b) => b.percentage - a.percentage);
+    })
+    .sort((a, b) => b.percentage - a.percentage);
   }, [data]);
 
   // 2. Qizil zona (>= 3 marta ketma-ket kelmaganlar)

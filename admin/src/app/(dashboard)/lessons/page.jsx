@@ -125,7 +125,7 @@ export default function LessonsPage() {
   }
 
   async function fetchGroups() {
-    const { data } = await supabase.from('groups').select('id, name, education_type').order('name');
+    const { data } = await supabase.from('groups').select('id, name, education_type').eq('status', 'active').order('name');
     if (data) setGroups(data);
   }
 

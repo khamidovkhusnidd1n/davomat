@@ -173,7 +173,7 @@ bot.hears('📢 Xabar tarqatish', async (ctx) => {
   const { data: user } = await supabase.from('users').select('role').eq('telegram_id', tgId).single();
   if (!user || (user.role !== 'admin' && user.role !== 'sysadmin' && user.role !== 'tutor')) return ctx.reply("Sizda xabar yuborish huquqi yo'q.");
   
-  const { data: groups } = await supabase.from('groups').select('id, name').order('name');
+  const { data: groups } = await supabase.from('groups').select('id, name').eq('status', 'active').order('name');
   if (!ctx.session) ctx.session = {};
   
   const buttons = [];
@@ -718,7 +718,7 @@ bot.hears('📅 Mening darslarim', async (ctx) => {
     let dayOfWeek = tz.dayOfWeek;
     const todayStr = tz.dateStr;
 
-    const { data: groups } = await supabase.from('groups').select('id, name').eq('nazoratchi_id', user.id);
+    const { data: groups } = await supabase.from('groups').select('id, name').eq('status', 'active').eq('nazoratchi_id', user.id);
     if (!groups || groups.length === 0) return ctx.reply("Sizga biriktirilgan guruhlar topilmadi.");
 
     const groupIds = groups.map(g => g.id);
@@ -857,7 +857,7 @@ bot.hears('📋 Guruhlarim ro\'yxati', async (ctx) => {
     const { data: user } = await supabase.from('users').select('id, role').eq('telegram_id', tgId).single();
     if (!user || user.role !== 'nazoratchi') return ctx.reply("Siz o'qituvchi roliga ega emassiz.");
 
-    const { data: groups } = await supabase.from('groups').select('id, name, course_name').eq('nazoratchi_id', user.id);
+    const { data: groups } = await supabase.from('groups').select('id, name, course_name').eq('status', 'active').eq('nazoratchi_id', user.id);
     if (!groups || groups.length === 0) return ctx.reply("Sizga biriktirilgan guruhlar topilmadi.");
 
     ctx.session.myGroups = groups;
@@ -898,7 +898,7 @@ bot.hears('📊 Davomat hisobotlari', async (ctx) => {
     const { data: user } = await supabase.from('users').select('id, role').eq('telegram_id', tgId).single();
     if (!user || user.role !== 'nazoratchi') return ctx.reply("Siz o'qituvchi roliga ega emassiz.");
 
-    const { data: groups } = await supabase.from('groups').select('id, name').eq('nazoratchi_id', user.id);
+    const { data: groups } = await supabase.from('groups').select('id, name').eq('status', 'active').eq('nazoratchi_id', user.id);
     if (!groups || groups.length === 0) return ctx.reply("Sizga biriktirilgan guruhlar topilmadi.");
 
     const groupStats = [];

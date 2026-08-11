@@ -42,6 +42,7 @@ export default function GroupsPage() {
           name,
           course_name,
           education_type,
+          status,
           nazoratchi_id,
           monitor_id,
           created_at,

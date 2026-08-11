@@ -123,7 +123,7 @@ export default function TeachersPage() {
           teacher_subjects: subjectsThisYear,
           completed_hours: completedHours,
           total_allocated: totalAllocated,
-          remaining_hours: Math.max(0, totalAllocated - completedHours),
+          remaining_hours: Math.max(0, (t.max_hours || 0) - completedHours),
         };
       }));
 
@@ -305,8 +305,8 @@ export default function TeachersPage() {
         <div className={styles.cardsGrid}>
           {filtered.map(teacher => {
             const isExpanded = expandedId === teacher.id;
-            const pct = teacher.total_allocated > 0
-              ? Math.min(100, Math.round((teacher.completed_hours / teacher.total_allocated) * 100))
+            const pct = (teacher.max_hours || 0) > 0 
+              ? Math.min(100, Math.round((teacher.completed_hours / teacher.max_hours) * 100)) 
               : 0;
 
             return (
@@ -443,8 +443,8 @@ export default function TeachersPage() {
               </thead>
               <tbody>
                 {filtered.map((teacher, idx) => {
-                  const pct = teacher.total_allocated > 0
-                    ? Math.min(100, Math.round((teacher.completed_hours / teacher.total_allocated) * 100))
+                  const pct = (teacher.max_hours || 0) > 0
+                    ? Math.min(100, Math.round((teacher.completed_hours / teacher.max_hours) * 100))
                     : 0;
                   return (
                     <tr key={teacher.id}>

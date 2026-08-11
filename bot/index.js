@@ -242,7 +242,15 @@ bot.hears('❌ Bekor qilish', async (ctx) => {
 
 bot.on('message', async (ctx, next) => {
   if (ctx.session && ctx.session.awaitingAdhocTitle) {
-    const title = ctx.message.text;
+    const title = ctx.message?.text || '';
+    
+    // Agar o'qituvchi yozish o'rniga menyudagi tugmalardan birini bosib yuborsa
+    const keyboardCommands = ['📅 Mening darslarim', '📋 Guruhlarim ro\'yxati', '📊 Davomat hisobotlari', '❌ Bekor qilish'];
+    if (keyboardCommands.includes(title)) {
+      ctx.session.awaitingAdhocTitle = null;
+      return next(); // Davom etib tugma vazifasini bajaradi
+    }
+
     const { groupId } = ctx.session.awaitingAdhocTitle;
     ctx.session.awaitingAdhocTitle = null;
     await startAdhocLesson(ctx, groupId, title);

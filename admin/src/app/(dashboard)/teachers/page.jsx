@@ -211,6 +211,7 @@ export default function TeachersPage() {
             <option value="otm">OTM</option>
             <option value="malaka_oshirish">Malaka oshirish</option>
             <option value="qayta_tayyorlov">Qayta tayyorlov</option>
+            <option value="ikkalasi">Barchasi (Ikkalasi)</option>
           </select>
           <select
             className="input"

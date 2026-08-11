@@ -151,7 +151,7 @@ export default function TeachersPage() {
       "№": idx + 1,
       "O'qituvchi": t.full_name,
       "Ilmiy daraja": t.degree || 'Kiritilmagan',
-      "Ta'lim turi": t.education_type === 'ikkalasi' ? 'Barchasi' : (t.education_type === 'malaka_oshirish' ? 'Malaka oshirish' : 'Qayta tayyorlov'),
+      "Ta'lim turi": t.education_type === 'ikkalasi' ? 'Barchasi' : (t.education_type === 'otm' ? 'OTM' : (t.education_type === 'malaka_oshirish' ? 'Malaka oshirish' : 'Qayta tayyorlov')),
       "Telefon": t.phone || 'Kiritilmagan',
       "Yillik limit soati": t.max_hours || 120,
       "Nazariy soat (O'tilgan/Reja)": `${t.teacher_subjects.reduce((sum, ts) => sum + (ts.total_theory_completed || 0), 0)} / ${t.teacher_subjects.reduce((sum, ts) => sum + (ts.allocated_theory_hours || 0), 0)}`,
@@ -208,6 +208,7 @@ export default function TeachersPage() {
             onChange={e => setFilterType(e.target.value)}
           >
             <option value="all">Barcha ta'lim turlari</option>
+            <option value="otm">OTM</option>
             <option value="malaka_oshirish">Malaka oshirish</option>
             <option value="qayta_tayyorlov">Qayta tayyorlov</option>
           </select>
@@ -262,6 +263,12 @@ export default function TeachersPage() {
         <div className={styles.statCard}>
           <span className={styles.statNum}>{teachers.length}</span>
           <span className={styles.statLabel}>Jami o'qituvchi</span>
+        </div>
+        <div className={styles.statCard}>
+          <span className={styles.statNum}>
+            {teachers.filter(t => t.education_type === 'otm').length}
+          </span>
+          <span className={styles.statLabel}>OTM</span>
         </div>
         <div className={styles.statCard}>
           <span className={styles.statNum}>

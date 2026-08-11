@@ -167,16 +167,16 @@ export default function GroupsPage() {
                   filteredGroups.map((group) => (
                     <tr key={group.id} style={{ opacity: group.status === 'archived' ? 0.6 : 1 }}>
                       <td>
-                        <span style={{
-                          padding: '2px 8px',
-                          borderRadius: '12px',
-                          fontSize: '0.75rem',
-                          fontWeight: '600',
-                          background: group.education_type === 'malaka_oshirish' ? '#dbeafe' : '#dcfce7',
-                          color: group.education_type === 'malaka_oshirish' ? '#1d4ed8' : '#15803d'
-                        }}>
-                          {group.education_type === 'malaka_oshirish' ? 'Malaka oshirish' : 'Qayta tayyorlov'}
-                        </span>
+                          <span style={{
+                            padding: '2px 8px',
+                            borderRadius: '12px',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            background: group.education_type === 'otm' ? '#f3e8ff' : (group.education_type === 'malaka_oshirish' ? '#dbeafe' : '#dcfce7'),
+                            color: group.education_type === 'otm' ? '#7e22ce' : (group.education_type === 'malaka_oshirish' ? '#1d4ed8' : '#15803d')
+                          }}>
+                            {group.education_type === 'otm' ? 'OTM' : (group.education_type === 'malaka_oshirish' ? 'Malaka oshirish' : 'Qayta tayyorlov')}
+                          </span>
                       </td>
                       <td style={{ fontWeight: 'bold' }}>{group.name}</td>
                       <td>{group.course_name}</td>

@@ -94,6 +94,7 @@ export default function GroupModal({ isOpen, onClose, group, nazoratchis, monito
           >
             <option value="qayta_tayyorlov">Qayta tayyorlov</option>
             <option value="malaka_oshirish">Malaka oshirish</option>
+            <option value="otm">OTM</option>
           </select>
         </div>
 

@@ -176,8 +176,8 @@ export default function LessonModal({ isOpen, onClose, lesson, groups, prefilled
 
   // Filter teachers by group education type
   const activeGroup = groups.find(g => g.id === formData.group_id);
-  const displayTeachers = activeGroup 
-    ? teachers.filter(t => t.education_type === activeGroup.education_type)
+  const displayTeachers = activeGroup?.education_type
+    ? teachers.filter(t => t.education_type === activeGroup.education_type || t.education_type === 'ikkalasi')
     : teachers;
 
   return (

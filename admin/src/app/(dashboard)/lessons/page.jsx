@@ -319,14 +319,14 @@ export default function LessonsPage() {
   const groupEduType = selectedFormGroup?.education_type;
   
   const displayTeachers = groupEduType
-    ? teachers.filter(t => t.education_type === groupEduType)
+    ? teachers.filter(t => t.education_type === groupEduType || t.education_type === 'ikkalasi')
     : teachers;
 
   const selectedEditGroup = groups.find(g => g.id === editFormData.group_id);
   const editGroupEduType = selectedEditGroup?.education_type;
   
   const displayEditTeachers = editGroupEduType
-    ? teachers.filter(t => t.education_type === editGroupEduType)
+    ? teachers.filter(t => t.education_type === editGroupEduType || t.education_type === 'ikkalasi')
     : teachers;
 
   const addAssignedSubs = formData.teacher_id

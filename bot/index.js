@@ -1277,16 +1277,17 @@ cron.schedule('*/5 * * * *', async () => {
 
     const { data: schedules } = await supabase
       .from('schedules')
-      .select('*, groups(name, nazoratchi_id, users!groups_nazoratchi_id_fkey(telegram_id, full_name))')
-      .eq('day_of_week', tz.dayOfWeek);
+      .select('*, groups!inner(name, status, nazoratchi_id, users!groups_nazoratchi_id_fkey(telegram_id, full_name))')
+      .eq('day_of_week', tz.dayOfWeek)
+      .eq('groups.status', 'active');
       
     if (schedules) {
       for (const s of schedules) {
         const schMinutes = timeToMinutes(s.start_time);
         const diff = curMinutes - schMinutes;
         
-        // Agar dars boshlanganiga 15-19 daqiqa bo'lgan bo'lsa (exact 15-minute window)
-        if (diff >= 15 && diff <= 19) {
+        // Agar dars boshlanganiga 10-14 daqiqa bo'lgan bo'lsa (exact 5-minute window for cron running every 5 min)
+        if (diff >= 10 && diff <= 14) {
           const { data: existing } = await supabase
             .from('lessons')
             .select('id')
@@ -1349,8 +1350,9 @@ cron.schedule('*/30 * * * *', async () => {
 
       const { data: schedules } = await supabase
         .from('schedules')
-        .select('*, groups(id, name, nazoratchi_id, tutor_id, users!groups_nazoratchi_id_fkey(telegram_id, full_name))')
-        .eq('day_of_week', d.day);
+        .select('*, groups!inner(id, name, status, nazoratchi_id, tutor_id, users!groups_nazoratchi_id_fkey(telegram_id, full_name))')
+        .eq('day_of_week', d.day)
+        .eq('groups.status', 'active');
 
       if (!schedules) continue;
 

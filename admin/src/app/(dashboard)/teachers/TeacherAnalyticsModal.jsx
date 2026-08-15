@@ -154,8 +154,10 @@ export default function TeacherAnalyticsModal({ isOpen, onClose, teacher, academ
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {analyticsData.map(subject => {
-              const remaining = subject.limits.total - subject.totalTaught;
+              const totalTaughtOverall = Math.max(subject.totalTaught, subject.manualCompleted ? subject.manualCompleted.total : 0);
+              const remaining = subject.limits.total - totalTaughtOverall;
               const isOverLimit = remaining < 0;
+              const manualUnassigned = subject.manualCompleted ? (subject.manualCompleted.total - subject.totalTaught) : 0;
 
               return (
                 <div key={subject.subjectId} style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '16px', background: '#f8fafc' }}>
@@ -218,10 +220,10 @@ export default function TeacherAnalyticsModal({ isOpen, onClose, teacher, academ
                       </strong>
                     </div>
 
-                    {subject.manualCompleted && (subject.manualCompleted.total - subject.totalTaught > 0) && (
+                    {manualUnassigned > 0 && (
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px', borderTop: `1px dashed ${isOverLimit ? '#fecaca' : '#bbf7d0'}` }}>
-                        <span style={{ color: '#854d0e', fontSize: '0.95rem' }}>⚠️ Tizimga kiritilmagan (qo'lda qo'shilgan) soatlar:</span>
-                        <strong style={{ color: '#854d0e', fontSize: '1rem' }}>{subject.manualCompleted.total - subject.totalTaught} soat</strong>
+                        <span style={{ color: '#854d0e', fontSize: '0.95rem' }}>⚠️ Boshqa (guruhsiz / qo'lda kiritilgan) o'tilgan soatlar:</span>
+                        <strong style={{ color: '#854d0e', fontSize: '1rem' }}>{manualUnassigned} soat</strong>
                       </div>
                     )}
                   </div>

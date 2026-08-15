@@ -124,7 +124,7 @@ const handlePhoneSubmit = async (ctx, phoneStr) => {
       kb = [
         ['📅 Mening davomatim', '📅 Dars jadvali'],
         ['🏆 Oylik reyting', '📢 Xabar tarqatish'],
-        ['⚙️ Admin panel']
+        ['🗄 Arxivlangan guruhlar', '⚙️ Admin panel']
       ];
     } else if (user.role === 'tutor') {
       kb = [
@@ -188,12 +188,34 @@ bot.hears('📢 Xabar tarqatish', async (ctx) => {
   ctx.reply("Yoki bekor qilish tugmasini bosing:", Markup.keyboard([['❌ Bekor qilish']]).resize());
 });
 
+bot.hears('🗄 Arxivlangan guruhlar', async (ctx) => {
+  const tgId = ctx.from.id.toString();
+  const { data: user } = await supabase.from('users').select('role').eq('telegram_id', tgId).single();
+  if (!user || (user.role !== 'admin' && user.role !== 'sysadmin')) return ctx.reply("Sizda xabar yuborish huquqi yo'q.");
+  
+  const { data: groups } = await supabase.from('groups').select('id, name').eq('status', 'arxiv').order('name');
+  if (!ctx.session) ctx.session = {};
+  
+  const buttons = [];
+  buttons.push([Markup.button.callback('🗄 Barcha arxiv guruhlarga', 'bc_target:all_arxiv')]);
+  if (groups) {
+    groups.forEach(g => {
+      buttons.push([Markup.button.callback(`🗃 ${g.name}`, `bc_target:${g.id}`)]);
+    });
+  }
+  
+  ctx.reply("Arxivlangan guruhlardan birini tanlang:", Markup.inlineKeyboard(buttons));
+  ctx.reply("Yoki bekor qilish tugmasini bosing:", Markup.keyboard([['❌ Bekor qilish']]).resize());
+});
+
 bot.action(/bc_target:(.+)/, async (ctx) => {
   const target = ctx.match[1];
   if (!ctx.session) ctx.session = {};
   
   let targetText = "Barcha guruhlarga";
-  if (target !== 'all') {
+  if (target === 'all_arxiv') {
+    targetText = "Barcha arxiv guruhlarga";
+  } else if (target !== 'all') {
     const { data: g } = await supabase.from('groups').select('name').eq('id', target).single();
     if (g) targetText = g.name;
   }
@@ -222,7 +244,7 @@ bot.hears('❌ Bekor qilish', async (ctx) => {
     kb = [
       ['📅 Mening davomatim', '📅 Dars jadvali'],
       ['🏆 Oylik reyting', '📢 Xabar tarqatish'],
-      ['⚙️ Admin panel']
+      ['🗄 Arxivlangan guruhlar', '⚙️ Admin panel']
     ];
   } else if (user && user.role === 'tutor') {
     kb = [
@@ -266,6 +288,17 @@ bot.on('message', async (ctx, next) => {
     if (target === 'all') {
       const { data } = await supabase.from('users').select('telegram_id').not('telegram_id', 'is', null);
       users = data || [];
+    } else if (target === 'all_arxiv') {
+      const { data: arxivGroups } = await supabase.from('groups').select('id').eq('status', 'arxiv');
+      if (arxivGroups && arxivGroups.length > 0) {
+        const arxivIds = arxivGroups.map(g => g.id);
+        const { data: students } = await supabase.from('students').select('user_id').in('group_id', arxivIds);
+        if (students && students.length > 0) {
+          const userIds = students.map(s => s.user_id);
+          const { data } = await supabase.from('users').select('telegram_id').in('id', userIds).not('telegram_id', 'is', null);
+          users = data || [];
+        }
+      }
     } else {
       const { data: students } = await supabase.from('students').select('user_id').eq('group_id', target);
       if (students && students.length > 0) {
@@ -298,7 +331,7 @@ bot.on('message', async (ctx, next) => {
       kb = [
         ['📅 Mening davomatim', '📅 Dars jadvali'],
         ['🏆 Oylik reyting', '📢 Xabar tarqatish'],
-        ['⚙️ Admin panel']
+        ['🗄 Arxivlangan guruhlar', '⚙️ Admin panel']
       ];
     } else if (user && user.role === 'tutor') {
       kb = [

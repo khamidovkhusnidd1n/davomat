@@ -153,18 +153,57 @@ export default function TeacherAnalyticsModal({ isOpen, onClose, teacher, academ
           <p style={{ textAlign: 'center', color: '#666', padding: '1rem' }}>Ma'lumot topilmadi.</p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {(() => {
+              const teacherMaxHours = teacher?.max_hours || 0;
+              const overallTotalTaught = analyticsData.reduce((sum, subject) => {
+                return sum + Math.max(subject.totalTaught, subject.manualCompleted ? subject.manualCompleted.total : 0);
+              }, 0);
+              const overallRemaining = teacherMaxHours - overallTotalTaught;
+              const isOverallOverLimit = overallRemaining < 0;
+
+              return (
+                <div style={{ 
+                  marginBottom: '10px', 
+                  padding: '20px', 
+                  background: isOverallOverLimit ? '#fef2f2' : '#f0f9ff', 
+                  border: `2px solid ${isOverallOverLimit ? '#fecaca' : '#bae6fd'}`,
+                  borderRadius: '12px',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
+                }}>
+                  <h3 style={{ margin: '0 0 16px 0', color: '#0f172a', textAlign: 'center', fontSize: '1.2rem' }}>
+                    Yillik Umumiy Limit Holati
+                  </h3>
+                  <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ajratilgan Limit</div>
+                      <div style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#0f172a' }}>{teacherMaxHours} <span style={{ fontSize: '1rem', fontWeight: 'normal' }}>soat</span></div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Jami O'tildi</div>
+                      <div style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#0369a1' }}>{overallTotalTaught} <span style={{ fontSize: '1rem', fontWeight: 'normal' }}>soat</span></div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.85rem', color: isOverallOverLimit ? '#dc2626' : '#16a34a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        {isOverallOverLimit ? 'Oshib Ketilgan' : 'Qoldiq'}
+                      </div>
+                      <div style={{ fontSize: '1.4rem', fontWeight: 'bold', color: isOverallOverLimit ? '#dc2626' : '#16a34a' }}>
+                        {Math.abs(overallRemaining)} <span style={{ fontSize: '1rem', fontWeight: 'normal' }}>soat</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             {analyticsData.map(subject => {
-              const totalTaughtOverall = Math.max(subject.totalTaught, subject.manualCompleted ? subject.manualCompleted.total : 0);
-              const remaining = subject.limits.total - totalTaughtOverall;
-              const isOverLimit = remaining < 0;
               const manualUnassigned = subject.manualCompleted ? (subject.manualCompleted.total - subject.totalTaught) : 0;
 
               return (
                 <div key={subject.subjectId} style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '16px', background: '#f8fafc' }}>
                   <h4 style={{ margin: '0 0 12px 0', color: '#0f172a', fontSize: '1.1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span>📚 {subject.subjectName}</span>
-                    <span style={{ fontSize: '0.9rem', padding: '4px 8px', borderRadius: '12px', background: '#e2e8f0' }}>
-                      Jami limit: <strong>{subject.limits.total}</strong> soat
+                    <span style={{ fontSize: '0.9rem', padding: '4px 8px', borderRadius: '12px', background: '#e2e8f0', color: '#475569' }}>
+                      Guruh uchun reja: <strong>{subject.limits.total} soat</strong>
                     </span>
                   </h4>
                   
@@ -175,25 +214,36 @@ export default function TeacherAnalyticsModal({ isOpen, onClose, teacher, academ
                       <div key={edType} style={{ marginBottom: '16px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '12px' }}>
                         <h5 style={{ margin: '0 0 8px 0', color: '#334155', borderBottom: '1px solid #e2e8f0', paddingBottom: '4px' }}>
                           🎓 Ta'lim turi: <strong>{edType}</strong>
-                          <span style={{ float: 'right', color: '#64748b', fontWeight: 'normal' }}>Jami: <strong>{edData.totalHours}</strong> soat</span>
+                          <span style={{ float: 'right', color: '#64748b', fontWeight: 'normal' }}>Shu ta'lim turida jami: <strong>{edData.totalHours} soat</strong></span>
                         </h5>
                         
                         <ul style={{ margin: 0, paddingLeft: '20px', color: '#475569', fontSize: '0.95rem' }}>
                           {Object.values(edData.groups).map(g => (
-                            <li key={g.groupId} style={{ margin: '4px 0', display: 'flex', justifyContent: 'space-between' }}>
-                              <span>
+                            <li key={g.groupId} style={{ margin: '8px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 {g.groupName} 
                                 {g.status === 'arxiv' || g.status === 'inactive' ? (
-                                  <span style={{ fontSize: '0.8rem', color: '#ef4444', marginLeft: '6px', background: '#fee2e2', padding: '2px 6px', borderRadius: '10px' }}>
+                                  <span style={{ fontSize: '0.75rem', color: '#ef4444', background: '#fee2e2', padding: '2px 6px', borderRadius: '10px' }}>
                                     Yakunlangan
                                   </span>
                                 ) : (
-                                  <span style={{ fontSize: '0.8rem', color: '#22c55e', marginLeft: '6px', background: '#dcfce7', padding: '2px 6px', borderRadius: '10px' }}>
+                                  <span style={{ fontSize: '0.75rem', color: '#22c55e', background: '#dcfce7', padding: '2px 6px', borderRadius: '10px' }}>
                                     Joriy
                                   </span>
                                 )}
                               </span>
-                              <strong>{g.hours} soat</strong>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <div style={{ width: '100px', height: '6px', background: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
+                                  <div style={{ 
+                                    height: '100%', 
+                                    background: g.hours >= subject.limits.total ? '#22c55e' : '#3b82f6',
+                                    width: `${Math.min(100, (g.hours / (subject.limits.total || 1)) * 100)}%`
+                                  }} />
+                                </div>
+                                <strong style={{ minWidth: '70px', textAlign: 'right' }}>
+                                  {g.hours} / {subject.limits.total} soat
+                                </strong>
+                              </div>
                             </li>
                           ))}
                         </ul>
@@ -201,32 +251,23 @@ export default function TeacherAnalyticsModal({ isOpen, onClose, teacher, academ
                     ))
                   )}
 
-                  <div style={{ 
-                    marginTop: '12px', 
-                    padding: '12px', 
-                    background: isOverLimit ? '#fef2f2' : '#f0fdf4', 
-                    border: `1px solid ${isOverLimit ? '#fecaca' : '#bbf7d0'}`,
-                    borderRadius: '6px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '8px'
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ color: isOverLimit ? '#dc2626' : '#166534', fontWeight: '500' }}>
-                        {isOverLimit ? 'Limitdan oshib ketilgan:' : 'Qoldiq limit (barcha guruhlar uchun):'}
+                  {manualUnassigned > 0 && (
+                    <div style={{ 
+                      marginTop: '12px', 
+                      padding: '12px', 
+                      background: '#fef3c7', 
+                      border: '1px solid #fde68a',
+                      borderRadius: '6px',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}>
+                      <span style={{ color: '#b45309', fontSize: '0.95rem', fontWeight: '500' }}>
+                        ⚠️ Boshqa (guruhsiz / qo'lda kiritilgan) o'tilgan soatlar:
                       </span>
-                      <strong style={{ color: isOverLimit ? '#dc2626' : '#166534', fontSize: '1.1rem' }}>
-                        {Math.abs(remaining)} soat {isOverLimit && 'oshikcha'}
-                      </strong>
+                      <strong style={{ color: '#b45309', fontSize: '1.05rem' }}>{manualUnassigned} soat</strong>
                     </div>
-
-                    {manualUnassigned > 0 && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px', borderTop: `1px dashed ${isOverLimit ? '#fecaca' : '#bbf7d0'}` }}>
-                        <span style={{ color: '#854d0e', fontSize: '0.95rem' }}>⚠️ Boshqa (guruhsiz / qo'lda kiritilgan) o'tilgan soatlar:</span>
-                        <strong style={{ color: '#854d0e', fontSize: '1rem' }}>{manualUnassigned} soat</strong>
-                      </div>
-                    )}
-                  </div>
+                  )}
                 </div>
               );
             })}

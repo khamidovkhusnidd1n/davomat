@@ -1,10 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Search, Plus, Upload, ChevronDown, ChevronUp, Edit, LayoutGrid, TableProperties, Download, Trash2 } from 'lucide-react';
+import { Search, Plus, Upload, ChevronDown, ChevronUp, Edit, LayoutGrid, TableProperties, Download, Trash2, BarChart2 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import TeacherImportModal from './TeacherImportModal';
 import TeacherModal from './TeacherModal';
+import TeacherAnalyticsModal from './TeacherAnalyticsModal';
 import styles from './page.module.css';
 
 export default function TeachersPage() {
@@ -14,6 +15,8 @@ export default function TeachersPage() {
   const [filterType, setFilterType] = useState('all');
   const [showImport, setShowImport] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
+  const [analyticsTeacher, setAnalyticsTeacher] = useState(null);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
   const [userRole, setUserRole] = useState(null);
@@ -362,6 +365,18 @@ export default function TeachersPage() {
                         </button>
                         <button
                           className={styles.editBtn}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setAnalyticsTeacher(teacher);
+                            setShowAnalyticsModal(true);
+                          }}
+                          title="Tahlil (Guruhlar kesimida)"
+                          style={{ color: '#3b82f6', marginLeft: '4px' }}
+                        >
+                          <BarChart2 size={16} />
+                        </button>
+                        <button
+                          className={styles.editBtn}
                           style={{ color: '#ef4444', marginLeft: '4px' }}
                           onClick={(e) => {
                             e.stopPropagation();
@@ -529,6 +544,17 @@ export default function TeachersPage() {
                             </button>
                             <button
                               className={styles.actionBtn}
+                              onClick={() => {
+                                setAnalyticsTeacher(teacher);
+                                setShowAnalyticsModal(true);
+                              }}
+                              title="Tahlil (Guruhlar kesimida)"
+                              style={{ color: '#3b82f6' }}
+                            >
+                              <BarChart2 size={16} />
+                            </button>
+                            <button
+                              className={styles.actionBtn}
                               style={{ color: '#ef4444' }}
                               onClick={() => handleDeleteTeacher(teacher.id)}
                               title="O'chirish"
@@ -560,6 +586,13 @@ export default function TeachersPage() {
         teacher={selectedTeacher}
         academicYear={academicYear}
         onSuccess={() => fetchData(true)}
+      />
+
+      <TeacherAnalyticsModal
+        isOpen={showAnalyticsModal}
+        onClose={() => setShowAnalyticsModal(false)}
+        teacher={analyticsTeacher}
+        academicYear={academicYear}
       />
     </div>
   );

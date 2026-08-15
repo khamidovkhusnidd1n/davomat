@@ -24,8 +24,11 @@ export default function TeacherAnalyticsModal({ isOpen, onClose, teacher, academ
         .select(`
           id,
           allocated_hours,
+          completed_hours,
           allocated_theory_hours,
           allocated_practice_hours,
+          completed_theory_hours,
+          completed_practice_hours,
           subjects ( id, name )
         `)
         .eq('teacher_id', teacher.id)
@@ -62,6 +65,11 @@ export default function TeacherAnalyticsModal({ isOpen, onClose, teacher, academ
             theory: ts.allocated_theory_hours || 0,
             practice: ts.allocated_practice_hours || 0
           },
+          manualCompleted: {
+            total: ts.completed_hours || 0,
+            theory: ts.completed_theory_hours || 0,
+            practice: ts.completed_practice_hours || 0
+          },
           educationTypes: {},
           totalTaught: 0
         };
@@ -76,6 +84,7 @@ export default function TeacherAnalyticsModal({ isOpen, onClose, teacher, academ
             subjectId: sid,
             subjectName: 'Boshqa fan (Limiti yo\'q)',
             limits: { total: 0, theory: 0, practice: 0 },
+            manualCompleted: { total: 0, theory: 0, practice: 0 },
             educationTypes: {},
             totalTaught: 0
           };
@@ -197,15 +206,24 @@ export default function TeacherAnalyticsModal({ isOpen, onClose, teacher, academ
                     border: `1px solid ${isOverLimit ? '#fecaca' : '#bbf7d0'}`,
                     borderRadius: '6px',
                     display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
+                    flexDirection: 'column',
+                    gap: '8px'
                   }}>
-                    <span style={{ color: isOverLimit ? '#dc2626' : '#166534', fontWeight: '500' }}>
-                      {isOverLimit ? 'Limitdan oshib ketilgan:' : 'Qoldiq limit (barcha guruhlar uchun):'}
-                    </span>
-                    <strong style={{ color: isOverLimit ? '#dc2626' : '#166534', fontSize: '1.1rem' }}>
-                      {Math.abs(remaining)} soat {isOverLimit && 'oshikcha'}
-                    </strong>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ color: isOverLimit ? '#dc2626' : '#166534', fontWeight: '500' }}>
+                        {isOverLimit ? 'Limitdan oshib ketilgan:' : 'Qoldiq limit (barcha guruhlar uchun):'}
+                      </span>
+                      <strong style={{ color: isOverLimit ? '#dc2626' : '#166534', fontSize: '1.1rem' }}>
+                        {Math.abs(remaining)} soat {isOverLimit && 'oshikcha'}
+                      </strong>
+                    </div>
+
+                    {subject.manualCompleted && (subject.manualCompleted.total - subject.totalTaught > 0) && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px', borderTop: `1px dashed ${isOverLimit ? '#fecaca' : '#bbf7d0'}` }}>
+                        <span style={{ color: '#854d0e', fontSize: '0.95rem' }}>⚠️ Tizimga kiritilmagan (qo'lda qo'shilgan) soatlar:</span>
+                        <strong style={{ color: '#854d0e', fontSize: '1rem' }}>{subject.manualCompleted.total - subject.totalTaught} soat</strong>
+                      </div>
+                    )}
                   </div>
                 </div>
               );

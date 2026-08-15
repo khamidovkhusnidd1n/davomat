@@ -400,15 +400,27 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
                       />
                     )}
                   </div>
-                  <div className={styles.hoursCol} style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px' }}>
+                  <div className={styles.hoursCol} style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                       <span style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', marginBottom: '2px', whiteSpace: 'nowrap' }}>Nazariy Ajr.</span>
                       <input
                         type="number"
                         className="input"
-                        style={{ width: '100px', padding: '10px 8px' }}
+                        style={{ width: '80px', padding: '10px 8px' }}
                         value={as.allocated_theory_hours}
                         onChange={e => handleSubjectChange(index, 'allocated_theory_hours', e.target.value)}
+                        min="0"
+                        required
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', marginBottom: '2px', whiteSpace: 'nowrap' }}>Nazariy O't.</span>
+                      <input
+                        type="number"
+                        className="input"
+                        style={{ width: '80px', padding: '10px 8px' }}
+                        value={as.completed_theory_hours}
+                        onChange={e => handleSubjectChange(index, 'completed_theory_hours', e.target.value)}
                         min="0"
                         required
                       />
@@ -418,9 +430,21 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
                       <input
                         type="number"
                         className="input"
-                        style={{ width: '100px', padding: '10px 8px' }}
+                        style={{ width: '80px', padding: '10px 8px' }}
                         value={as.allocated_practice_hours}
                         onChange={e => handleSubjectChange(index, 'allocated_practice_hours', e.target.value)}
+                        min="0"
+                        required
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', marginBottom: '2px', whiteSpace: 'nowrap' }}>Amaliy O't.</span>
+                      <input
+                        type="number"
+                        className="input"
+                        style={{ width: '80px', padding: '10px 8px' }}
+                        value={as.completed_practice_hours}
+                        onChange={e => handleSubjectChange(index, 'completed_practice_hours', e.target.value)}
                         min="0"
                         required
                       />

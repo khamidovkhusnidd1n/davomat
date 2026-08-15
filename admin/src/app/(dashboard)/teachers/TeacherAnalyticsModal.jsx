@@ -93,8 +93,14 @@ export default function TeacherAnalyticsModal({ isOpen, onClose, teacher, academ
         const g = lesson.groups;
         if (!g) return;
 
-        const edType = g.education_type || "Noma'lum";
-        
+        const rawEdType = g.education_type || "Noma'lum";
+        const edTypeMap = {
+          'otm': 'OTM',
+          'malaka_oshirish': 'Malaka oshirish',
+          'qayta_tayyorlov': 'Qayta tayyorlov',
+          'ikkalasi': 'Barchasi'
+        };
+        const edType = edTypeMap[rawEdType] || rawEdType;        
         if (!subjectsMap[sid].educationTypes[edType]) {
           subjectsMap[sid].educationTypes[edType] = {
             totalHours: 0,

@@ -107,8 +107,8 @@ export default function TeachersPage() {
               return sum + (diffHours > 0 ? Math.round(diffHours * 1.5) : 6);
             }, 0);
 
-          const totalTheory = (ts.completed_theory_hours || 0) + dynamicTheory;
-          const totalPractice = (ts.completed_practice_hours || 0) + dynamicPractice;
+          const totalTheory = Math.max(ts.completed_theory_hours || 0, dynamicTheory);
+          const totalPractice = Math.max(ts.completed_practice_hours || 0, dynamicPractice);
 
           return {
             ...ts,
@@ -119,14 +119,14 @@ export default function TeachersPage() {
         });
 
         const completedHours = subjectsThisYear.reduce((sum, ts) => sum + ts.total_completed, 0);
-        const totalAllocated = subjectsThisYear.reduce((sum, ts) => sum + (ts.allocated_theory_hours || 0) + (ts.allocated_practice_hours || 0), 0);
+        const maxLimit = t.max_hours || 120;
 
         return {
           ...t,
           teacher_subjects: subjectsThisYear,
           completed_hours: completedHours,
-          total_allocated: totalAllocated,
-          remaining_hours: Math.max(0, (totalAllocated > 0 ? totalAllocated : (t.max_hours || 120)) - completedHours),
+          total_allocated: maxLimit,
+          remaining_hours: maxLimit - completedHours,
         };
       }));
 
@@ -401,18 +401,20 @@ export default function TeachersPage() {
                 <div className={styles.progressSection}>
                   <div className={styles.progressInfo}>
                     <span>{teacher.completed_hours} soat o'tildi</span>
-                    <span>Ajratilgan: {teacher.total_allocated} soat (Limit: {teacher.max_hours} s)</span>
+                    <span>Yillik Limit: {teacher.max_hours} soat</span>
                   </div>
                   <div className={styles.progressBar}>
                     <div
                       className={styles.progressFill}
                       style={{
-                        width: `${pct}%`,
-                        background: teacher.completed_hours >= targetHours ? '#ef4444' : pct >= 90 ? '#ef4444' : pct >= 60 ? '#f59e0b' : '#22c55e'
+                        width: `${Math.min(100, pct)}%`,
+                        background: teacher.completed_hours > teacher.max_hours ? '#ef4444' : pct >= 90 ? '#ef4444' : pct >= 60 ? '#f59e0b' : '#22c55e'
                       }}
                     />
                   </div>
-                  <div className={styles.progressPct}>{pct}% — Qoldiq: {teacher.remaining_hours} soat</div>
+                  <div className={styles.progressPct}>
+                    {pct}% — {teacher.remaining_hours < 0 ? 'Oshib ketilgan:' : 'Qoldiq:'} {Math.abs(teacher.remaining_hours)} soat
+                  </div>
                 </div>
 
                 {/* Expanded: Subject breakdown */}

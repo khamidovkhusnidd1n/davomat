@@ -157,11 +157,11 @@ export default function TeachersPage() {
       "Ta'lim turi": (t.education_type || '').split(',').map(s => s.trim()).flatMap(type => type === 'ikkalasi' ? ['Qayta tayyorlov', 'Malaka oshirish'] : [type === 'otm' ? 'OTM' : type === 'malaka_oshirish' ? 'Malaka oshirish' : 'Qayta tayyorlov']).join(', '),
       "Telefon": t.phone || 'Kiritilmagan',
       "Yillik limit soati": t.max_hours || 120,
-      "Nazariy soat (O'tilgan/Reja)": `${t.teacher_subjects.reduce((sum, ts) => sum + (ts.total_theory_completed || 0), 0)} / ${t.teacher_subjects.reduce((sum, ts) => sum + (ts.allocated_theory_hours || 0), 0)}`,
-      "Amaliy soat (O'tilgan/Reja)": `${t.teacher_subjects.reduce((sum, ts) => sum + (ts.total_practice_completed || 0), 0)} / ${t.teacher_subjects.reduce((sum, ts) => sum + (ts.allocated_practice_hours || 0), 0)}`,
-      "Jami soat (O'tilgan/Reja)": `${t.completed_hours} / ${t.total_allocated}`,
-      "Qoldiq soat": t.remaining_hours,
-      "Bajarilishi (%)": (t.total_allocated > 0 ? t.total_allocated : (t.max_hours || 120)) > 0 ? Math.round((t.completed_hours / (t.total_allocated > 0 ? t.total_allocated : (t.max_hours || 120))) * 100) : 0
+      "Nazariy (O'tilgan/Guruh rejasi)": `${t.teacher_subjects.reduce((sum, ts) => sum + (ts.total_theory_completed || 0), 0)} / ${t.teacher_subjects.reduce((sum, ts) => sum + (ts.allocated_theory_hours || 0), 0)}`,
+      "Amaliy (O'tilgan/Guruh rejasi)": `${t.teacher_subjects.reduce((sum, ts) => sum + (ts.total_practice_completed || 0), 0)} / ${t.teacher_subjects.reduce((sum, ts) => sum + (ts.allocated_practice_hours || 0), 0)}`,
+      "Jami O'tildi": t.completed_hours,
+      "Limitdan Qoldiq": Math.abs(t.remaining_hours) + (t.remaining_hours < 0 ? ' (Oshib ketgan)' : ''),
+      "Bajarilishi (%)": (t.max_hours || 120) > 0 ? Math.min(100, Math.round((t.completed_hours / (t.max_hours || 120)) * 100)) : 0
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);

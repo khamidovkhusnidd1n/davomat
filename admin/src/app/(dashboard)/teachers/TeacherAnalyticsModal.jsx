@@ -136,6 +136,29 @@ export default function TeacherAnalyticsModal({ isOpen, onClose, teacher, academ
         subjectsMap[sid].totalTaught += lessonHours;
       });
 
+      // Distribute manual hours to groups
+      Object.values(subjectsMap).forEach(subject => {
+        if (subject.manualCompleted && subject.manualCompleted.total > subject.totalTaught) {
+          let extraHours = subject.manualCompleted.total - subject.totalTaught;
+          
+          Object.values(subject.educationTypes).forEach(edTypeData => {
+            Object.values(edTypeData.groups).forEach(g => {
+              if (extraHours > 0) {
+                const groupLimit = subject.limits.total || 0;
+                if (g.hours < groupLimit) {
+                  const needed = groupLimit - g.hours;
+                  const add = Math.min(needed, extraHours);
+                  g.hours += add;
+                  edTypeData.totalHours += add;
+                  subject.totalTaught += add;
+                  extraHours -= add;
+                }
+              }
+            });
+          });
+        }
+      });
+
       setAnalyticsData(Object.values(subjectsMap));
 
     } catch (err) {

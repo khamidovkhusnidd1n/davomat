@@ -193,7 +193,7 @@ bot.hears('🗄 Arxivlangan guruhlar', async (ctx) => {
   const { data: user } = await supabase.from('users').select('role').eq('telegram_id', tgId).single();
   if (!user || (user.role !== 'admin' && user.role !== 'sysadmin')) return ctx.reply("Sizda xabar yuborish huquqi yo'q.");
   
-  const { data: groups } = await supabase.from('groups').select('id, name').eq('status', 'arxiv').order('name');
+  const { data: groups } = await supabase.from('groups').select('id, name').eq('status', 'archived').order('name');
   if (!ctx.session) ctx.session = {};
   
   const buttons = [];
@@ -289,7 +289,7 @@ bot.on('message', async (ctx, next) => {
       const { data } = await supabase.from('users').select('telegram_id').not('telegram_id', 'is', null);
       users = data || [];
     } else if (target === 'all_arxiv') {
-      const { data: arxivGroups } = await supabase.from('groups').select('id').eq('status', 'arxiv');
+      const { data: arxivGroups } = await supabase.from('groups').select('id').eq('status', 'archived');
       if (arxivGroups && arxivGroups.length > 0) {
         const arxivIds = arxivGroups.map(g => g.id);
         const { data: students } = await supabase.from('students').select('user_id').in('group_id', arxivIds);

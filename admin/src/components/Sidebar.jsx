@@ -16,7 +16,8 @@ import {
   Settings, 
   User, 
   LogOut,
-  UserCheck
+  UserCheck,
+  Shield
 } from 'lucide-react';
 import styles from './Sidebar.module.css';
 
@@ -33,6 +34,7 @@ const menuItems = [
 ];
 
 const bottomItems = [
+  { name: 'SOC Desk', path: '/soc', icon: Shield },
   { name: 'Sozlamalar', path: '/settings', icon: Settings },
   { name: 'Profil', path: '/profile', icon: User },
 ];
@@ -88,8 +90,8 @@ export default function Sidebar() {
 
   const filteredBottomItems = bottomItems.filter(item => {
     if (loading || !role) return false;
-    if (item.path === '/settings') {
-      return role === 'sysadmin'; // Only sysadmin sees settings
+    if (item.path === '/settings' || item.path === '/soc') {
+      return role === 'sysadmin'; // Only sysadmin sees settings and SOC
     }
     return true; // Everyone sees profile
   });

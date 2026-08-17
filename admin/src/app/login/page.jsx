@@ -18,17 +18,42 @@ export default function Login() {
     setLoading(true);
     setError(null);
 
+    const email = login.includes('@') ? login : `${login}@app.local`;
+
     try {
-      // Login ni email formatga o'girish (Supabase auth email talab qiladi)
-      const email = login.includes('@') ? login : `${login}@app.local`;
-      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        // Log failed attempt
+        fetch('/api/soc/log', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            event_type: 'login_failed',
+            username: login,
+            severity: 'MEDIUM',
+            details: { message: error.message }
+          })
+        }).catch(err => console.error("Log error", err));
+        
+        throw error;
+      }
       
+      // Log success attempt
+      fetch('/api/soc/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event_type: 'login_success',
+          username: login,
+          severity: 'INFO',
+          details: { message: 'Successful login' }
+        })
+      }).catch(err => console.error("Log error", err));
+
       if (typeof window !== 'undefined') localStorage.removeItem('demo_login');
       router.push('/dashboard');
     } catch (err) {

@@ -11,16 +11,16 @@
   gap: 12px;
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--text-color, #1e293b);
+  color: var(--text-primary);
   margin: 0 0 4px 0;
 }
 
 .titleIcon {
-  color: #3b82f6;
+  color: var(--primary);
 }
 
 .subtitle {
-  color: #64748b;
+  color: var(--text-secondary);
   margin: 0;
   font-size: 0.9rem;
 }
@@ -33,16 +33,16 @@
 }
 
 .statCard, .statCardDanger {
-  background: var(--card-bg, #ffffff);
-  border: 1px solid var(--border-color, #e2e8f0);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 16px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-shadow: var(--shadow-sm);
 }
 
 .statCardDanger {
-  border-color: #fca5a5;
-  background: #fef2f2;
+  border-color: var(--error);
+  background: var(--error-light);
 }
 
 .statCard h3, .statCardDanger h3 {
@@ -50,22 +50,22 @@
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 .statCardDanger h3 {
-  color: #ef4444;
+  color: var(--error);
 }
 
 .statValue {
   margin: 0;
   font-size: 2rem;
   font-weight: 700;
-  color: var(--text-color, #0f172a);
+  color: var(--text-primary);
 }
 
 .statCardDanger .statValue {
-  color: #b91c1c;
+  color: var(--error);
 }
 
 .filters {
@@ -75,11 +75,11 @@
 }
 
 .tableWrapper {
-  background: var(--card-bg, #ffffff);
-  border: 1px solid var(--border-color, #e2e8f0);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 12px;
   overflow-x: auto;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-shadow: var(--shadow-sm);
 }
 
 .table {
@@ -91,20 +91,20 @@
 .table th, .table td {
   padding: 12px 16px;
   text-align: left;
-  border-bottom: 1px solid var(--border-color, #e2e8f0);
+  border-bottom: 1px solid var(--border);
 }
 
 .table th {
-  background: var(--bg-hover, #f8fafc);
+  background: var(--bg-secondary);
   font-weight: 600;
-  color: #475569;
+  color: var(--text-secondary);
 }
 
 .timeCell {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #64748b;
+  color: var(--text-secondary);
   white-space: nowrap;
 }
 
@@ -113,12 +113,13 @@
   align-items: center;
   gap: 8px;
   font-weight: 500;
+  color: var(--text-primary);
 }
 
-.iconSuccess { color: #22c55e; }
-.iconWarning { color: #f59e0b; }
-.iconCritical { color: #ef4444; }
-.iconInfo { color: #3b82f6; }
+.iconSuccess { color: var(--success); }
+.iconWarning { color: var(--warning); }
+.iconCritical { color: var(--error); }
+.iconInfo { color: var(--primary); }
 
 .badge {
   display: inline-flex;
@@ -130,28 +131,35 @@
   font-weight: 600;
 }
 
-.badgeCritical { background: #fee2e2; color: #b91c1c; }
-.badgeHigh { background: #ffedd5; color: #c2410c; }
-.badgeMedium { background: #fef3c7; color: #b45309; }
-.badgeLow { background: #f1f5f9; color: #475569; }
-.badgeInfo { background: #dbeafe; color: #1d4ed8; }
+.badgeCritical { background: var(--error-light); color: var(--error); }
+.badgeHigh { background: var(--warning-light); color: var(--warning); }
+.badgeMedium { background: var(--warning-light); color: var(--warning); }
+.badgeLow { background: var(--bg-secondary); color: var(--text-secondary); }
+.badgeInfo { background: var(--primary-light); color: var(--primary); }
 
 .username {
   font-weight: 500;
+  color: var(--text-primary);
 }
 
 .ip {
-  font-family: monospace;
-  color: #64748b;
+  font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
 }
 
 .detailsJson {
   margin: 0;
-  padding: 8px;
-  background: var(--bg-hover, #f8fafc);
-  border-radius: 6px;
+  padding: 10px 12px;
+  background: var(--bg-primary);
+  border-radius: 8px;
   font-size: 0.75rem;
+  font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
   max-width: 300px;
   overflow-x: auto;
-  border: 1px solid var(--border-color, #e2e8f0);
+  white-space: pre-wrap;
+  word-break: break-word;
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  line-height: 1.5;
 }

@@ -123,52 +123,9 @@ export default function ScheduleModal({ isOpen, onClose, schedule, groups, onSuc
         payload.id = formData.id;
       }
 
-      // Auto-create lessons payload for next 16 weeks (only for new schedules)
+      // Darslar mas'ul tomonidan qo'lda kiritilishi kerak (TZ talabi)
+      // Shuning uchun bu yerda avtomatik darslarni generatsiya qilmaymiz.
       const lessonDates = [];
-      if (!isEdit) {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        // If start_date is provided, use it as startDate; otherwise derive from day_of_week
-        let startDate;
-        if (formData.start_date) {
-          startDate = new Date(formData.start_date + 'T12:00:00');
-        } else {
-          const targetJsDay = formData.day_of_week % 7;
-          const todayJs = today.getDay();
-          let daysUntilTarget = (targetJsDay - todayJs + 7) % 7;
-          startDate = new Date(today);
-          startDate.setDate(startDate.getDate() + daysUntilTarget);
-        }
-
-        for (let week = 0; week < 16; week++) {
-          const d = new Date(startDate);
-          d.setDate(d.getDate() + week * 7);
-          const year = d.getFullYear();
-          const month = String(d.getMonth() + 1).padStart(2, '0');
-          const day = String(d.getDate()).padStart(2, '0');
-          const dateStr = `${year}-${month}-${day}`;
-
-          const subject = subjects.find(s => s.id === formData.subject_id);
-          const titleParts = [];
-          if (formData.start_time && formData.end_time) {
-            titleParts.push(`${formData.start_time}-${formData.end_time} |`);
-          }
-          if (subject) titleParts.push(subject.name);
-          const title = titleParts.join(' ');
-
-          lessonDates.push({
-            group_id: formData.group_id,
-            lesson_date: dateStr,
-            title,
-            start_time: formData.start_time || null,
-            end_time: formData.end_time || null,
-            teacher_id: formData.teacher_id || null,
-            subject_id: formData.subject_id || null,
-            lesson_type: 'practice',
-          });
-        }
-      }
 
       // Call our API Route to bypass RLS issues for sysadmin and perform insert atomically
       const { data: { session } } = await supabase.auth.getSession();

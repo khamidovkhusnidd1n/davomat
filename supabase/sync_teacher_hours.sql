@@ -1,4 +1,6 @@
 -- Tizimda o'tilgan darslarni avtomat hisoblab teacher_subjects jadvaliga yozadigan trigger
+-- Akademik soat hisobi: har bir 80 daqiqalik para = 2 akademik soat, paralar orasida 10 daqiqa tanaffus
+-- Formula: FLOOR((daqiqalar + 10) / 90) * 2
 CREATE OR REPLACE FUNCTION update_teacher_completed_hours()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -16,11 +18,12 @@ BEGIN
     v_subject_id := NEW.subject_id;
   END IF;
 
-  -- Calculate total theory hours for this teacher and subject
+  -- Calculate total theory academic hours for this teacher and subject
+  -- 80 daqiqa = 1 para = 2 akademik soat, 10 daqiqa tanaffus
   SELECT COALESCE(SUM(
     CASE 
       WHEN start_time IS NOT NULL AND end_time IS NOT NULL THEN
-        ROUND(EXTRACT(EPOCH FROM (end_time - start_time))/3600)
+        FLOOR((EXTRACT(EPOCH FROM (end_time - start_time))/60 + 10) / 90) * 2
       ELSE 2
     END
   ), 0) INTO v_theory_hours
@@ -29,11 +32,11 @@ BEGIN
     AND subject_id = v_subject_id
     AND lesson_type = 'theory';
 
-  -- Calculate total practice hours for this teacher and subject
+  -- Calculate total practice academic hours for this teacher and subject
   SELECT COALESCE(SUM(
     CASE 
       WHEN start_time IS NOT NULL AND end_time IS NOT NULL THEN
-        ROUND(EXTRACT(EPOCH FROM (end_time - start_time))/3600)
+        FLOOR((EXTRACT(EPOCH FROM (end_time - start_time))/60 + 10) / 90) * 2
       ELSE 2
     END
   ), 0) INTO v_practice_hours
@@ -77,12 +80,12 @@ BEGIN
     UPDATE teacher_subjects ts
     SET completed_theory_hours = (
       SELECT COALESCE(SUM(
-        CASE WHEN start_time IS NOT NULL AND end_time IS NOT NULL THEN ROUND(EXTRACT(EPOCH FROM (end_time - start_time))/3600) ELSE 2 END
+        CASE WHEN start_time IS NOT NULL AND end_time IS NOT NULL THEN FLOOR((EXTRACT(EPOCH FROM (end_time - start_time))/60 + 10) / 90) * 2 ELSE 2 END
       ), 0) FROM lessons WHERE teacher_id = rec.teacher_id AND subject_id = rec.subject_id AND lesson_type = 'theory'
     ),
     completed_practice_hours = (
       SELECT COALESCE(SUM(
-        CASE WHEN start_time IS NOT NULL AND end_time IS NOT NULL THEN ROUND(EXTRACT(EPOCH FROM (end_time - start_time))/3600) ELSE 2 END
+        CASE WHEN start_time IS NOT NULL AND end_time IS NOT NULL THEN FLOOR((EXTRACT(EPOCH FROM (end_time - start_time))/60 + 10) / 90) * 2 ELSE 2 END
       ), 0) FROM lessons WHERE teacher_id = rec.teacher_id AND subject_id = rec.subject_id AND lesson_type = 'practice'
     )
     WHERE ts.teacher_id = rec.teacher_id AND ts.subject_id = rec.subject_id;

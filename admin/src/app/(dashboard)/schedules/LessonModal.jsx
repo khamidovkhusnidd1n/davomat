@@ -96,8 +96,8 @@ export default function LessonModal({ isOpen, onClose, lesson, groups, prefilled
           const end = l.end_time || '13:00';
           const [startH, startM] = start.substring(0, 5).split(':').map(Number);
           const [endH, endM] = end.substring(0, 5).split(':').map(Number);
-          const diffHours = ((endH * 60 + endM) - (startH * 60 + startM)) / 60;
-          const hours = diffHours > 0 ? Math.round(diffHours * 1.5) : 6;
+          const totalMinutes = (endH * 60 + endM) - (startH * 60 + startM);
+          const hours = totalMinutes > 0 ? Math.floor((totalMinutes + 10) / 90) * 2 : 2;
           return sum + hours;
         }, 0);
 

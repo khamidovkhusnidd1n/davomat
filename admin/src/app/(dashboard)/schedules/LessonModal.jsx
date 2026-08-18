@@ -90,8 +90,15 @@ export default function LessonModal({ isOpen, onClose, lesson, groups, prefilled
         
         const manualCompleted = t.teacher_subjects?.reduce((sum, ts) => sum + (ts.completed_hours || 0), 0) || 0;
 
-        const futureLessons = (lesData || []).filter(l => l.lesson_date >= todayStr);
-        const dynamicHours = futureLessons.reduce((sum, l) => {
+        // Soat faqat dars boshlanganidan 1 soat o'tgach ayriladi
+        const now = new Date(new Date().getTime() + 5 * 60 * 60 * 1000); // UZ time
+        const startedLessons = (lesData || []).filter(l => {
+          const start = l.start_time || '09:00';
+          const lessonStart = new Date(`${l.lesson_date}T${start.substring(0, 5)}:00+05:00`);
+          lessonStart.setHours(lessonStart.getHours() + 1);
+          return lessonStart < now;
+        });
+        const dynamicHours = startedLessons.reduce((sum, l) => {
           const start = l.start_time || '09:00';
           const end = l.end_time || '13:00';
           const [startH, startM] = start.substring(0, 5).split(':').map(Number);

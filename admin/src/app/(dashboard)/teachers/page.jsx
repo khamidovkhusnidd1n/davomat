@@ -72,12 +72,13 @@ export default function TeachersPage() {
         // Filter teacher_subjects by academic year
         const rawSubjectsThisYear = t.teacher_subjects?.filter(ts => ts.academic_year === academicYear) || [];
 
-        // Faqatgina vaqti o'tib bo'lgan (tugagan) darslarni "o'tildi" (completed) hisobiga qo'shamiz
+        // Soat faqat dars boshlanganidan 1 soat o'tgach ayriladi
         const now = new Date(new Date().getTime() + 5 * 60 * 60 * 1000); // UZ time
         const pastLessons = (lesData || []).filter(l => {
-          const end = l.end_time || '13:00';
-          const lessonEnd = new Date(`${l.lesson_date}T${end}:00+05:00`);
-          return lessonEnd < now;
+          const start = l.start_time || '09:00';
+          const lessonStart = new Date(`${l.lesson_date}T${start.substring(0, 5)}:00+05:00`);
+          lessonStart.setHours(lessonStart.getHours() + 1); // +1 soat
+          return lessonStart < now;
         });
         
         const subjectsThisYear = rawSubjectsThisYear.map(ts => {

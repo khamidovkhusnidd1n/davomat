@@ -87,7 +87,13 @@ export default function StudentsPage() {
     if (filterBot === 'not_connected') matchesBot = !s.users?.telegram_id;
 
     let matchesGroup = true;
-    if (selectedGroupFilter !== 'all') matchesGroup = s.groups?.id === selectedGroupFilter;
+    if (selectedGroupFilter === 'all') {
+      matchesGroup = s.groups?.status !== 'archived';
+    } else if (selectedGroupFilter === 'all_archived') {
+      matchesGroup = s.groups?.status === 'archived';
+    } else {
+      matchesGroup = s.groups?.id === selectedGroupFilter;
+    }
 
     return matchesSearch && matchesBot && matchesGroup;
   });
@@ -124,10 +130,18 @@ export default function StudentsPage() {
             value={selectedGroupFilter}
             onChange={(e) => setSelectedGroupFilter(e.target.value)}
           >
-            <option value="all">Barcha guruhlar</option>
-            {groups.map(g => (
-              <option key={g.id} value={g.id}>{g.name}</option>
-            ))}
+            <option value="all">Barcha faol guruhlar</option>
+            <option value="all_archived">Barcha arxivdagi guruhlar</option>
+            <optgroup label="Faol guruhlar">
+              {groups.filter(g => g.status !== 'archived').map(g => (
+                <option key={g.id} value={g.id}>{g.name}</option>
+              ))}
+            </optgroup>
+            <optgroup label="Arxivdagi guruhlar">
+              {groups.filter(g => g.status === 'archived').map(g => (
+                <option key={g.id} value={g.id}>{g.name}</option>
+              ))}
+            </optgroup>
           </select>
         </div>
 

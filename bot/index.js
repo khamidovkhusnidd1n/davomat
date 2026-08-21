@@ -1677,7 +1677,7 @@ async function finishTest(ctx, userId, timeIsUp) {
   if (timeIsUp) text += `⏳ <i>Vaqt tugadi!</i>\n\n`;
   
   text += `To'g'ri javoblar: <b>${sessionData.score} / 30</b>\n`;
-  text += `Natija: <b>${isPassed ? '✅ O\\'tdingiz! Tabriklaymiz!' : '❌ Yiqildingiz.'}</b>\n\n`;
+  text += `Natija: <b>${isPassed ? "✅ O'tdingiz! Tabriklaymiz!" : "❌ Yiqildingiz."}</b>\n\n`;
   text += rankText;
 
   delete testSessions[userId];

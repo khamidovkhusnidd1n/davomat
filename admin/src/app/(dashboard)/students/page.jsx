@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Search, Plus, Trash2, Edit2, FileSpreadsheet, RotateCcw } from 'lucide-react';
+import { Search, Plus, Trash2, Edit2, FileSpreadsheet } from 'lucide-react';
 import ExcelImport from '@/components/ExcelImport/ExcelImport';
 import StudentModal from './StudentModal';
 import styles from './page.module.css';
@@ -35,7 +35,7 @@ export default function StudentsPage() {
         }
       }
 
-      const [studentsRes, groupsRes, testRes] = await Promise.all([
+      const [studentsRes, groupsRes] = await Promise.all([
         supabase.from('students').select(`
           id,
           status,
@@ -45,16 +45,9 @@ export default function StudentsPage() {
           groups ( id, name, course_name, status )
         `),
         supabase.from('groups').select('id, name, course_name, status'),
-        supabase.from('test_results').select('user_id, score, is_passed')
       ]);
 
-      const testData = testRes.data || [];
-      const enrichedStudents = (studentsRes.data || []).map(st => {
-        const tr = testData.find(t => t.user_id === st.user_id);
-        return { ...st, testResult: tr || null };
-      });
-
-      setStudents(enrichedStudents);
+      setStudents(studentsRes.data || []);
       setGroups(groupsRes.data || []);
     } catch (error) {
       console.error('Error:', error);
@@ -79,22 +72,6 @@ export default function StudentsPage() {
         const d = await res.json();
         throw new Error(d.error);
       }
-      fetchAll(true);
-    } catch (err) {
-      alert(err.message);
-    }
-  };
-
-  const handleResetTest = async (userId, telegramId) => {
-    if (!confirm("Ushbu tinglovchiga test xabarini yuborasizmi? (Agar oldin ishlagan bo'lsa eski natijasi o'chadi)")) return;
-    try {
-      const res = await fetch('/api/test-reset', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: userId, telegram_id: telegramId })
-      });
-      if (!res.ok) throw new Error("Xatolik yuz berdi");
-      alert("Test natijasi bekor qilindi va tinglovchiga bot orqali xabar yuborildi!");
       fetchAll(true);
     } catch (err) {
       alert(err.message);
@@ -195,7 +172,6 @@ export default function StudentsPage() {
                   <th>Telefon</th>
                   <th>Bot</th>
                   <th>Status</th>
-                  <th>Yakuniy</th>
                   <th>Qo'shilgan sana</th>
                   {(userRole === 'sysadmin' || userRole === 'admin') && <th>Amallar</th>}
                 </tr>
@@ -224,27 +200,6 @@ export default function StudentsPage() {
                         <span className={`${styles.statusBadge} ${styles[student.status] || ''}`}>
                           {student.status === 'active' ? 'Faol' : student.status === 'left' ? 'Ketgan' : 'Ko\'chgan'}
                         </span>
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          {student.testResult ? (
-                            <span style={{ fontWeight: 'bold', color: student.testResult.is_passed ? 'var(--success)' : 'var(--danger)' }}>
-                              {student.testResult.score} bal
-                            </span>
-                          ) : (
-                            <span>-</span>
-                          )}
-                          
-                          {(userRole === 'sysadmin' || userRole === 'admin') && student.users?.telegram_id && (
-                            <button 
-                              onClick={() => handleResetTest(student.user_id, student.users.telegram_id)}
-                              title={student.testResult ? "Natijani o'chirish va qayta topshirishga ruxsat berish" : "Test ishlash uchun xabar yuborish"}
-                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', padding: 0 }}
-                            >
-                              <RotateCcw size={14} />
-                            </button>
-                          )}
-                        </div>
                       </td>
                       <td>{new Date(student.joined_at).toLocaleDateString('uz-UZ')}</td>
                       {(userRole === 'sysadmin' || userRole === 'admin') && (

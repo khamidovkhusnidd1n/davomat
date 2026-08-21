@@ -124,8 +124,7 @@ const handlePhoneSubmit = async (ctx, phoneStr) => {
       kb = [
         ['📅 Mening davomatim', '📅 Dars jadvali'],
         ['🏆 Oylik reyting', '📢 Xabar tarqatish'],
-        ['🗄 Arxivlangan guruhlar', '⚙️ Admin panel'],
-        ['📝 Yakuniy Test Boshlash']
+        ['🗄 Arxivlangan guruhlar', '⚙️ Admin panel']
       ];
     } else if (user.role === 'tutor') {
       kb = [
@@ -245,8 +244,7 @@ bot.hears('❌ Bekor qilish', async (ctx) => {
     kb = [
       ['📅 Mening davomatim', '📅 Dars jadvali'],
       ['🏆 Oylik reyting', '📢 Xabar tarqatish'],
-      ['🗄 Arxivlangan guruhlar', '⚙️ Admin panel'],
-      ['📝 Yakuniy Test Boshlash']
+      ['🗄 Arxivlangan guruhlar', '⚙️ Admin panel']
     ];
   } else if (user && user.role === 'tutor') {
     kb = [
@@ -333,8 +331,7 @@ bot.on('message', async (ctx, next) => {
       kb = [
         ['📅 Mening davomatim', '📅 Dars jadvali'],
         ['🏆 Oylik reyting', '📢 Xabar tarqatish'],
-        ['🗄 Arxivlangan guruhlar', '⚙️ Admin panel'],
-        ['📝 Yakuniy Test Boshlash']
+        ['🗄 Arxivlangan guruhlar', '⚙️ Admin panel']
       ];
     } else if (user && user.role === 'tutor') {
       kb = [
@@ -1452,247 +1449,7 @@ cron.schedule('*/30 * * * *', async () => {
   timezone: "Asia/Tashkent"
 });
 
-// --- YAKUNIY TEST LOGIC ---
-
-// Xotirada test sessiyalarini saqlaymiz (vaqtinchalik)
-const testSessions = {};
-
-// Adminga xabar berish cron (13:55 da)
-cron.schedule('55 13 * * *', async () => {
-  const { data: admins } = await supabase.from('users').select('telegram_id').eq('role', 'admin').not('telegram_id', 'is', null);
-  if (admins) {
-    for (const admin of admins) {
-      try {
-        await bot.telegram.sendMessage(admin.telegram_id, "Yakuniy testni boshlaymizmi?", Markup.inlineKeyboard([
-          [Markup.button.callback("✅ Boshlaymiz", "test_start_admin")]
-        ]));
-      } catch (e) {}
-    }
-  }
-}, { timezone: "Asia/Tashkent" });
-
-// Osonlik uchun menyu tugmasi
-bot.hears('📝 Yakuniy Test Boshlash', async (ctx) => {
-  const tgId = ctx.from.id.toString();
-  const { data: user } = await supabase.from('users').select('role').eq('telegram_id', tgId).single();
-  if (!user || (user.role !== 'admin' && user.role !== 'sysadmin')) return;
-  await ctx.reply("Yakuniy testni boshlaymizmi?", Markup.inlineKeyboard([
-    [Markup.button.callback("✅ Boshlaymiz", "test_start_admin")]
-  ]));
-});
-
-bot.action('test_start_admin', async (ctx) => {
-  const { data: groups } = await supabase.from('groups').select('id, name').eq('status', 'active').order('name');
-  const buttons = [];
-  if (groups) {
-    groups.forEach(g => {
-      buttons.push([Markup.button.callback(`📝 ${g.name}`, `test_group:${g.id}`)]);
-    });
-  }
-  await ctx.editMessageText("Qaysi guruhga test yuborilsin?", Markup.inlineKeyboard(buttons));
-});
-
-bot.action(/test_group:(.+)/, async (ctx) => {
-  const groupId = ctx.match[1];
-  const { data: group } = await supabase.from('groups').select('name').eq('id', groupId).single();
-  
-  const { data: students } = await supabase.from('students').select('user_id').eq('group_id', groupId);
-  if (students && students.length > 0) {
-    const userIds = students.map(s => s.user_id);
-    const { data: users } = await supabase.from('users').select('telegram_id').in('id', userIds).not('telegram_id', 'is', null);
-    
-    let count = 0;
-    const msg = `📢 <b>DIQQAT: YAKUNIY TEST!</b>\n\nSiz uchun yakuniy test tayyor. Testni ishlash uchun <b>30 daqiqa</b> vaqt beriladi.\n\nTayyor bo'lsangiz, quyidagi tugmani bosing:`;
-    if (users) {
-      for (const u of users) {
-        try {
-          await bot.telegram.sendMessage(u.telegram_id, msg, { 
-            parse_mode: 'HTML',
-            ...Markup.inlineKeyboard([[Markup.button.callback("▶️ Boshlash", `test_start_btn:${groupId}`)]])
-          });
-          count++;
-        } catch(e) {}
-      }
-    }
-    await ctx.editMessageText(`${group.name} guruhidagi ${count} ta tinglovchiga test yuborildi.`);
-  } else {
-    await ctx.editMessageText(`Bu guruhda talabalar topilmadi.`);
-  }
-});
-
-function shuffleArray(array) {
-  for (let i = array.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [array[i], array[j]] = [array[j], array[i]];
-  }
-  return array;
-}
-
-bot.action(/test_start_btn:(.+)/, async (ctx) => {
-  const groupId = ctx.match[1];
-  const tgId = ctx.from.id.toString();
-  const { data: user } = await supabase.from('users').select('id, full_name').eq('telegram_id', tgId).single();
-  
-  if (!user) return ctx.answerCbQuery("Foydalanuvchi topilmadi.");
-
-  // Check if already finished
-  const { data: existing } = await supabase.from('test_results').select('id, finished_at').eq('user_id', user.id).single();
-  if (existing && existing.finished_at) {
-    return ctx.editMessageText("Siz testni allaqachon ishlab bo'lgansiz.");
-  }
-  
-  // Start test
-  if (!existing) {
-    await supabase.from('test_results').insert([{ user_id: user.id, group_id: groupId }]);
-  } else {
-    await supabase.from('test_results').update({ started_at: new Date().toISOString() }).eq('id', existing.id);
-  }
-
-  // Fetch all questions and pick 30
-  const { data: questions } = await supabase.from('test_questions').select('*');
-  let selected = shuffleArray(questions || []).slice(0, 30);
-  
-  testSessions[user.id] = {
-    questions: selected,
-    currentIndex: 0,
-    score: 0,
-    startTime: Date.now(),
-    groupId: groupId
-  };
-
-  await sendTestQuestion(ctx, user.id, true);
-});
-
-async function sendTestQuestion(ctx, userId, isFirst = false) {
-  const sessionData = testSessions[userId];
-  if (!sessionData) return;
-
-  const now = Date.now();
-  const elapsedMinutes = (now - sessionData.startTime) / (1000 * 60);
-
-  if (elapsedMinutes >= 30) {
-    await finishTest(ctx, userId, true);
-    return;
-  }
-
-  if (sessionData.currentIndex >= sessionData.questions.length) {
-    await finishTest(ctx, userId, false);
-    return;
-  }
-
-  const q = sessionData.questions[sessionData.currentIndex];
-  
-  // Format question
-  let text = `<b>${sessionData.currentIndex + 1}-savol (Jami 30 ta)</b>\n<i>Qolgan vaqt: ${Math.max(0, 30 - Math.floor(elapsedMinutes))} daqiqa</i>\n\n`;
-  text += `<b>${q.text}</b>\n\n`;
-  text += `<b>A)</b> ${q.option_a}\n`;
-  text += `<b>B)</b> ${q.option_b}\n`;
-  text += `<b>C)</b> ${q.option_c}\n`;
-  text += `<b>D)</b> ${q.option_d}\n`;
-
-  const kb = Markup.inlineKeyboard([
-    [
-      Markup.button.callback("A", `test_ans_A`),
-      Markup.button.callback("B", `test_ans_B`)
-    ],
-    [
-      Markup.button.callback("C", `test_ans_C`),
-      Markup.button.callback("D", `test_ans_D`)
-    ]
-  ]);
-
-  try {
-    if (ctx.updateType === 'callback_query' && ctx.callbackQuery.message && !isFirst) {
-      await ctx.editMessageText(text, { parse_mode: 'HTML', ...kb });
-    } else {
-      await ctx.reply(text, { parse_mode: 'HTML', ...kb });
-      if (isFirst && ctx.updateType === 'callback_query') {
-        // delete original start button message so they can't click it again
-        try { await ctx.deleteMessage(); } catch(e){}
-      }
-    }
-  } catch (e) {
-    try { await ctx.reply(text, { parse_mode: 'HTML', ...kb }); } catch(err){}
-  }
-}
-
-bot.action(/test_ans_(.)/, async (ctx) => {
-  const answer = ctx.match[1]; // A, B, C or D
-  const tgId = ctx.from.id.toString();
-  const { data: user } = await supabase.from('users').select('id').eq('telegram_id', tgId).single();
-  if (!user || !testSessions[user.id]) return ctx.answerCbQuery("Test yakunlangan yoki topilmadi.");
-
-  const sessionData = testSessions[user.id];
-  const now = Date.now();
-  const elapsedMinutes = (now - sessionData.startTime) / (1000 * 60);
-
-  if (elapsedMinutes >= 30) {
-    await finishTest(ctx, user.id, true);
-    return;
-  }
-
-  const q = sessionData.questions[sessionData.currentIndex];
-  if (q.correct_answer === answer) {
-    sessionData.score++;
-  }
-
-  sessionData.currentIndex++;
-  await sendTestQuestion(ctx, user.id);
-});
-
-async function finishTest(ctx, userId, timeIsUp) {
-  const sessionData = testSessions[userId];
-  if (!sessionData) return;
-  
-  const isPassed = sessionData.score >= 17;
-
-  // Save to DB
-  await supabase.from('test_results').update({
-    score: sessionData.score,
-    finished_at: new Date().toISOString(),
-    is_passed: isPassed
-  }).eq('user_id', userId);
-
-  // Determine rank based on all finished tests in that group
-  let rankText = "";
-  const { data: allResults } = await supabase
-    .from('test_results')
-    .select('user_id, score, started_at, finished_at')
-    .eq('group_id', sessionData.groupId)
-    .not('finished_at', 'is', null);
-
-  if (allResults) {
-    allResults.sort((a, b) => {
-       if (b.score !== a.score) return b.score - a.score;
-       const durationA = new Date(a.finished_at) - new Date(a.started_at);
-       const durationB = new Date(b.finished_at) - new Date(b.started_at);
-       return durationA - durationB;
-    });
-
-    const rank = allResults.findIndex(r => r.user_id === userId) + 1;
-    rankText = `Siz hozirgi natijalarga ko'ra <b>${rank}-o'rinda</b> turibsiz.`;
-  }
-
-  let text = `🏁 <b>Test Yakunlandi!</b>\n\n`;
-  if (timeIsUp) text += `⏳ <i>Vaqt tugadi!</i>\n\n`;
-  
-  text += `To'g'ri javoblar: <b>${sessionData.score} / 30</b>\n`;
-  text += `Natija: <b>${isPassed ? "✅ O'tdingiz! Tabriklaymiz!" : "❌ Yiqildingiz."}</b>\n\n`;
-  text += rankText;
-
-  delete testSessions[userId];
-  
-  try {
-    if (ctx.updateType === 'callback_query' && ctx.callbackQuery.message) {
-      await ctx.editMessageText(text, { parse_mode: 'HTML' });
-    } else {
-      await ctx.reply(text, { parse_mode: 'HTML' });
-    }
-  } catch(e) {}
-}
-
 bot.launch().then(() => {
-
   console.log("Bot ishlashni boshladi...");
 }).catch(err => {
   console.error("Bot ishga tushishda xatolik:", err);

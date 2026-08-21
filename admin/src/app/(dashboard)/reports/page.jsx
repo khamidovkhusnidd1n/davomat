@@ -82,11 +82,14 @@ export default function ReportsPage() {
         attendance = attData || [];
       }
 
+      const { data: testResults, error: trErr } = await supabase.from('test_results').select('user_id, group_id, score, is_passed');
+
       setData({
         groups: groups || [],
         students: students || [],
         lessons: lessons || [],
-        attendance: attendance
+        attendance: attendance,
+        testResults: testResults || []
       });
     } catch (err) {
       console.error(err);
@@ -406,6 +409,12 @@ export default function ReportsPage() {
         >
           <FileSpreadsheet size={18} /> Eksport
         </button>
+        <button 
+          className={`${styles.tabBtn} ${activeTab === 'yakuniy' ? styles.active : ''}`}
+          onClick={() => setActiveTab('yakuniy')}
+        >
+          <FileText size={18} /> Yakuniy Hisobot
+        </button>
       </div>
 
       <div className={styles.content}>
@@ -549,6 +558,55 @@ export default function ReportsPage() {
                   
                   <button className={`${styles.exportBtn} ${styles.btnPdf}`} onClick={exportPDF}>
                     <FileText size={24} /> PDF Yuklash (.pdf)
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* YAKUNIY TAB */}
+            {activeTab === 'yakuniy' && (
+              <div className={styles.exportPanel}>
+                <h3>Yakuniy test natijalari hisoboti</h3>
+                <p style={{ color: 'var(--text-secondary)' }}>Faqat yakuniy testdan o'tganlar va ularning ballarini yuklab olish.</p>
+                
+                <div className={styles.exportButtons} style={{ marginTop: 20 }}>
+                  <button 
+                    className={`${styles.exportBtn} ${styles.btnExcel}`} 
+                    onClick={async () => {
+                      if (!data.testResults || data.testResults.length === 0) {
+                        return alert("Hech qanday natija yo'q");
+                      }
+                      
+                      const workbook = new ExcelJS.Workbook();
+                      const sheet = workbook.addWorksheet('Natijalar');
+                      sheet.addRow(['Guruh', 'F.I.Sh.', 'Ball', 'Status']);
+                      sheet.getRow(1).font = { bold: true };
+                      
+                      const results = data.testResults.map(tr => {
+                        const st = data.students.find(s => s.user_id === tr.user_id);
+                        const group = data.groups.find(g => g.id === tr.group_id);
+                        return {
+                           groupName: group ? group.name : '?',
+                           fullName: st && st.users ? st.users.full_name : '?',
+                           score: tr.score,
+                           status: tr.is_passed ? "O'tdi" : "Yiqildi"
+                        };
+                      }).sort((a,b) => a.groupName.localeCompare(b.groupName) || b.score - a.score);
+
+                      results.forEach(r => {
+                        sheet.addRow([r.groupName, r.fullName, r.score, r.status]);
+                      });
+
+                      sheet.getColumn(1).width = 20;
+                      sheet.getColumn(2).width = 30;
+                      sheet.getColumn(3).width = 10;
+                      sheet.getColumn(4).width = 15;
+
+                      const buffer = await workbook.xlsx.writeBuffer();
+                      saveAs(new Blob([buffer]), `Yakuniy_Test_Natijalari.xlsx`);
+                    }}
+                  >
+                    <FileSpreadsheet size={24} /> Yakuniy Natijalarni Yuklash (.xlsx)
                   </button>
                 </div>
               </div>

@@ -35,7 +35,7 @@ export default function StudentsPage() {
         }
       }
 
-      const [studentsRes, groupsRes] = await Promise.all([
+      const [studentsRes, groupsRes, testRes] = await Promise.all([
         supabase.from('students').select(`
           id,
           status,
@@ -45,9 +45,16 @@ export default function StudentsPage() {
           groups ( id, name, course_name, status )
         `),
         supabase.from('groups').select('id, name, course_name, status'),
+        supabase.from('test_results').select('user_id, score, is_passed')
       ]);
 
-      setStudents(studentsRes.data || []);
+      const testData = testRes.data || [];
+      const enrichedStudents = (studentsRes.data || []).map(st => {
+        const tr = testData.find(t => t.user_id === st.user_id);
+        return { ...st, testResult: tr || null };
+      });
+
+      setStudents(enrichedStudents);
       setGroups(groupsRes.data || []);
     } catch (error) {
       console.error('Error:', error);
@@ -172,6 +179,7 @@ export default function StudentsPage() {
                   <th>Telefon</th>
                   <th>Bot</th>
                   <th>Status</th>
+                  <th>Yakuniy</th>
                   <th>Qo'shilgan sana</th>
                   {(userRole === 'sysadmin' || userRole === 'admin') && <th>Amallar</th>}
                 </tr>
@@ -200,6 +208,13 @@ export default function StudentsPage() {
                         <span className={`${styles.statusBadge} ${styles[student.status] || ''}`}>
                           {student.status === 'active' ? 'Faol' : student.status === 'left' ? 'Ketgan' : 'Ko\'chgan'}
                         </span>
+                      </td>
+                      <td>
+                        {student.testResult ? (
+                          <span style={{ fontWeight: 'bold', color: student.testResult.is_passed ? 'var(--success)' : 'var(--danger)' }}>
+                            {student.testResult.score} bal
+                          </span>
+                        ) : '-'}
                       </td>
                       <td>{new Date(student.joined_at).toLocaleDateString('uz-UZ')}</td>
                       {(userRole === 'sysadmin' || userRole === 'admin') && (

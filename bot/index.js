@@ -124,7 +124,8 @@ const handlePhoneSubmit = async (ctx, phoneStr) => {
       kb = [
         ['📅 Mening davomatim', '📅 Dars jadvali'],
         ['🏆 Oylik reyting', '📢 Xabar tarqatish'],
-        ['🗄 Arxivlangan guruhlar', '⚙️ Admin panel']
+        ['🗄 Arxivlangan guruhlar', '⚙️ Admin panel'],
+        ['📝 Yakuniy Test Boshlash']
       ];
     } else if (user.role === 'tutor') {
       kb = [
@@ -244,7 +245,8 @@ bot.hears('❌ Bekor qilish', async (ctx) => {
     kb = [
       ['📅 Mening davomatim', '📅 Dars jadvali'],
       ['🏆 Oylik reyting', '📢 Xabar tarqatish'],
-      ['🗄 Arxivlangan guruhlar', '⚙️ Admin panel']
+      ['🗄 Arxivlangan guruhlar', '⚙️ Admin panel'],
+      ['📝 Yakuniy Test Boshlash']
     ];
   } else if (user && user.role === 'tutor') {
     kb = [
@@ -331,7 +333,8 @@ bot.on('message', async (ctx, next) => {
       kb = [
         ['📅 Mening davomatim', '📅 Dars jadvali'],
         ['🏆 Oylik reyting', '📢 Xabar tarqatish'],
-        ['🗄 Arxivlangan guruhlar', '⚙️ Admin panel']
+        ['🗄 Arxivlangan guruhlar', '⚙️ Admin panel'],
+        ['📝 Yakuniy Test Boshlash']
       ];
     } else if (user && user.role === 'tutor') {
       kb = [
@@ -1468,11 +1471,11 @@ cron.schedule('55 13 * * *', async () => {
   }
 }, { timezone: "Asia/Tashkent" });
 
-// Osonlik uchun komanda ham qo'shamiz
-bot.command('sendtest', async (ctx) => {
+// Osonlik uchun menyu tugmasi
+bot.hears('📝 Yakuniy Test Boshlash', async (ctx) => {
   const tgId = ctx.from.id.toString();
   const { data: user } = await supabase.from('users').select('role').eq('telegram_id', tgId).single();
-  if (!user || user.role !== 'admin') return;
+  if (!user || (user.role !== 'admin' && user.role !== 'sysadmin')) return;
   await ctx.reply("Yakuniy testni boshlaymizmi?", Markup.inlineKeyboard([
     [Markup.button.callback("✅ Boshlaymiz", "test_start_admin")]
   ]));

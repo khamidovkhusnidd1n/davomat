@@ -86,7 +86,7 @@ export default function StudentsPage() {
   };
 
   const handleResetTest = async (userId, telegramId) => {
-    if (!confirm("Haqiqatan ham bu tinglovchiga testni qayta topshirishga ruxsat berasizmi? (Eski natija o'chadi)")) return;
+    if (!confirm("Ushbu tinglovchiga test xabarini yuborasizmi? (Agar oldin ishlagan bo'lsa eski natijasi o'chadi)")) return;
     try {
       const res = await fetch('/api/test-reset', {
         method: 'POST',
@@ -226,22 +226,25 @@ export default function StudentsPage() {
                         </span>
                       </td>
                       <td>
-                        {student.testResult ? (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          {student.testResult ? (
                             <span style={{ fontWeight: 'bold', color: student.testResult.is_passed ? 'var(--success)' : 'var(--danger)' }}>
                               {student.testResult.score} bal
                             </span>
-                            {(userRole === 'sysadmin' || userRole === 'admin') && (
-                              <button 
-                                onClick={() => handleResetTest(student.user_id, student.users?.telegram_id)}
-                                title="Qayta topshirishga ruxsat berish"
-                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', padding: 0 }}
-                              >
-                                <RotateCcw size={14} />
-                              </button>
-                            )}
-                          </div>
-                        ) : '-'}
+                          ) : (
+                            <span>-</span>
+                          )}
+                          
+                          {(userRole === 'sysadmin' || userRole === 'admin') && student.users?.telegram_id && (
+                            <button 
+                              onClick={() => handleResetTest(student.user_id, student.users.telegram_id)}
+                              title={student.testResult ? "Natijani o'chirish va qayta topshirishga ruxsat berish" : "Test ishlash uchun xabar yuborish"}
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', padding: 0 }}
+                            >
+                              <RotateCcw size={14} />
+                            </button>
+                          )}
+                        </div>
                       </td>
                       <td>{new Date(student.joined_at).toLocaleDateString('uz-UZ')}</td>
                       {(userRole === 'sysadmin' || userRole === 'admin') && (

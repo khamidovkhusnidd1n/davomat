@@ -53,7 +53,8 @@ export default function ReportsPage() {
         .from('students')
         .select(`
           id, 
-          group_id, 
+          group_id,
+          user_id,
           users ( full_name, phone )
         `);
       if (sErr) throw sErr;

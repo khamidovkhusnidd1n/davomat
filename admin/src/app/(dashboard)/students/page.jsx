@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Search, Plus, Trash2, Edit2, FileSpreadsheet } from 'lucide-react';
+import { Search, Plus, Trash2, Edit2, FileSpreadsheet, RotateCcw } from 'lucide-react';
 import ExcelImport from '@/components/ExcelImport/ExcelImport';
 import StudentModal from './StudentModal';
 import styles from './page.module.css';
@@ -79,6 +79,22 @@ export default function StudentsPage() {
         const d = await res.json();
         throw new Error(d.error);
       }
+      fetchAll(true);
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleResetTest = async (userId, telegramId) => {
+    if (!confirm("Haqiqatan ham bu tinglovchiga testni qayta topshirishga ruxsat berasizmi? (Eski natija o'chadi)")) return;
+    try {
+      const res = await fetch('/api/test-reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, telegram_id: telegramId })
+      });
+      if (!res.ok) throw new Error("Xatolik yuz berdi");
+      alert("Test natijasi bekor qilindi va tinglovchiga bot orqali xabar yuborildi!");
       fetchAll(true);
     } catch (err) {
       alert(err.message);
@@ -211,9 +227,20 @@ export default function StudentsPage() {
                       </td>
                       <td>
                         {student.testResult ? (
-                          <span style={{ fontWeight: 'bold', color: student.testResult.is_passed ? 'var(--success)' : 'var(--danger)' }}>
-                            {student.testResult.score} bal
-                          </span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ fontWeight: 'bold', color: student.testResult.is_passed ? 'var(--success)' : 'var(--danger)' }}>
+                              {student.testResult.score} bal
+                            </span>
+                            {(userRole === 'sysadmin' || userRole === 'admin') && (
+                              <button 
+                                onClick={() => handleResetTest(student.user_id, student.users?.telegram_id)}
+                                title="Qayta topshirishga ruxsat berish"
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', padding: 0 }}
+                              >
+                                <RotateCcw size={14} />
+                              </button>
+                            )}
+                          </div>
                         ) : '-'}
                       </td>
                       <td>{new Date(student.joined_at).toLocaleDateString('uz-UZ')}</td>

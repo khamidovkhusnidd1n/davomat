@@ -414,7 +414,7 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
                       />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', marginBottom: '2px', whiteSpace: 'nowrap' }}>Eski Naz. Qoldiq</span>
+                      <span style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', marginBottom: '2px', whiteSpace: 'nowrap' }}>Oldin O'tilgan</span>
                       <input
                         type="number"
                         className="input"
@@ -438,7 +438,7 @@ export default function TeacherModal({ isOpen, onClose, teacher, academicYear, o
                       />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', marginBottom: '2px', whiteSpace: 'nowrap' }}>Eski Amal. Qoldiq</span>
+                      <span style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', marginBottom: '2px', whiteSpace: 'nowrap' }}>Oldin O'tilgan</span>
                       <input
                         type="number"
                         className="input"

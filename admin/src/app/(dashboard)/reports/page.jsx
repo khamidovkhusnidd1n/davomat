@@ -186,35 +186,35 @@ export default function ReportsPage() {
       const gStudents = data.students.filter(s => s.group_id === g.id);
       
       if (gStudents.length === 0 || gLessons.length === 0) return;
-
-      const dates = gLessons.map(l => l.lesson_date);
       
       const rows = gStudents.map(st => {
         const row = { 'O\'quvchi F.I.O': st.users?.full_name || 'Ismsiz' };
         let missedHours = 0;
-        
-        gLessons.forEach(les => {
-          const att = data.attendance.find(a => a.lesson_id === les.id && a.student_id === st.id);
-          let mark = '';
-          if (att) {
-            if (att.status === 'present') {
-              mark = '+';
-            } else if (att.status === 'absent' || att.status === 'unexcused') {
-              mark = '-';
-              missedHours += 6;
-            } else if (att.status === 'late') {
-              mark = 'Kech keldi';
-              if (att.late_hours > 0) missedHours += att.late_hours;
-            } else if (att.status === 'excused') {
-              mark = 'Sababli';
+                gLessons.forEach(les => {
+            const att = data.attendance.find(a => a.lesson_id === les.id && a.student_id === st.id);
+            let mark = '';
+            if (att) {
+              if (att.status === 'present') {
+                mark = '+';
+              } else if (att.status === 'absent' || att.status === 'unexcused') {
+                mark = '-';
+                missedHours += 6;
+              } else if (att.status === 'late') {
+                mark = 'Kech keldi';
+                if (att.late_hours > 0) missedHours += att.late_hours;
+              } else if (att.status === 'excused') {
+                mark = 'Sababli';
+              }
             }
-          }
-          row[les.lesson_date] = mark;
-        });
-        
-        row['Qoldirilgan (soat)'] = missedHours > 0 ? `${missedHours} soat` : '0';
-        
-        return row;
+            // Use short date: DD.MM to save space (e.g. 20.07 instead of 2026-07-20)
+            const [yyyy, mm, dd] = les.lesson_date.split('-');
+            const shortDate = `${dd}.${mm}`;
+            row[shortDate] = mark;
+          });
+          
+          row['Qoldiq (s)'] = missedHours > 0 ? `${missedHours}` : '0';
+          
+          return row;
       });
 
       sheetsData[g.name] = rows;
@@ -346,7 +346,8 @@ export default function ReportsPage() {
         headStyles: { fillColor: [79, 70, 229], textColor: [255,255,255], fontStyle: 'bold' },
         alternateRowStyles: { fillColor: [249, 250, 251] },
         columnStyles: {
-          "O'quvchi F.I.O": { cellWidth: 40 }
+          "O'quvchi F.I.O": { cellWidth: 40 },
+          "Qoldiq (s)": { cellWidth: 15 }
         },
         didParseCell: function(data) {
           if (data.section === 'body' && data.column.index > 0) {

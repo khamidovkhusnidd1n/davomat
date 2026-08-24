@@ -426,6 +426,7 @@ export default function ReportsPage() {
               >
                 <option value="month">Oylik hisobot</option>
                 <option value="date">Kunlik hisobot</option>
+                <option value="all">Umumiy</option>
               </select>
 
               {filterType === 'month' ? (

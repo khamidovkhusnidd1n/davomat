@@ -7,10 +7,11 @@ import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { BarChart3, AlertTriangle, FileSpreadsheet, Download, FileText } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import TeacherAnalyticsTab from './TeacherAnalyticsTab';
 import styles from './page.module.css';
 
 export default function ReportsPage() {
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'teachers'
   const [data, setData] = useState({ groups: [], students: [], lessons: [], attendance: [] });
   const [loading, setLoading] = useState(true);
   const [currentUserFullName, setCurrentUserFullName] = useState('');
@@ -387,77 +388,89 @@ export default function ReportsPage() {
         <p>O'quv markazi bo'yicha davomat natijalari va statistikalar</p>
       </div>
 
-      <div className={styles.tabs}>
-        <button 
-          className={`${styles.tabBtn} ${activeTab === 'overview' ? styles.active : ''}`}
-          onClick={() => setActiveTab('overview')}
-        >
-          <BarChart3 size={18} /> Guruhlar Reytingi
-        </button>
-        <button 
-          className={`${styles.tabBtn} ${activeTab === 'redzone' ? styles.active : ''}`}
-          onClick={() => setActiveTab('redzone')}
-        >
-          <AlertTriangle size={18} /> Qizil Zona
-        </button>
-        <button 
-          className={`${styles.tabBtn} ${activeTab === 'export' ? styles.active : ''}`}
-          onClick={() => setActiveTab('export')}
-        >
-          <FileSpreadsheet size={18} /> Eksport
-        </button>
-      </div>
-
-      <div className={styles.content}>
-        <div style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
-          <select 
-            className="input" 
-            style={{ width: '160px' }}
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
+        <div className={styles.tabs}>
+          <button 
+            className={`${styles.tabBtn} ${activeTab === 'overview' ? styles.active : ''}`}
+            onClick={() => setActiveTab('overview')}
           >
-            <option value="month">Oy bo'yicha</option>
-            <option value="date">Sana bo'yicha</option>
-            <option value="all">Umumiy</option>
-          </select>
-
-          {filterType === 'month' ? (
-            <input 
-              type="month" 
-              className="input" 
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-            />
-          ) : filterType === 'date' ? (
-            <input 
-              type="date" 
-              className="input" 
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-            />
-          ) : null}
-
-          {activeTab === 'export' && (
-            <select
-              className="input"
-              style={{ width: '220px', marginLeft: 'auto' }}
-              value={selectedExportGroup}
-              onChange={(e) => setSelectedExportGroup(e.target.value)}
-            >
-              <option value="all">Barcha guruhlar</option>
-              {data.groups.map(g => (
-                <option key={g.id} value={g.id}>{g.name}</option>
-              ))}
-            </select>
-          )}
+            <BarChart3 size={18} /> Guruhlar Reytingi
+          </button>
+          <button 
+            className={`${styles.tabBtn} ${activeTab === 'teachers' ? styles.active : ''}`}
+            onClick={() => setActiveTab('teachers')}
+          >
+            <FileSpreadsheet size={18} /> O'qituvchilar Tahlili
+          </button>
+          <button 
+            className={`${styles.tabBtn} ${activeTab === 'redzone' ? styles.active : ''}`}
+            onClick={() => setActiveTab('redzone')}
+          >
+            <AlertTriangle size={18} /> Qizil Zona
+          </button>
+          <button 
+            className={`${styles.tabBtn} ${activeTab === 'export' ? styles.active : ''}`}
+            onClick={() => setActiveTab('export')}
+          >
+            <FileSpreadsheet size={18} /> Eksport
+          </button>
         </div>
 
-        {loading ? (
-          <div className={styles.loading}>Hisoblanmoqda...</div>
-        ) : (
-          <>
-            {/* OVERVIEW TAB */}
-            {activeTab === 'overview' && (
+        <div className={styles.content}>
+          {activeTab !== 'teachers' && (
+            <div style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
+              <select 
+                className="input" 
+                style={{ width: '160px' }}
+                value={filterType}
+                onChange={e => setFilterType(e.target.value)}
+              >
+                <option value="month">Oylik hisobot</option>
+                <option value="date">Kunlik hisobot</option>
+              </select>
+
+              {filterType === 'month' ? (
+                <input 
+                  type="month" 
+                  className="input"
+                  style={{ width: '160px' }}
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                />
+              ) : filterType === 'date' ? (
+                <input
+                  type="date"
+                  className="input"
+                  style={{ width: '160px' }}
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                />
+              ) : null}
+
+              {activeTab === 'export' && (
+                <select
+                  className="input"
+                  style={{ width: '220px', marginLeft: 'auto' }}
+                  value={selectedExportGroup}
+                  onChange={(e) => setSelectedExportGroup(e.target.value)}
+                >
+                  <option value="all">Barcha guruhlar</option>
+                  {data.groups.map(g => (
+                    <option key={g.id} value={g.id}>{g.name}</option>
+                  ))}
+                </select>
+              )}
+            </div>
+          )}
+
+          {loading ? (
+            <div className={styles.loading}>Hisoblanmoqda...</div>
+          ) : (
+            <>
+              {activeTab === 'teachers' && (
+                <TeacherAnalyticsTab />
+              )}
+              {/* OVERVIEW TAB */}
+              {activeTab === 'overview' && (
               <div className={styles.tableWrapper}>
                 <table className={styles.table}>
                   <thead>

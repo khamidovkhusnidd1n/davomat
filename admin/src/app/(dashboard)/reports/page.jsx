@@ -345,6 +345,9 @@ export default function ReportsPage() {
         styles: { fontSize: 8, cellPadding: 2 },
         headStyles: { fillColor: [79, 70, 229], textColor: [255,255,255], fontStyle: 'bold' },
         alternateRowStyles: { fillColor: [249, 250, 251] },
+        columnStyles: {
+          "O'quvchi F.I.O": { cellWidth: 40 }
+        },
         didParseCell: function(data) {
           if (data.section === 'body' && data.column.index > 0) {
              if (data.cell.raw === '+') {

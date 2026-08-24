@@ -5,6 +5,7 @@ import { Search, Plus, Upload, ChevronDown, ChevronUp, Edit, LayoutGrid, TablePr
 import * as XLSX from 'xlsx';
 import TeacherImportModal from './TeacherImportModal';
 import TeacherModal from './TeacherModal';
+import ExcelHistoricalImport from '@/components/ExcelHistoricalImport/ExcelHistoricalImport';
 import TeacherAnalyticsModal from './TeacherAnalyticsModal';
 import styles from './page.module.css';
 
@@ -14,6 +15,7 @@ export default function TeachersPage() {
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [showImport, setShowImport] = useState(false);
+  const [showHistoricalImport, setShowHistoricalImport] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
   const [analyticsTeacher, setAnalyticsTeacher] = useState(null);
@@ -254,16 +256,19 @@ export default function TeachersPage() {
               <Download size={18} /> Excel hisobot
             </button>
           )}
-          {canWrite && (
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
-              <button className="btn btn-secondary" style={{ backgroundColor: '#e0e7ff', color: '#4f46e5' }} onClick={() => setShowImport(true)}>
-                <Upload size={18} /> Excel yuklash
-              </button>
-              <button className="btn btn-primary" onClick={() => { setSelectedTeacher(null); setShowAddModal(true); }}>
-                <Plus size={18} /> O'qituvchi qo'shish
-              </button>
-            </div>
-          )}
+            {canWrite && (
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                <button className="btn btn-secondary" style={{ backgroundColor: '#fef3c7', color: '#d97706', borderColor: '#fde68a' }} onClick={() => setShowHistoricalImport(true)}>
+                  <Upload size={18} /> Eski soatlarni yuklash
+                </button>
+                <button className="btn btn-secondary" style={{ backgroundColor: '#e0e7ff', color: '#4f46e5' }} onClick={() => setShowImport(true)}>
+                  <Upload size={18} /> Excel yuklash
+                </button>
+                <button className="btn btn-primary" onClick={() => { setSelectedTeacher(null); setShowAddModal(true); }}>
+                  <Plus size={18} /> O'qituvchi qo'shish
+                </button>
+              </div>
+            )}
         </div>
       </div>
 
@@ -579,8 +584,19 @@ export default function TeachersPage() {
       <TeacherImportModal
         isOpen={showImport}
         onClose={() => setShowImport(false)}
-        onSuccess={() => fetchData(true)}
-        academicYear={academicYear}
+        onSuccess={() => {
+          setShowImport(false);
+          fetchData(true);
+        }}
+      />
+
+      <ExcelHistoricalImport
+        isOpen={showHistoricalImport}
+        onClose={() => setShowHistoricalImport(false)}
+        onSuccess={() => {
+          setShowHistoricalImport(false);
+          fetchData(true);
+        }}
       />
 
       <TeacherModal

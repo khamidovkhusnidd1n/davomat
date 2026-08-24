@@ -136,10 +136,10 @@ export default function TeacherAnalyticsModal({ isOpen, onClose, teacher, academ
         subjectsMap[sid].totalTaught += lessonHours;
       });
 
-      // Distribute manual hours to groups
+      // Distribute manual (base) hours to subjects
       Object.values(subjectsMap).forEach(subject => {
-        if (subject.manualCompleted && subject.manualCompleted.total > subject.totalTaught) {
-          let extraHours = subject.manualCompleted.total - subject.totalTaught;
+        if (subject.manualCompleted && subject.manualCompleted.total > 0) {
+          let extraHours = subject.manualCompleted.total;
           
           Object.values(subject.educationTypes).forEach(edTypeData => {
             Object.values(edTypeData.groups).forEach(g => {
@@ -156,6 +156,11 @@ export default function TeacherAnalyticsModal({ isOpen, onClose, teacher, academ
               }
             });
           });
+
+          // If there are still extra hours but no groups to assign to, just add it to the subject's total
+          if (extraHours > 0) {
+             subject.totalTaught += extraHours;
+          }
         }
       });
 
@@ -185,7 +190,7 @@ export default function TeacherAnalyticsModal({ isOpen, onClose, teacher, academ
             {(() => {
               const teacherMaxHours = teacher?.max_hours || 0;
               const overallTotalTaught = analyticsData.reduce((sum, subject) => {
-                return sum + Math.max(subject.totalTaught, subject.manualCompleted ? subject.manualCompleted.total : 0);
+                return sum + subject.totalTaught;
               }, 0);
               const overallRemaining = teacherMaxHours - overallTotalTaught;
               const isOverallOverLimit = overallRemaining < 0;

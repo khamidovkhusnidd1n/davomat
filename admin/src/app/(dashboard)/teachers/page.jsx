@@ -108,8 +108,8 @@ export default function TeachersPage() {
               return sum + (totalMinutes > 0 ? Math.floor((totalMinutes + 10) / 90) * 2 : 2);
             }, 0);
 
-          const totalTheory = Math.max(ts.completed_theory_hours || 0, dynamicTheory);
-          const totalPractice = Math.max(ts.completed_practice_hours || 0, dynamicPractice);
+          const totalTheory = (ts.completed_theory_hours || 0) + dynamicTheory;
+          const totalPractice = (ts.completed_practice_hours || 0) + dynamicPractice;
 
           return {
             ...ts,

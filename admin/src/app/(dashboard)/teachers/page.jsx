@@ -95,7 +95,9 @@ export default function TeachersPage() {
               const [startH, startM] = start.substring(0, 5).split(':').map(Number);
               const [endH, endM] = end.substring(0, 5).split(':').map(Number);
               const totalMinutes = (endH * 60 + endM) - (startH * 60 + startM);
-              return sum + (totalMinutes > 0 ? Math.floor((totalMinutes + 10) / 90) * 2 : 2);
+              let lessonHours = Math.round(totalMinutes / 40);
+              if (lessonHours === 0 && totalMinutes > 0) lessonHours = 1;
+              return sum + (totalMinutes > 0 ? lessonHours : 2);
             }, 0);
 
           // Calculate dynamic practice hours
@@ -107,7 +109,9 @@ export default function TeachersPage() {
               const [startH, startM] = start.substring(0, 5).split(':').map(Number);
               const [endH, endM] = end.substring(0, 5).split(':').map(Number);
               const totalMinutes = (endH * 60 + endM) - (startH * 60 + startM);
-              return sum + (totalMinutes > 0 ? Math.floor((totalMinutes + 10) / 90) * 2 : 2);
+              let lessonHours = Math.round(totalMinutes / 40);
+              if (lessonHours === 0 && totalMinutes > 0) lessonHours = 1;
+              return sum + (totalMinutes > 0 ? lessonHours : 2);
             }, 0);
 
           const totalTheory = (ts.completed_theory_hours || 0) + dynamicTheory;

@@ -124,9 +124,11 @@ export default function TeacherAnalyticsModal({ isOpen, onClose, teacher, academ
           const [sh, sm] = lesson.start_time.split(':').map(Number);
           const [eh, em] = lesson.end_time.split(':').map(Number);
           if (!isNaN(sh) && !isNaN(eh)) {
-            const diffHours = (eh + em/60) - (sh + sm/60);
-            if (diffHours > 0 && diffHours < 12) {
-              lessonHours = Math.round(diffHours); 
+            const totalMinutes = (eh * 60 + em) - (sh * 60 + sm);
+            if (totalMinutes > 0) {
+              // 40 mins = 1 acad hour, 80 mins = 2 acad hours
+              lessonHours = Math.round(totalMinutes / 40);
+              if (lessonHours === 0) lessonHours = 1; // minimum 1
             }
           }
         }

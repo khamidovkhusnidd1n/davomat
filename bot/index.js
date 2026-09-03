@@ -341,12 +341,7 @@ bot.on('message', async (ctx, next) => {
       ];
     } else {
       kb = [
-        ['📅 Mening davomatim', '📅 Dars jadvali'],
-        ['🏆 Oylik reyting']
-      ];
-    }
-    
-    return ctx.reply(`Xabar ${count} ta foydalanuvchiga muvaffaqiyatli yuborildi!`, Markup.keyboard(kb).resize());
+    ctx.reply(`Xabar ${count} ta foydalanuvchiga muvaffaqiyatli yuborildi!`, Markup.keyboard(kb).resize());
   }
   return next();
 });
@@ -357,42 +352,57 @@ bot.on('text', async (ctx, next) => {
 
 bot.hears('📅 Mening davomatim', async (ctx) => {
   const tgId = ctx.from.id.toString();
-  
-  // Find user by tgId
   const { data: user } = await supabase.from('users').select('id, full_name').eq('telegram_id', tgId).single();
-  
-  if (!user) {
-    return ctx.reply("Siz tizimga kirmagansiz. Iltimos, /start buyrug'i orqali raqamingizni yuboring.");
-  }
+  if (!user) return ctx.reply("Siz tizimga kirmagansiz. /start orqali raqamingizni yuboring.");
 
-  // Get student info
   const { data: student } = await supabase.from('students').select('id, group_id').eq('user_id', user.id).single();
   if (!student) return ctx.reply("Siz talabalar ro'yxatida yo'qsiz.");
 
-  // Get recent 5 attendances
   const { data: attendances } = await supabase
     .from('attendance')
-    .select(`
-      status,
-      lessons ( lesson_date, title )
-    `)
+    .select('status, lessons(lesson_date, title)')
     .eq('student_id', student.id)
-    .order('created_at', { ascending: false })
-    .limit(5);
+    .order('created_at', { ascending: false });
 
   if (!attendances || attendances.length === 0) {
     return ctx.reply("Sizda hali davomat ma'lumotlari yo'q.");
   }
 
-  let text = "<b>So'nggi davomat natijalaringiz:</b>\n\n";
+  let present = 0, absent = 0, excused = 0, late = 0;
   attendances.forEach(a => {
+    if (a.status === 'present') present++;
+    else if (a.status === 'absent' || a.status === 'unexcused') absent++;
+    else if (a.status === 'late') late++;
+    else if (a.status === 'excused') excused++;
+  });
+  
+  const total = attendances.length;
+  const missedPct = total > 0 ? Math.round((absent / total) * 100) : 0;
+  
+  let warning = '';
+  if (missedPct >= 20) {
+    warning = `\n\n🚨 <b>QIZIL ZONA:</b> Siz darslarning ${missedPct}% qismini qoldirgansiz! Agar qoldirish davom etsa, sertifikat berilmasligi mumkin.`;
+  } else if (missedPct >= 10) {
+    warning = `\n\n⚠️ <b>DIQQAT:</b> Siz darslarning ${missedPct}% qismini qoldirgansiz. Iltimos, darslarni qoldirmang.`;
+  }
+  
+  let text = `👤 <b>${user.full_name}</b>\n📊 <b>Sizning umumiy davomat statistikangiz:</b>\n\n`;
+  text += `🔹 Jami o'tilgan darslar: <b>${total} ta</b>\n`;
+  text += `✅ Kelgan: <b>${present} ta</b>\n`;
+  text += `❌ Kelmagan (sababsiz): <b>${absent} ta</b>\n`;
+  if (excused > 0) text += `📄 Sababli: <b>${excused} ta</b>\n`;
+  if (late > 0) text += `⏰ Kech qolgan: <b>${late} ta</b>\n`;
+  
+  text += warning;
+  
+  text += `\n\n<i>Oxirgi 3 ta dars natijasi:</i>\n`;
+  attendances.slice(0, 3).forEach(a => {
      let statusText = 'Noma\'lum';
-     if (a.status === 'present') statusText = '🟢 Keldi';
-     else if (a.status === 'absent' || a.status === 'unexcused') statusText = '🔴 Kelmadi';
-     else if (a.status === 'late') statusText = '🟡 Kech qoldi';
-     else if (a.status === 'excused') statusText = '🔵 Sababli';
-
-     text += `📅 ${a.lessons?.lesson_date || ''} - ${statusText}\n`;
+     if (a.status === 'present') statusText = '✅ Keldi';
+     else if (a.status === 'absent' || a.status === 'unexcused') statusText = '❌ Kelmadi';
+     else if (a.status === 'late') statusText = '⏰ Kech qoldi';
+     else if (a.status === 'excused') statusText = '📄 Sababli';
+     text += `🗓 ${a.lessons?.lesson_date || ''} - ${statusText}\n`;
   });
 
   ctx.replyWithHTML(text);
@@ -401,7 +411,7 @@ bot.hears('📅 Mening davomatim', async (ctx) => {
 bot.hears('📅 Dars jadvali', async (ctx) => {
   const tgId = ctx.from.id.toString();
   const { data: user } = await supabase.from('users').select('id').eq('telegram_id', tgId).single();
-  if (!user) return ctx.reply("Siz tizimga kirmagansiz. Iltimos, /start buyrug'i orqali raqamingizni yuboring.");
+  if (!user) return ctx.reply("Siz tizimga kirmagansiz.");
 
   const { data: student } = await supabase.from('students').select('group_id').eq('user_id', user.id).single();
   if (!student) return ctx.reply("Guruh topilmadi.");
@@ -440,24 +450,24 @@ bot.hears('📅 Dars jadvali', async (ctx) => {
     const startTime = sch ? sch.start_time.substring(0, 5) : '--:--';
     const endTime = sch ? sch.end_time.substring(0, 5) : '--:--';
 
-    let icon = '⏳';
+    let icon = '🔹';
     let dateStr = s.lesson_date;
 
     if (s.lesson_date === todayStr) {
       if (currentHourStr > endTime) {
-        icon = '✅';
+        icon = '✔️';
         dateStr = 'Bugun (Tugadi)';
       } else if (currentHourStr >= startTime && currentHourStr <= endTime) {
-        icon = '🔴';
+        icon = '🔄';
         dateStr = 'Bugun (Ketyapti)';
       } else {
-        icon = '🔥';
+        icon = '📌';
         dateStr = 'Bugun';
       }
     } else {
       const diff = Math.round((new Date(s.lesson_date) - new Date(todayStr)) / (1000 * 60 * 60 * 24));
       if (diff === 1) {
-        icon = '🚀';
+        icon = '🔜';
         dateStr = 'Ertaga';
       }
     }
@@ -465,7 +475,59 @@ bot.hears('📅 Dars jadvali', async (ctx) => {
     text += `${icon} <b>${dateStr}, soat ${startTime}</b> — <i>${s.title}</i>\n`;
   });
 
-  ctx.replyWithHTML(text);
+  const kb = Markup.inlineKeyboard([
+    [Markup.button.callback("📖 O'tilgan mavzular arxivi", "past_topics")]
+  ]);
+  
+  ctx.replyWithHTML(text, kb);
+});
+
+bot.action('past_topics', async (ctx) => {
+  const tgId = ctx.from.id.toString();
+  const { data: user } = await supabase.from('users').select('id').eq('telegram_id', tgId).single();
+  if (!user) return ctx.answerCbQuery("Topilmadi", {show_alert: true});
+
+  const { data: student } = await supabase.from('students').select('group_id').eq('user_id', user.id).single();
+  if (!student) return ctx.answerCbQuery("Guruh topilmadi", {show_alert: true});
+  
+  const tashkentFormatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Tashkent',
+    year: 'numeric', month: '2-digit', day: '2-digit'
+  });
+  const parts = tashkentFormatter.formatToParts(new Date());
+  const tObj = {};
+  parts.forEach(p => tObj[p.type] = p.value);
+  const todayStr = `${tObj.year}-${tObj.month}-${tObj.day}`;
+
+  const { data: pastLessons } = await supabase
+    .from('lessons')
+    .select('title, lesson_date')
+    .eq('group_id', student.group_id)
+    .lt('lesson_date', todayStr)
+    .order('lesson_date', { ascending: false })
+    .limit(5);
+    
+  if (!pastLessons || pastLessons.length === 0) {
+    return ctx.answerCbQuery("Hali o'tilgan darslar yo'q.", {show_alert: true});
+  }
+  
+  let text = "📖 <b>Oxirgi o'tilgan mavzular:</b>\n\n";
+  pastLessons.forEach(l => {
+    text += `✅ <b>${l.lesson_date}:</b> ${l.title}\n`;
+  });
+  
+  const kb = Markup.inlineKeyboard([
+    [Markup.button.callback("⬅️ Ortga (Dars jadvali)", "show_schedule")]
+  ]);
+  
+  await ctx.editMessageText(text, { parse_mode: 'HTML', ...kb }).catch(()=>{});
+  ctx.answerCbQuery();
+});
+
+bot.action('show_schedule', async (ctx) => {
+  await ctx.deleteMessage().catch(() => {});
+  ctx.reply("Pastki menyudan 📅 Dars jadvali tugmasini bosing.");
+  ctx.answerCbQuery();
 });
 
 bot.hears('🏆 Oylik reyting', async (ctx) => {

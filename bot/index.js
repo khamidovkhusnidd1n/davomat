@@ -341,7 +341,12 @@ bot.on('message', async (ctx, next) => {
       ];
     } else {
       kb = [
-    ctx.reply(`Xabar ${count} ta foydalanuvchiga muvaffaqiyatli yuborildi!`, Markup.keyboard(kb).resize());
+        ['📅 Mening davomatim', '📅 Dars jadvali'],
+        ['🏆 Oylik reyting']
+      ];
+      }
+
+      ctx.reply(`Xabar ${count} ta foydalanuvchiga muvaffaqiyatli yuborildi!`, Markup.keyboard(kb).resize());
   }
   return next();
 });

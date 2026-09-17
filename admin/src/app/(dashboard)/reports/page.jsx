@@ -63,7 +63,9 @@ export default function ReportsPage() {
       let lessonsQuery = supabase.from('lessons').select('id, group_id, lesson_date, title').order('lesson_date', { ascending: true });
       if (filterType === 'month' && selectedMonth) {
         const startDate = `${selectedMonth}-01`;
-        const endDate = `${selectedMonth}-31`; 
+        const [y, m] = selectedMonth.split('-');
+        const lastDay = new Date(y, m, 0).getDate();
+        const endDate = `${selectedMonth}-${lastDay}`;
         lessonsQuery = lessonsQuery.gte('lesson_date', startDate).lte('lesson_date', endDate);
       } else if (filterType === 'date' && selectedDate) {
         lessonsQuery = lessonsQuery.eq('lesson_date', selectedDate);

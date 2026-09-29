@@ -363,7 +363,7 @@ export default function Dashboard() {
               </div>
             ))}
           </div>
-          <Link href="/users" className={`btn btn-secondary ${styles.viewAllBtn}`} style={{ textDecoration: 'none', textAlign: 'center' }}>
+          <Link href="/students" className={`btn btn-secondary ${styles.viewAllBtn}`} style={{ textDecoration: 'none', textAlign: 'center' }}>
             Barchasini ko'rish
           </Link>
         </div>

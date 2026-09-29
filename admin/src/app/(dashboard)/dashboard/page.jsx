@@ -67,11 +67,38 @@ export default function Dashboard() {
           absentToday: absent
         });
 
-        // Set some dummy recent activity
-        setActivities([
-          { id: 1, title: 'Tizim ishga tushdi', desc: 'Davomat statistikasi real vaqtda yangilanmoqda', time: 'Hozir', type: 'system' }
-        ]);
+        // 1. Yangi: Top 5 talabalar (TG rasm va davomat bilan)
+        const { data: topStudentsData } = await supabase.from('users')
+          .select('id, full_name, telegram_id, students!inner(id)')
+          .eq('role', 'student')
+          .limit(5);
 
+        let topStudents = [];
+        if (topStudentsData) {
+          // Ularning davomatini ham hisoblaymiz (soddalashtirilgan)
+          for (let s of topStudentsData) {
+            const { count: presentCount } = await supabase.from('attendance')
+              .select('*', { count: 'exact', head: true })
+              .eq('student_id', s.students[0].id)
+              .in('status', ['present', 'late']);
+              
+            const { count: totalCount } = await supabase.from('attendance')
+              .select('*', { count: 'exact', head: true })
+              .eq('student_id', s.students[0].id);
+
+            const progress = totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 0;
+            topStudents.push({
+              id: s.id,
+              name: s.full_name,
+              tg_id: s.telegram_id,
+              progress,
+              status: progress >= 80 ? 'Yaxshi' : progress >= 60 ? 'O\'rtacha' : 'Xavfli',
+              statusColor: progress >= 80 ? 'var(--success)' : progress >= 60 ? 'var(--warning)' : 'var(--error)'
+            });
+          }
+        }
+        setActivities(topStudents.sort((a,b) => b.progress - a.progress));
+        // ... (Charts logic continues)
         // CHARTS DATA CALCULATION
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
@@ -193,7 +220,7 @@ export default function Dashboard() {
         </div>
 
         <div className={`card ${styles.statCard}`}>
-          <div className={styles.statIconWrapper} style={{ background: 'var(--info-light)', color: '#3b82f6' }}>
+          <div className={styles.statIconWrapper} style={{ background: 'var(--primary-light)', color: 'var(--primary)' }}>
             <CalendarClock size={24} />
           </div>
           <div className={styles.statInfo}>
@@ -238,44 +265,54 @@ export default function Dashboard() {
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)' }} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)' }} domain={[0, 100]} />
                   <Tooltip 
-                    cursor={{ fill: 'var(--primary-light)' }}
-                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: 'var(--shadow)', background: 'var(--bg-sidebar)' }} 
+                    cursor={{ fill: 'var(--bg-secondary)' }}
+                    contentStyle={{ borderRadius: '12px', border: '1px solid var(--border)', boxShadow: 'var(--shadow-lg)', background: 'var(--bg-card)' }} 
                   />
-                  <Bar dataKey="foiz" fill="var(--primary)" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                  <Bar dataKey="foiz" fill="var(--primary)" radius={[6, 6, 0, 0]} maxBarSize={45} />
                 </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          <div className={`card ${styles.chartCard}`}>
-            <h3 className={styles.sectionTitle}>Oylik Trend (Foiz)</h3>
-            <div className={styles.chartWrapper}>
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={monthData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)' }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)' }} domain={[80, 100]} />
-                  <Tooltip 
-                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: 'var(--shadow)', background: 'var(--bg-sidebar)' }} 
-                  />
-                  <Line type="monotone" dataKey="foiz" stroke="var(--success)" strokeWidth={3} dot={{ r: 4, fill: 'var(--success)', strokeWidth: 2 }} activeDot={{ r: 6 }} />
-                </LineChart>
               </ResponsiveContainer>
             </div>
           </div>
         </div>
 
-        {/* RECENT ACTIVITY */}
+        {/* STUDENT PROGRESS (Neumorphic List) */}
         <div className={`card ${styles.activityCard}`}>
-          <h3 className={styles.sectionTitle}>So'nggi Faoliyat</h3>
-          <div className={styles.activityList}>
-            {activities.map(activity => (
-              <div key={activity.id} className={styles.activityItem}>
-                <div className={styles.activityDot}></div>
-                <div className={styles.activityContent}>
-                  <h4>{activity.title}</h4>
-                  <p>{activity.desc}</p>
-                  <span className={styles.activityTime}>{activity.time}</span>
+          <h3 className={styles.sectionTitle}>Tinglovchilar Holati</h3>
+          <div className={styles.studentList}>
+            <div className={styles.studentListHeader}>
+              <span>Tinglovchi</span>
+              <span>Foiz</span>
+              <span>Holat</span>
+            </div>
+            {activities.map(student => (
+              <div key={student.id} className={styles.studentRow}>
+                <div className={styles.studentInfo}>
+                  <div className={styles.studentAvatar}>
+                    {student.tg_id ? (
+                      <img src={`/api/tg-photo?tg_id=${student.tg_id}`} alt={student.name} />
+                    ) : (
+                      <div className={styles.avatarFallback}>{student.name.charAt(0)}</div>
+                    )}
+                  </div>
+                  <span className={styles.studentName}>{student.name}</span>
+                </div>
+                
+                <div className={styles.studentProgressWrapper}>
+                  <div className={styles.studentProgressBar}>
+                    <div 
+                      className={styles.studentProgressFill} 
+                      style={{ 
+                        width: `${student.progress}%`,
+                        background: student.statusColor,
+                        boxShadow: `0 0 10px ${student.statusColor}` // Neon glow
+                      }}
+                    ></div>
+                  </div>
+                  <span className={styles.studentProgressText}>{student.progress}%</span>
+                </div>
+
+                <div className={styles.studentStatus} style={{ color: student.statusColor }}>
+                  {student.status}
                 </div>
               </div>
             ))}
@@ -286,3 +323,4 @@ export default function Dashboard() {
     </div>
   );
 }
+

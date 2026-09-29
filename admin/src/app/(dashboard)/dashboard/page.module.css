@@ -284,6 +284,81 @@
   color: var(--text-muted);
 }
 
+.scheduleCard {
+  padding: 24px;
+}
+
+.scheduleHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.scheduleList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.scheduleItem {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.scheduleItem:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.scheduleTime {
+  width: 120px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.scheduleInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.scheduleSubject {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.scheduleGroup {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.scheduleIconBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--bg-secondary);
+  box-shadow: 2px 2px 4px rgba(0,0,0,0.3), -2px -2px 4px rgba(255,255,255,0.02);
+  color: var(--text-muted);
+  text-decoration: none;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.scheduleIconBtn:hover {
+  color: var(--primary);
+  box-shadow: inset 1px 1px 3px rgba(0,0,0,0.4), inset -1px -1px 3px rgba(255,255,255,0.02);
+}
+
 @media (max-width: 768px) {
   .studentRow {
     flex-direction: column;

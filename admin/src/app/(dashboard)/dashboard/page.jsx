@@ -21,6 +21,7 @@ export default function Dashboard() {
   const [weekData, setWeekData] = useState([]);
   const [monthData, setMonthData] = useState([]);
   const [activities, setActivities] = useState([]);
+  const [recentLessons, setRecentLessons] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -103,7 +104,15 @@ export default function Dashboard() {
           }
         }
         setActivities(topStudents.sort((a,b) => b.progress - a.progress));
-        // ... (Charts logic continues)
+
+        // 2. Yana bir qulaylik: Eng so'nggi / Kelgusi darslar jadvali (Upcoming Classes)
+        const { data: recentLessonsData } = await supabase.from('lessons')
+          .select('id, title, lesson_date, lesson_type, groups(name)')
+          .order('lesson_date', { ascending: false })
+          .limit(4);
+          
+        setRecentLessons(recentLessonsData || []);
+
         // CHARTS DATA CALCULATION
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
@@ -278,6 +287,36 @@ export default function Dashboard() {
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+
+          <div className={`card ${styles.scheduleCard}`}>
+            <div className={styles.scheduleHeader}>
+              <h3 className={styles.sectionTitle} style={{ margin: 0 }}>Eng So'nggi Darslar</h3>
+              <span className="badge badge-primary">Yangi</span>
+            </div>
+            <div className={styles.scheduleList}>
+              {recentLessons.map((lesson) => {
+                // Soddalashtirilgan vaqtni ajratib olish: Masalan "Tasviriy san'at (09:00 - 13:00)"
+                const match = lesson.title.match(/\(([^)]+)\)$/);
+                const timeStr = match ? match[1] : lesson.lesson_date;
+                const subjectName = lesson.title.replace(/\([^)]+\)$/, '').trim();
+                
+                return (
+                  <div key={lesson.id} className={styles.scheduleItem}>
+                    <div className={styles.scheduleTime}>{timeStr}</div>
+                    <div className={styles.scheduleInfo}>
+                      <span className={styles.scheduleSubject}>{subjectName}</span>
+                      <span className={styles.scheduleGroup}>{lesson.groups?.name || 'Guruh'}</span>
+                    </div>
+                    <div className={styles.scheduleAction}>
+                      <Link href={`/lessons?date=${lesson.lesson_date}`} className={styles.scheduleIconBtn}>
+                        &gt;
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>

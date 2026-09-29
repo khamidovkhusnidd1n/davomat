@@ -2,14 +2,16 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const tg_id = searchParams.get('tg_id');
+    const name = searchParams.get('name') || 'User';
+    const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=25262B&color=F8F9FA`;
     
     if (!tg_id) {
-      return new Response('Missing tg_id', { status: 400 });
+      return Response.redirect(fallbackAvatar, 302);
     }
 
-    const token = process.env.TELEGRAM_BOT_TOKEN;
+    const token = process.env.TELEGRAM_BOT_TOKEN || process.env.BOT_TOKEN;
     if (!token) {
-      return new Response('No bot token', { status: 500 });
+      return Response.redirect(fallbackAvatar, 302);
     }
 
     // 1. Get user profile photos
@@ -17,7 +19,7 @@ export async function GET(request) {
     const photosData = await photosRes.json();
 
     if (!photosData.ok || photosData.result.total_count === 0) {
-      return new Response('No photo', { status: 404 });
+      return Response.redirect(fallbackAvatar, 302);
     }
 
     // Get the highest resolution of the first photo
@@ -29,7 +31,7 @@ export async function GET(request) {
     const fileData = await fileRes.json();
 
     if (!fileData.ok) {
-      return new Response('Could not get file path', { status: 404 });
+      return Response.redirect(fallbackAvatar, 302);
     }
 
     const filePath = fileData.result.file_path;
@@ -38,6 +40,6 @@ export async function GET(request) {
     // Redirect directly to the photo URL so it can be used in <img src="..." />
     return Response.redirect(photoUrl, 302);
   } catch (error) {
-    return new Response(error.message, { status: 500 });
+    return Response.redirect(fallbackAvatar, 302);
   }
 }

@@ -217,3 +217,28 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 768px) {
+  .studentRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .studentInfo {
+    width: 100%;
+  }
+  .studentProgressWrapper {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .studentProgressBar {
+    flex: 1;
+    margin-right: 12px;
+  }
+  .studentStatus {
+    text-align: left;
+  }
+  .studentListHeader {
+    display: none; /* Hide header on mobile, too cramped */
+  }
+}

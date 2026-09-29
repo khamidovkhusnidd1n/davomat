@@ -31,7 +31,7 @@ export default function Dashboard() {
         const { count: studentCount } = await supabase.from('students').select('*', { count: 'exact', head: true });
         
         // Fetch teachers count
-        const { count: teacherCount } = await supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'teacher');
+        const { count: teacherCount } = await supabase.from('teachers').select('*', { count: 'exact', head: true });
         
         // Fetch groups count
         const { count: groupCount } = await supabase.from('groups').select('*', { count: 'exact', head: true });
@@ -289,9 +289,9 @@ export default function Dashboard() {
                 <div className={styles.studentInfo}>
                   <div className={styles.studentAvatar}>
                     {student.tg_id ? (
-                      <img src={`/api/tg-photo?tg_id=${student.tg_id}`} alt={student.name} />
+                      <img src={`/api/tg-photo?tg_id=${student.tg_id}&name=${encodeURIComponent(student.name)}`} alt={student.name} />
                     ) : (
-                      <div className={styles.avatarFallback}>{student.name.charAt(0)}</div>
+                      <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=25262B&color=F8F9FA`} alt={student.name} />
                     )}
                   </div>
                   <span className={styles.studentName}>{student.name}</span>

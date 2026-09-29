@@ -443,11 +443,11 @@ export default function LessonsPage() {
                                   fontSize: '0.68rem', 
                                   padding: '1px 5px', 
                                   borderRadius: '3px', 
-                                  background: lesson.lesson_type === 'theory' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(16, 185, 129, 0.15)', 
-                                  color: lesson.lesson_type === 'theory' ? '#3b82f6' : '#10b981',
+                                  background: lesson.lesson_type === 'theory' ? 'rgba(59, 130, 246, 0.15)' : lesson.lesson_type === 'field' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.15)', 
+                                  color: lesson.lesson_type === 'theory' ? '#3b82f6' : lesson.lesson_type === 'field' ? '#d97706' : '#10b981',
                                   fontWeight: '600'
                                 }}>
-                                  {lesson.lesson_type === 'theory' ? 'Nazariy' : 'Amaliy'}
+                                  {lesson.lesson_type === 'theory' ? 'Nazariy' : lesson.lesson_type === 'field' ? "Ko'chma dars" : 'Amaliy'}
                                 </span>
                               </div>
                             )}
@@ -569,8 +569,9 @@ export default function LessonsPage() {
                 onChange={(e) => setFormData({...formData, lesson_type: e.target.value})}
                 required
               >
-                <option value="practice">Amaliy (Practice)</option>
-                <option value="theory">Nazariy (Theory)</option>
+                <option value="practice">Amaliy</option>
+                <option value="theory">Nazariy</option>
+                <option value="field">Ko'chma dars</option>
               </select>
             </div>
           </div>
@@ -741,8 +742,9 @@ export default function LessonsPage() {
                 onChange={(e) => setEditFormData({...editFormData, lesson_type: e.target.value})}
                 required
               >
-                <option value="practice">Amaliy (Practice)</option>
-                <option value="theory">Nazariy (Theory)</option>
+                <option value="practice">Amaliy</option>
+                <option value="theory">Nazariy</option>
+                <option value="field">Ko'chma dars</option>
               </select>
             </div>
           </div>

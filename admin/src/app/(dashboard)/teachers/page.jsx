@@ -100,9 +100,9 @@ export default function TeachersPage() {
               return sum + (totalMinutes > 0 ? lessonHours : 2);
             }, 0);
 
-          // Calculate dynamic practice hours
+          // Calculate dynamic practice hours (amaliy + ko'chma dars)
           const dynamicPractice = subPastLessons
-            .filter(l => l.lesson_type === 'practice')
+            .filter(l => l.lesson_type === 'practice' || l.lesson_type === 'field')
             .reduce((sum, l) => {
               const start = l.start_time || '09:00';
               const end = l.end_time || '13:00';

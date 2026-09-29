@@ -26,6 +26,11 @@
   justify-content: center;
 }
 
+[data-theme='dark'] .statIconWrapper {
+  box-shadow: 3px 3px 6px rgba(0,0,0,0.4), -3px -3px 6px rgba(255,255,255,0.03);
+  background: var(--bg-secondary) !important;
+}
+
 .statInfo {
   display: flex;
   flex-direction: column;

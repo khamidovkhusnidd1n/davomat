@@ -78,6 +78,89 @@
   --gradient-success: linear-gradient(135deg, #00E676, #1DB954);
 }
 
+/* Global Neumorphism Overrides for Dark Mode */
+[data-theme='dark'] .input, 
+[data-theme='dark'] .select, 
+[data-theme='dark'] .textarea {
+  background: var(--bg-secondary);
+  border: none;
+  box-shadow: inset 3px 3px 6px rgba(0,0,0,0.4), inset -3px -3px 6px rgba(255,255,255,0.02);
+  color: var(--text-primary);
+}
+
+[data-theme='dark'] .input:focus, 
+[data-theme='dark'] .select:focus, 
+[data-theme='dark'] .textarea:focus {
+  box-shadow: inset 4px 4px 8px rgba(0,0,0,0.5), inset -4px -4px 8px rgba(255,255,255,0.03), 0 0 0 1px var(--primary);
+}
+
+[data-theme='dark'] .btn-secondary {
+  background: var(--bg-secondary);
+  border: none;
+  box-shadow: 3px 3px 6px rgba(0,0,0,0.4), -3px -3px 6px rgba(255,255,255,0.03);
+  color: var(--text-primary);
+}
+
+[data-theme='dark'] .btn-secondary:active {
+  box-shadow: inset 2px 2px 5px rgba(0,0,0,0.4), inset -2px -2px 5px rgba(255,255,255,0.02);
+  transform: scale(0.98);
+}
+
+[data-theme='dark'] .table-wrapper {
+  background: var(--bg-card);
+  border: none;
+  box-shadow: var(--shadow);
+}
+
+[data-theme='dark'] thead {
+  background: var(--bg-secondary);
+  box-shadow: inset 2px 2px 4px rgba(0,0,0,0.2);
+}
+
+[data-theme='dark'] th {
+  border-bottom: none;
+  color: var(--text-muted);
+}
+
+[data-theme='dark'] td {
+  border-bottom: 1px solid var(--border);
+}
+
+[data-theme='dark'] tr:hover {
+  background: var(--bg-secondary);
+  box-shadow: inset 2px 0 5px rgba(0,0,0,0.2);
+}
+
+[data-theme='dark'] .card {
+  border: none;
+}
+
+[data-theme='dark'] .btn-primary {
+  box-shadow: 3px 3px 8px rgba(0,0,0,0.5), -2px -2px 6px rgba(255,255,255,0.03), 0 0 10px rgba(0, 210, 255, 0.3);
+  border: none;
+}
+
+[data-theme='dark'] .btn-primary:active {
+  box-shadow: inset 2px 2px 5px rgba(0,0,0,0.5);
+  transform: scale(0.98);
+}
+
+[data-theme='dark'] .btn-icon {
+  background: var(--bg-secondary);
+  box-shadow: 3px 3px 6px rgba(0,0,0,0.4), -3px -3px 6px rgba(255,255,255,0.03);
+}
+
+[data-theme='dark'] .btn-icon:hover {
+  box-shadow: inset 2px 2px 5px rgba(0,0,0,0.4), inset -2px -2px 5px rgba(255,255,255,0.02);
+  color: var(--primary);
+  background: var(--bg-primary);
+}
+
+[data-theme='dark'] .badge {
+  background: var(--bg-secondary);
+  box-shadow: inset 2px 2px 4px rgba(0,0,0,0.3), inset -2px -2px 4px rgba(255,255,255,0.02);
+}
+
 * {
   margin: 0;
   padding: 0;

@@ -101,6 +101,12 @@
   font-weight: 600;
 }
 
+[data-theme='dark'] .active {
+  background: var(--bg-primary);
+  box-shadow: inset 2px 2px 5px rgba(0,0,0,0.4), inset -2px -2px 5px rgba(255,255,255,0.02);
+  border: none;
+}
+
 .active .icon {
   color: var(--primary);
 }
@@ -130,6 +136,11 @@
   justify-content: center;
   font-weight: 600;
   border: 1px solid var(--border);
+}
+
+[data-theme='dark'] .avatar {
+  border: none;
+  box-shadow: 2px 2px 5px rgba(0,0,0,0.4), -2px -2px 5px rgba(255,255,255,0.03);
 }
 
 .userDetails {

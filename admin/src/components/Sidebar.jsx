@@ -49,7 +49,7 @@ const ROLE_LABELS = {
   student: 'Tinglovchi'
 };
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose }) {
   const pathname = usePathname();
   const router = useRouter();
   const { role, loading, user } = useUserRole();
@@ -101,7 +101,7 @@ export default function Sidebar() {
   const avatarLetter = displayName.charAt(0).toUpperCase();
 
   return (
-    <aside className={styles.sidebar}>
+    <aside className={`${styles.sidebar} ${isOpen ? styles.sidebarOpen : ''}`}>
       <div className={styles.logo}>
         <div className={styles.logoIcon}>D</div>
         <span className={styles.logoText}>DAVOMAT</span>

@@ -8,7 +8,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-width: 0; /* Important for flex children to allow truncate */
+  min-width: 0;
 }
 
 .header {
@@ -24,6 +24,27 @@
   position: sticky;
   top: 0;
   z-index: 30;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.hamburger {
+  display: none;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.hamburger:hover {
+  background: var(--bg-secondary);
 }
 
 .pageTitle {
@@ -46,10 +67,31 @@
   animation: fadeIn 0.4s ease;
 }
 
-@media (max-width: 768px) {
+/* Mobile overlay — sidebar orqasidagi qoraygan fon */
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 35;
+  backdrop-filter: blur(2px);
+}
+
+.overlayVisible {
+  display: block;
+}
+
+@media (max-width: 1024px) {
+  .hamburger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   .header {
     padding: 0 16px;
   }
+
   .content {
     padding: 16px;
   }

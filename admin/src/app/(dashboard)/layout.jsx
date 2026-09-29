@@ -4,16 +4,17 @@ import ThemeToggle from '@/components/ThemeToggle';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { Menu, X } from 'lucide-react';
 import styles from './layout.module.css';
 
 export default function DashboardLayout({ children }) {
   const pathname = usePathname();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
-      // Check demo bypass first for MVP testing without DB
       const isDemo = typeof window !== 'undefined' && localStorage.getItem('demo_login');
       if (isDemo) {
         setLoading(false);
@@ -38,8 +39,12 @@ export default function DashboardLayout({ children }) {
 
     return () => subscription.unsubscribe();
   }, [router]);
-  
-  // Format pathname for header title
+
+  // Sahifa o'zgarganda sidebar yopilsin
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [pathname]);
+
   const getPageTitle = () => {
     const path = pathname.split('/')[1];
     switch(path) {
@@ -54,6 +59,7 @@ export default function DashboardLayout({ children }) {
       case 'reports': return 'Hisobotlar';
       case 'settings': return 'Sozlamalar';
       case 'profile': return 'Profil';
+      case 'soc': return 'SOC Desk';
       default: return 'DAVOMAT';
     }
   };
@@ -64,10 +70,25 @@ export default function DashboardLayout({ children }) {
 
   return (
     <div className={styles.layout}>
-      <Sidebar />
+      {/* Sidebar orqasidagi overlay — bossang yopiladi */}
+      <div
+        className={`${styles.overlay} ${sidebarOpen ? styles.overlayVisible : ''}`}
+        onClick={() => setSidebarOpen(false)}
+      />
+
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
       <main className={styles.main}>
         <header className={styles.header}>
           <div className={styles.headerLeft}>
+            {/* Hamburger tugmasi — faqat mobilda ko'rinadi */}
+            <button
+              className={styles.hamburger}
+              onClick={() => setSidebarOpen(prev => !prev)}
+              aria-label="Menyuni ochish"
+            >
+              {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
             <h2 className={styles.pageTitle}>{getPageTitle()}</h2>
           </div>
           <div className={styles.headerRight}>

@@ -36,13 +36,17 @@ export default function Dashboard() {
         // Fetch groups count
         const { count: groupCount } = await supabase.from('groups').select('*', { count: 'exact', head: true });
         
-        // Fetch today's lessons count
-        const { count: lessonsCount } = await supabase.from('lessons').select('*', { count: 'exact', head: true }).eq('lesson_date', today);
+        // Fetch today's lessons count - CHANGED TO THIS MONTH
+        const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+        
+        const { count: lessonsCount } = await supabase.from('lessons')
+          .select('*', { count: 'exact', head: true })
+          .gte('lesson_date', firstDayOfMonth);
 
-        // Fetch attendance for today
+        // Fetch attendance for this month
         const { data: attendanceData } = await supabase.from('attendance')
           .select('status, lessons!inner(lesson_date)')
-          .eq('lessons.lesson_date', today);
+          .gte('lessons.lesson_date', firstDayOfMonth);
 
         let absent = 0;
         let present = 0;
@@ -224,9 +228,9 @@ export default function Dashboard() {
             <CalendarClock size={24} />
           </div>
           <div className={styles.statInfo}>
-            <p className={styles.statTitle}>Bugungi Darslar</p>
+            <p className={styles.statTitle}>Oylik Darslar</p>
             <h3 className={styles.statValue}>{loading ? '...' : stats.lessonsToday}</h3>
-            <span className={styles.statTrend} data-trend="neutral">Rejalashtirilgan</span>
+            <span className={styles.statTrend} data-trend="neutral">Shu oyda</span>
           </div>
         </div>
 
@@ -237,7 +241,7 @@ export default function Dashboard() {
           <div className={styles.statInfo}>
             <p className={styles.statTitle}>Davomat Foizi</p>
             <h3 className={styles.statValue}>{loading ? '...' : `${stats.attendanceRate}%`}</h3>
-            <span className={styles.statTrend} data-trend="neutral">Bugungi ko'rsatkich</span>
+            <span className={styles.statTrend} data-trend="neutral">Shu oy ko'rsatkichi</span>
           </div>
         </div>
 
@@ -248,7 +252,7 @@ export default function Dashboard() {
           <div className={styles.statInfo}>
             <p className={styles.statTitle}>Kelmaganlar</p>
             <h3 className={styles.statValue}>{loading ? '...' : stats.absentToday}</h3>
-            <span className={styles.statTrend} data-trend="down">Bugungi kunda</span>
+            <span className={styles.statTrend} data-trend="down">Shu oyda</span>
           </div>
         </div>
       </div>

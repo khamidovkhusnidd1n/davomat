@@ -148,9 +148,14 @@ export async function DELETE(request) {
     const { id } = await request.json();
     if (!id) return Response.json({ error: 'Missing id' }, { status: 400 });
 
-    // Since auth.users has ON DELETE CASCADE to public.users, deleting auth user will delete everything
-    const { error } = await supabaseAdmin.auth.admin.deleteUser(id);
-    if (error) throw error;
+    // Auth user o'chirish (cascade bilan public.users ham o'chadi)
+    const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(id);
+    
+    if (authError) {
+      // Auth servisi ishlamasa, to'g'ridan public.users dan o'chiramiz
+      const { error: pubError } = await supabaseAdmin.from('users').delete().eq('id', id);
+      if (pubError) throw pubError;
+    }
 
     return Response.json({ success: true });
   } catch (err) {

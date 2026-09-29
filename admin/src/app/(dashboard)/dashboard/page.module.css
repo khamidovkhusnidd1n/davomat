@@ -148,6 +148,7 @@
 .studentAvatar {
   width: 36px;
   height: 36px;
+  flex-shrink: 0;
   border-radius: 50%;
   overflow: hidden;
   background: var(--bg-primary);

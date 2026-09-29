@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Users, GraduationCap, BookOpen, CalendarClock, TrendingUp, UserMinus } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { supabase } from '@/lib/supabase';
+import Link from 'next/link';
 import styles from './page.module.css';
 
 // Chart state will be populated dynamically from the database
@@ -323,7 +324,9 @@ export default function Dashboard() {
               </div>
             ))}
           </div>
-          <button className={`btn btn-secondary ${styles.viewAllBtn}`}>Barchasini ko'rish</button>
+          <Link href="/users" className={`btn btn-secondary ${styles.viewAllBtn}`} style={{ textDecoration: 'none', textAlign: 'center' }}>
+            Barchasini ko'rish
+          </Link>
         </div>
       </div>
     </div>

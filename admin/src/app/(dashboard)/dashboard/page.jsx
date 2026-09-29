@@ -263,18 +263,20 @@ export default function Dashboard() {
           <div className={`card ${styles.chartCard}`}>
             <h3 className={styles.sectionTitle}>Haftalik Davomat K'orsatkichi</h3>
             <div className={styles.chartWrapper}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={weekData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)' }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)' }} domain={[0, 100]} />
-                  <Tooltip 
-                    cursor={{ fill: 'var(--bg-secondary)' }}
-                    contentStyle={{ borderRadius: '12px', border: '1px solid var(--border)', boxShadow: 'var(--shadow-lg)', background: 'var(--bg-card)' }} 
-                  />
-                  <Bar dataKey="foiz" fill="var(--primary)" radius={[6, 6, 0, 0]} maxBarSize={45} />
-                </BarChart>
-              </ResponsiveContainer>
+              <div className={styles.neumorphicChartContainer}>
+                {weekData.map((data, index) => (
+                  <div key={index} className={styles.chartColumn}>
+                    <div className={styles.neumorphicTrack}>
+                      <div 
+                        className={styles.neumorphicBar} 
+                        style={{ height: `${data.foiz}%` }}
+                        data-value={data.foiz}
+                      ></div>
+                    </div>
+                    <span className={styles.chartLabel}>{data.name}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>

@@ -24,6 +24,9 @@ export default function Dashboard() {
   const [recentLessons, setRecentLessons] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // today - render da ham kerak (kelgusi darslar "Bugun" belgisi uchun)
+  const today = new Date().toISOString().split('T')[0];
+
   useEffect(() => {
     async function fetchStats() {
       try {
@@ -105,13 +108,24 @@ export default function Dashboard() {
         }
         setActivities(topStudents.sort((a,b) => b.progress - a.progress));
 
-        // 2. Yana bir qulaylik: Eng so'nggi / Kelgusi darslar jadvali (Upcoming Classes)
-        const { data: recentLessonsData } = await supabase.from('lessons')
+        // 2. Upcoming lessons - kelgusi darslar (bugun va undan keyin)
+        const { data: upcomingLessonsData } = await supabase.from('lessons')
           .select('id, title, lesson_date, lesson_type, groups(name)')
-          .order('lesson_date', { ascending: false })
-          .limit(4);
+          .gte('lesson_date', today)
+          .order('lesson_date', { ascending: true })
+          .limit(5);
           
-        setRecentLessons(recentLessonsData || []);
+        // Agar kelgusi dars bo'lmasa, oxirgi o'tilgan darslarni ko'rsat
+        if (upcomingLessonsData && upcomingLessonsData.length > 0) {
+          setRecentLessons(upcomingLessonsData);
+        } else {
+          const { data: pastLessonsData } = await supabase.from('lessons')
+            .select('id, title, lesson_date, lesson_type, groups(name)')
+            .lt('lesson_date', today)
+            .order('lesson_date', { ascending: false })
+            .limit(5);
+          setRecentLessons(pastLessonsData || []);
+        }
 
         // CHARTS DATA CALCULATION
         const thirtyDaysAgo = new Date();
@@ -292,27 +306,38 @@ export default function Dashboard() {
 
           <div className={`card ${styles.scheduleCard}`}>
             <div className={styles.scheduleHeader}>
-              <h3 className={styles.sectionTitle} style={{ margin: 0 }}>Eng So'nggi Darslar</h3>
-              <span className="badge badge-primary">Yangi</span>
+              <h3 className={styles.sectionTitle} style={{ margin: 0 }}>Kelgusi Darslar</h3>
+              <Link href="/lessons" className="badge badge-primary" style={{ textDecoration: 'none' }}>Hammasi →</Link>
             </div>
             <div className={styles.scheduleList}>
-              {recentLessons.map((lesson) => {
-                // Soddalashtirilgan vaqtni ajratib olish: Masalan "Tasviriy san'at (09:00 - 13:00)"
+              {recentLessons.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-muted)' }}>
+                  Kelgusi darslar mavjud emas
+                </div>
+              ) : recentLessons.map((lesson) => {
                 const match = lesson.title.match(/\(([^)]+)\)$/);
-                const timeStr = match ? match[1] : lesson.lesson_date;
+                const timeStr = match ? match[1] : '';
                 const subjectName = lesson.title.replace(/\([^)]+\)$/, '').trim();
+                
+                // sana format: 29.09 (Dush)
+                const d = new Date(lesson.lesson_date);
+                const days = ['Yak', 'Dush', 'Sesh', 'Chor', 'Pay', 'Jum', 'Shan'];
+                const dateLabel = `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')} (${days[d.getDay()]})`;
+                
+                const isToday = lesson.lesson_date === today;
                 
                 return (
                   <div key={lesson.id} className={styles.scheduleItem}>
-                    <div className={styles.scheduleTime}>{timeStr}</div>
+                    <div className={styles.scheduleTime} style={isToday ? { color: 'var(--primary)', fontWeight: '700' } : {}}>
+                      {isToday ? '🟢 Bugun' : dateLabel}
+                      {timeStr && <div style={{ fontSize: '11px', opacity: 0.7 }}>{timeStr}</div>}
+                    </div>
                     <div className={styles.scheduleInfo}>
                       <span className={styles.scheduleSubject}>{subjectName}</span>
                       <span className={styles.scheduleGroup}>{lesson.groups?.name || 'Guruh'}</span>
                     </div>
                     <div className={styles.scheduleAction}>
-                      <Link href={`/lessons?date=${lesson.lesson_date}`} className={styles.scheduleIconBtn}>
-                        &gt;
-                      </Link>
+                      <Link href={`/lessons?date=${lesson.lesson_date}`} className={styles.scheduleIconBtn}>›</Link>
                     </div>
                   </div>
                 );

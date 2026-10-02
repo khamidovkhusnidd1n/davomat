@@ -53,6 +53,8 @@ export default function SchedulesPage() {
   useEffect(() => {
     if (selectedGroupId) {
       fetchWeeklyLessons();
+    } else {
+      setWeeklyLessons([]);
     }
   }, [selectedGroupId, currentDate]);
 
@@ -321,16 +323,17 @@ export default function SchedulesPage() {
             onChange={(e) => {
               const val = e.target.value;
               setEducationType(val);
-              // Filter groups and pick first
+              // Ta'lim turi o'zgarganda shu turga mos birinchi guruhni tanlash
               const filtered = groups.filter(g => {
                 const nameMatch = g.name?.toLowerCase().includes(search.toLowerCase()) || g.course_name?.toLowerCase().includes(search.toLowerCase());
                 const typeMatch = !val || g.education_type === val;
                 return nameMatch && typeMatch;
               });
               if (filtered.length > 0) {
-                setSelectedGroupId(filtered[0].id);
+                setSelectedGroupId(filtered[0].id); // Bu fetchWeeklyLessons ni trigger qiladi
               } else {
-                setSelectedGroupId('');
+                setSelectedGroupId(''); // Bu weeklyLessons ni tozalaydi
+                setWeeklyLessons([]);
               }
             }}
           >

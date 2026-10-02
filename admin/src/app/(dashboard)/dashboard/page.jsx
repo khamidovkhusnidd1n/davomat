@@ -306,38 +306,49 @@ export default function Dashboard() {
 
           <div className={`card ${styles.scheduleCard}`}>
             <div className={styles.scheduleHeader}>
-              <h3 className={styles.sectionTitle} style={{ margin: 0 }}>Kelgusi Darslar</h3>
+              <h3 className={styles.sectionTitle} style={{ margin: 0 }}>📅 Kelgusi Darslar</h3>
               <Link href="/lessons" className="badge badge-primary" style={{ textDecoration: 'none' }}>Hammasi →</Link>
             </div>
             <div className={styles.scheduleList}>
               {recentLessons.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-muted)' }}>
-                  Kelgusi darslar mavjud emas
+                <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-muted)', fontSize: '13px' }}>
+                  📭 Kelgusi darslar mavjud emas
                 </div>
               ) : recentLessons.map((lesson) => {
-                const match = lesson.title.match(/\(([^)]+)\)$/);
-                const timeStr = match ? match[1] : '';
-                const subjectName = lesson.title.replace(/\([^)]+\)$/, '').trim();
+                // 2 xil format: "09:00-13:00 | Fan nomi" yoki "Fan nomi (09:00 - 13:00)"
+                let timeStr = '';
+                let subjectName = lesson.title || '';
                 
-                // sana format: 29.09 (Dush)
-                const d = new Date(lesson.lesson_date);
+                const pipeMatch = lesson.title.match(/^(\d{2}:\d{2})-(\d{2}:\d{2})\s*\|\s*(.+)$/);
+                const parenMatch = lesson.title.match(/^(.+?)\s*\((\d{2}:\d{2}\s*-\s*\d{2}:\d{2})\)$/);
+                
+                if (pipeMatch) {
+                  timeStr = `${pipeMatch[1]}-${pipeMatch[2]}`;
+                  subjectName = pipeMatch[3].trim();
+                } else if (parenMatch) {
+                  subjectName = parenMatch[1].trim();
+                  timeStr = parenMatch[2];
+                }
+                
+                // Timezone-safe sana
+                const [yr, mo, dy] = lesson.lesson_date.split('-');
+                const d = new Date(parseInt(yr), parseInt(mo)-1, parseInt(dy));
                 const days = ['Yak', 'Dush', 'Sesh', 'Chor', 'Pay', 'Jum', 'Shan'];
-                const dateLabel = `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')} (${days[d.getDay()]})`;
-                
+                const dateLabel = `${dy}.${mo} (${days[d.getDay()]})`;
                 const isToday = lesson.lesson_date === today;
                 
                 return (
                   <div key={lesson.id} className={styles.scheduleItem}>
                     <div className={styles.scheduleTime} style={isToday ? { color: 'var(--primary)', fontWeight: '700' } : {}}>
                       {isToday ? '🟢 Bugun' : dateLabel}
-                      {timeStr && <div style={{ fontSize: '11px', opacity: 0.7 }}>{timeStr}</div>}
+                      {timeStr && <div style={{ fontSize: '11px', opacity: 0.7, marginTop: '2px' }}>{timeStr}</div>}
                     </div>
                     <div className={styles.scheduleInfo}>
-                      <span className={styles.scheduleSubject}>{subjectName}</span>
-                      <span className={styles.scheduleGroup}>{lesson.groups?.name || 'Guruh'}</span>
+                      <span className={styles.scheduleSubject}>{subjectName || 'Mavzusiz'}</span>
+                      <span className={styles.scheduleGroup}>📚 {lesson.groups?.name || '—'}</span>
                     </div>
                     <div className={styles.scheduleAction}>
-                      <Link href={`/lessons?date=${lesson.lesson_date}`} className={styles.scheduleIconBtn}>›</Link>
+                      <Link href={`/attendance?date=${lesson.lesson_date}`} className={styles.scheduleIconBtn}>›</Link>
                     </div>
                   </div>
                 );

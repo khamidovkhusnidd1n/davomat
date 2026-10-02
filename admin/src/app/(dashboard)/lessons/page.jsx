@@ -19,6 +19,7 @@ export default function LessonsPage() {
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showImport, setShowImport] = useState(false);
+  const [activeTab, setActiveTab] = useState('active');
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
   const [userRole, setUserRole] = useState(null);
@@ -132,7 +133,7 @@ export default function LessonsPage() {
   }
 
   async function fetchGroups() {
-    const { data } = await supabase.from('groups').select('id, name, education_type').eq('status', 'active').order('name');
+    const { data } = await supabase.from('groups').select('id, name, education_type, status').order('name');
     if (data) setGroups(data);
   }
 
@@ -158,7 +159,7 @@ export default function LessonsPage() {
           teacher_id,
           subject_id,
           lesson_type,
-          groups ( name, course_name, education_type ),
+          groups ( name, course_name, education_type, status ),
           users!lessons_created_by_fkey ( full_name ),
           teachers ( full_name ),
           subjects ( name ),
@@ -177,13 +178,16 @@ export default function LessonsPage() {
   const isWriteEnabled = userRole === 'sysadmin' || userRole === 'admin' || userRole === 'academic';
 
   const filteredLessons = lessons.filter(l => {
+    const isArchived = l.groups?.status === 'archived';
+    const matchesTab = activeTab === 'archived' ? isArchived : !isArchived;
+
     const matchesSearch = 
       l.title?.toLowerCase().includes(search.toLowerCase()) || 
       l.groups?.name?.toLowerCase().includes(search.toLowerCase()) ||
       l.subjects?.name?.toLowerCase().includes(search.toLowerCase()) ||
       l.teachers?.full_name?.toLowerCase().includes(search.toLowerCase());
     const matchesGroup = selectedGroup === 'all' || l.group_id === selectedGroup;
-    return matchesSearch && matchesGroup;
+    return matchesTab && matchesSearch && matchesGroup;
   });
   const parseLessonTitle = (rawTitle, scheduleId, schedulesList) => {
     let startTime = '09:00';
@@ -357,7 +361,25 @@ export default function LessonsPage() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1>Darslar jadvali</h1>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <h1>Darslar jadvali</h1>
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+            <button 
+              className={`btn ${activeTab === 'active' ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setActiveTab('active')}
+              style={{ padding: '6px 12px', fontSize: '14px' }}
+            >
+              Faol guruhlar
+            </button>
+            <button 
+              className={`btn ${activeTab === 'archived' ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setActiveTab('archived')}
+              style={{ padding: '6px 12px', fontSize: '14px' }}
+            >
+              Arxivlangan guruhlar
+            </button>
+          </div>
+        </div>
 
       
         <div className={styles.controls}>
@@ -376,7 +398,7 @@ export default function LessonsPage() {
             onChange={(e) => setSelectedGroup(e.target.value)}
           >
             <option value="all">Barcha guruhlar</option>
-            {groups.map(g => (
+            {groups.filter(g => activeTab === 'archived' ? g.status === 'archived' : g.status !== 'archived').map(g => (
               <option key={g.id} value={g.id}>{g.name}</option>
             ))}
           </select>
@@ -521,7 +543,7 @@ export default function LessonsPage() {
               required
             >
               <option value="">Guruhni tanlang</option>
-              {groups.map(g => (
+              {groups.filter(g => g.status !== 'archived').map(g => (
                 <option key={g.id} value={g.id}>{g.name}</option>
               ))}
             </select>
@@ -694,7 +716,7 @@ export default function LessonsPage() {
               required
             >
               <option value="">Guruhni tanlang</option>
-              {groups.map(g => (
+              {groups.filter(g => g.status !== 'archived' || g.id === editFormData.group_id).map(g => (
                 <option key={g.id} value={g.id}>{g.name}</option>
               ))}
             </select>

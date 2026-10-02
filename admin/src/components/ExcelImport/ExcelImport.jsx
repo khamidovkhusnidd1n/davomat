@@ -9,8 +9,7 @@ import styles from './ExcelImport.module.css';
 const REQUIRED_COLS = ['full_name'];
 const COL_LABELS = {
   full_name: 'F.I.Sh (majburiy)',
-  phone: 'Telefon',
-  email: 'Email',
+  phone: 'Telefon raqami',
 };
 
 export default function ExcelImport({ isOpen, onClose, groups, organizationId, onSuccess }) {
@@ -77,7 +76,6 @@ export default function ExcelImport({ isOpen, onClose, groups, organizationId, o
             smartResult.push({
               full_name: firstCol,
               phone: String(row[1] || '').trim(),
-              email: String(row[2] || '').trim(),
             });
           }
         }
@@ -136,9 +134,9 @@ export default function ExcelImport({ isOpen, onClose, groups, organizationId, o
 
   const downloadTemplate = () => {
     const ws = XLSX.utils.aoa_to_sheet([
-      ['full_name', 'phone', 'email'],
-      ['Ali Valiyev', '+998901234567', 'ali@example.com'],
-      ['Gulnora Karimova', '+998901234568', ''],
+      ['full_name', 'phone'],
+      ['Ali Valiyev', '+998901234567'],
+      ['Gulnora Karimova', '+998901234568'],
     ]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'O\'quvchilar');
@@ -237,7 +235,7 @@ export default function ExcelImport({ isOpen, onClose, groups, organizationId, o
                       <th>#</th>
                       <th>F.I.Sh</th>
                       <th>Telefon</th>
-                      <th>Email</th>
+                      <th>Login/Email</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -246,7 +244,7 @@ export default function ExcelImport({ isOpen, onClose, groups, organizationId, o
                         <td>{i + 1}</td>
                         <td>{row.full_name || <span className={styles.missing}>—</span>}</td>
                         <td>{row.phone || <span className={styles.missing}>—</span>}</td>
-                        <td>{row.email || <span className={styles.missing}>—</span>}</td>
+                        <td><span style={{ fontSize: '12px', color: 'var(--primary)', background: 'var(--primary-light)', padding: '2px 6px', borderRadius: '4px' }}>Avto-yaratiladi</span></td>
                       </tr>
                     ))}
                     {parsedData.length > 10 && (

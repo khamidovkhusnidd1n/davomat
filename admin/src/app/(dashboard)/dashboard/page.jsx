@@ -115,17 +115,8 @@ export default function Dashboard() {
           .order('lesson_date', { ascending: true })
           .limit(5);
           
-        // Agar kelgusi dars bo'lmasa, oxirgi o'tilgan darslarni ko'rsat
-        if (upcomingLessonsData && upcomingLessonsData.length > 0) {
-          setRecentLessons(upcomingLessonsData);
-        } else {
-          const { data: pastLessonsData } = await supabase.from('lessons')
-            .select('id, title, lesson_date, lesson_type, groups(name)')
-            .lt('lesson_date', today)
-            .order('lesson_date', { ascending: false })
-            .limit(5);
-          setRecentLessons(pastLessonsData || []);
-        }
+        // Faqat kelgusi darslar
+        setRecentLessons(upcomingLessonsData || []);
 
         // CHARTS DATA CALCULATION
         const thirtyDaysAgo = new Date();

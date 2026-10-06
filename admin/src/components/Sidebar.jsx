@@ -17,7 +17,8 @@ import {
   User, 
   LogOut,
   UserCheck,
-  Shield
+  Shield,
+  TrendingUp
 } from 'lucide-react';
 import styles from './Sidebar.module.css';
 
@@ -31,6 +32,7 @@ const menuItems = [
   { name: 'Darslar', path: '/lessons', icon: CalendarClock },
   { name: 'Davomat', path: '/attendance', icon: ClipboardCheck },
   { name: 'Hisobotlar', path: '/reports', icon: BarChart3 },
+  { name: 'Kurs Monitoring', path: '/courses', icon: TrendingUp },
 ];
 
 const bottomItems = [
@@ -80,10 +82,10 @@ export default function Sidebar({ isOpen, onClose }) {
   const filteredMenuItems = menuItems.filter(item => {
     if (loading || !role) return false;
     if (role === 'director') {
-      return ['/dashboard', '/students', '/tutors', '/teachers', '/groups', '/attendance', '/reports'].includes(item.path);
+      return ['/dashboard', '/students', '/tutors', '/teachers', '/groups', '/attendance', '/reports', '/courses'].includes(item.path);
     }
     if (role === 'academic') {
-      return ['/dashboard', '/students', '/tutors', '/teachers', '/groups', '/schedules', '/lessons', '/attendance', '/reports'].includes(item.path);
+      return ['/dashboard', '/students', '/tutors', '/teachers', '/groups', '/schedules', '/lessons', '/attendance', '/reports', '/courses'].includes(item.path);
     }
     return true; // sysadmin and admin can see all
   });

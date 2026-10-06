@@ -11,7 +11,9 @@ export default function DashboardLayout({ children }) {
   const pathname = usePathname();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [showNotification, setShowNotification] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -26,6 +28,13 @@ export default function DashboardLayout({ children }) {
         router.push('/login');
       } else {
         setLoading(false);
+        const { data: user } = await supabase.from('users').select('id, full_name, role').eq('id', session.user.id).single();
+        if (user) {
+          setCurrentUser(user);
+          if (user.full_name?.includes('Guldona') || user.full_name?.includes('Dilnavoz')) {
+            setShowNotification(true);
+          }
+        }
       }
     };
     
@@ -60,6 +69,7 @@ export default function DashboardLayout({ children }) {
       case 'settings': return 'Sozlamalar';
       case 'profile': return 'Profil';
       case 'soc': return 'SOC Desk';
+      case 'courses': return 'Kurs Monitoring';
       default: return 'DAVOMAT';
     }
   };
@@ -95,6 +105,12 @@ export default function DashboardLayout({ children }) {
             <ThemeToggle />
           </div>
         </header>
+        {showNotification && (
+          <div style={{ backgroundColor: '#ffedd5', color: '#9a3412', padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '0 20px 20px', borderRadius: '8px', borderLeft: '4px solid #f97316' }}>
+            <span><strong>Eslatma:</strong> O'zingizga tegishli guruh uchun bugungi davomatni web paneldan kiritishingiz mumkin!</span>
+            <button onClick={() => setShowNotification(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9a3412' }}><X size={18}/></button>
+          </div>
+        )}
         <div className={styles.content}>
           {children}
         </div>

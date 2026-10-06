@@ -1,4 +1,8 @@
-'use client';
+import os
+
+attendance_path = r"admin/src/app/(dashboard)/attendance/page.jsx"
+
+new_attendance_content = """'use client';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Search, Filter, Edit2, Plus, X } from 'lucide-react';
@@ -274,7 +278,7 @@ export default function AttendancePage() {
                             <span className={styles.time}>{dateObj.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })}</span>
                           </div>
                         </td>
-                        <td style={{ fontWeight: 'bold' }}>{record.students?.users?.full_name || 'Noma'lum'}</td>
+                        <td style={{ fontWeight: 'bold' }}>{record.students?.users?.full_name || 'Noma\'lum'}</td>
                         <td>{record.lessons?.groups?.name || '-'}</td>
                         <td>{record.lessons?.title || 'Mavzusiz'}</td>
                         <td>
@@ -386,3 +390,9 @@ export default function AttendancePage() {
     </div>
   );
 }
+"""
+
+with open(attendance_path, 'w', encoding='utf-8') as f:
+    f.write(new_attendance_content)
+
+print("Updated attendance page.")

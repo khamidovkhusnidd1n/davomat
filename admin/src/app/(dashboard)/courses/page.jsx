@@ -177,12 +177,17 @@ export default function CourseMonitorPage() {
                 <BookOpen size={16} />
                 <span>{c.lessonsCount} ta dars o'tildi</span>
               </div>
-              {c.firstLesson && (
+              {(c.start_date && c.end_date) ? (
                 <div className={styles.statItem}>
                   <TrendingUp size={16} />
-                  <span>{c.firstLesson} — {c.lastLesson}</span>
+                  <span>Muddati: {c.start_date} / {c.end_date}</span>
                 </div>
-              )}
+              ) : c.firstLesson ? (
+                <div className={styles.statItem}>
+                  <TrendingUp size={16} />
+                  <span>Darslar davri: {c.firstLesson} dan {c.lastLesson} gacha</span>
+                </div>
+              ) : null}
             </div>
 
             {c.course_name && (

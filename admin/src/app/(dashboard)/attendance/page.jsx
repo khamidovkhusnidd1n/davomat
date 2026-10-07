@@ -274,7 +274,7 @@ export default function AttendancePage() {
                             <span className={styles.time}>{dateObj.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })}</span>
                           </div>
                         </td>
-                        <td style={{ fontWeight: 'bold' }}>{record.students?.users?.full_name || 'Noma'lum'}</td>
+                        <td style={{ fontWeight: 'bold' }}>{record.students?.users?.full_name || "Noma'lum"}</td>
                         <td>{record.lessons?.groups?.name || '-'}</td>
                         <td>{record.lessons?.title || 'Mavzusiz'}</td>
                         <td>

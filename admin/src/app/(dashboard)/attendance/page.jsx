@@ -328,21 +328,22 @@ export default function AttendancePage() {
       </div>
 
       {showNewModal && (
-        <div style={{ position: 'fixed', top:0, left:0, right:0, bottom:0, backgroundColor:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:9999 }}>
-          <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', width: '90%', maxWidth: '600px', maxHeight:'90vh', overflowY:'auto', color:'#000' }}>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'15px' }}>
-              <h2 style={{margin:0}}>Web Davomat Kiritish</h2>
-              <button onClick={() => setShowNewModal(false)} style={{background:'none', border:'none', cursor:'pointer'}}><X/></button>
+        <div className={styles.modalOverlay} onClick={() => setShowNewModal(false)}>
+          <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2>Davomat kiritish</h2>
+              <button className={styles.closeBtn} onClick={() => setShowNewModal(false)}><X size={20}/></button>
             </div>
-            <div style={{ display:'flex', gap:'10px', marginBottom:'15px' }}>
-              <div style={{flex:1}}>
-                <label>Sana:</label>
-                <input type="date" className="input" value={newAttDate} onChange={e=>setNewAttDate(e.target.value)} style={{width:'100%'}}/>
+            
+            <div className={styles.modalFormGroup}>
+              <div className={styles.formField}>
+                <label>Sana</label>
+                <input type="date" className="input" value={newAttDate} onChange={e=>setNewAttDate(e.target.value)} />
               </div>
-              <div style={{flex:1}}>
-                <label>Guruh:</label>
-                <select className="input" value={newAttGroupId} onChange={e=>setNewAttGroupId(e.target.value)} style={{width:'100%'}}>
-                  <option value="">-- Tanlang --</option>
+              <div className={styles.formField}>
+                <label>Guruh</label>
+                <select className="input" value={newAttGroupId} onChange={e=>setNewAttGroupId(e.target.value)}>
+                  <option value="">-- Guruhni tanlang --</option>
                   {allGroups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
                 </select>
               </div>
@@ -350,36 +351,48 @@ export default function AttendancePage() {
 
             {groupStudents.length > 0 && (
               <div>
-                <table className={styles.table} style={{width:'100%', marginBottom:'15px'}}>
-                  <thead>
-                    <tr>
-                      <th>Tinglovchi</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {groupStudents.map(s => (
-                      <tr key={s.id}>
-                        <td>{s.users?.full_name}</td>
-                        <td>
-                          <select className="input" value={newAttData[s.id]?.status || 'present'} 
-                            onChange={(e) => setNewAttData({...newAttData, [s.id]: { ...newAttData[s.id], status: e.target.value }})}>
-                            <option value="present">Kelgan</option>
-                            <option value="absent">Kelmagan</option>
-                            <option value="excused">Sababli</option>
-                            <option value="late">Kech qolgan</option>
-                          </select>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                <button className="btn btn-primary" style={{width:'100%'}} onClick={handleSaveNewAttendance} disabled={isSaving}>
-                  {isSaving ? 'Saqlanmoqda...' : 'Saqlash'}
+                <div style={{ marginBottom: '16px' }}>
+                  {groupStudents.map(s => {
+                    const status = newAttData[s.id]?.status || 'present';
+                    return (
+                      <div key={s.id} className={styles.studentRow}>
+                        <div className={styles.studentName}>{s.users?.full_name}</div>
+                        <div className={styles.statusGroup}>
+                          <button 
+                            className={`${styles.statusBtn} ${status === 'present' ? styles.statusPresent : ''}`}
+                            onClick={() => setNewAttData({...newAttData, [s.id]: { ...newAttData[s.id], status: 'present' }})}
+                          >
+                            Kelgan
+                          </button>
+                          <button 
+                            className={`${styles.statusBtn} ${status === 'absent' ? styles.statusAbsent : ''}`}
+                            onClick={() => setNewAttData({...newAttData, [s.id]: { ...newAttData[s.id], status: 'absent' }})}
+                          >
+                            Kelmagan
+                          </button>
+                          <button 
+                            className={`${styles.statusBtn} ${status === 'excused' ? styles.statusExcused : ''}`}
+                            onClick={() => setNewAttData({...newAttData, [s.id]: { ...newAttData[s.id], status: 'excused' }})}
+                          >
+                            Sababli
+                          </button>
+                          <button 
+                            className={`${styles.statusBtn} ${status === 'late' ? styles.statusLate : ''}`}
+                            onClick={() => setNewAttData({...newAttData, [s.id]: { ...newAttData[s.id], status: 'late' }})}
+                          >
+                            Kech qoldi
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <button className={`btn btn-primary ${styles.saveBtn}`} onClick={handleSaveNewAttendance} disabled={isSaving}>
+                  {isSaving ? 'Saqlanmoqda...' : 'Davomatni saqlash'}
                 </button>
               </div>
             )}
-            {!newAttGroupId && <p style={{color:'#666'}}>Guruhni tanlang.</p>}
+            {!newAttGroupId && <p style={{color:'var(--text-muted)', textAlign:'center', padding:'20px 0'}}>Guruhni tanlang, shunda o'quvchilar ro'yxati chiqadi.</p>}
           </div>
         </div>
       )}

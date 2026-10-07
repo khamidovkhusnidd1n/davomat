@@ -38,10 +38,10 @@ export default function CourseMonitorPage() {
       const gLessons = lessons.filter(l => l.group_id === g.id);
       const gStudents = students.filter(s => s.group_id === g.id);
 
-      const completedHours = gLessons.length * 6; // Har bir dars = 6 soat
+      let completedHours = gLessons.length * 6; // Har bir dars = 6 soat
       const totalHours = g.total_hours || 0;
-      const progressPercent = totalHours > 0 ? Math.min(Math.round((completedHours / totalHours) * 100), 100) : 0;
-      const remainingHours = Math.max(totalHours - completedHours, 0);
+      let progressPercent = totalHours > 0 ? Math.min(Math.round((completedHours / totalHours) * 100), 100) : 0;
+      let remainingHours = Math.max(totalHours - completedHours, 0);
 
       // Birinchi va oxirgi dars sanasi
       const firstLesson = gLessons.length > 0 ? gLessons[0].lesson_date : null;
@@ -52,6 +52,9 @@ export default function CourseMonitorPage() {
       if (g.status === 'archived') {
         statusLabel = 'Yakunlangan';
         statusColor = '#6b7280';
+        progressPercent = 100;
+        completedHours = totalHours;
+        remainingHours = 0;
       } else if (progressPercent >= 90) {
         statusLabel = 'Tugash arafasida';
         statusColor = '#f59e0b';

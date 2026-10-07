@@ -286,7 +286,18 @@ export default function AttendancePage() {
                               <option value="late">Kech qolgan</option>
                             </select>
                           ) : (
-                            <span className={`${styles.statusBadge} ${styles[record.status] || ''}`}>
+                            <span 
+                              className={`${styles.statusBadge} ${styles[record.status] || ''}`}
+                              style={{ cursor: (userRole === 'sysadmin' || userRole === 'admin' || userRole === 'academic') ? 'pointer' : 'default' }}
+                              onClick={() => {
+                                if (userRole === 'sysadmin' || userRole === 'admin' || userRole === 'academic') {
+                                  setEditingId(record.id); 
+                                  setEditStatus(record.status); 
+                                  setEditLateHours(record.late_hours?.toString() || '0');
+                                }
+                              }}
+                              title={(userRole === 'sysadmin' || userRole === 'admin' || userRole === 'academic') ? "O'zgartirish uchun bosing" : ""}
+                            >
                               {record.status === 'present' ? 'Kelgan' : record.status === 'excused' ? 'Kelmagan (Sababli)' : record.status === 'absent' || record.status === 'unexcused' ? 'Kelmagan (Sababsiz)' : 'Kech qolgan'}
                             </span>
                           )}
@@ -301,19 +312,11 @@ export default function AttendancePage() {
                         <td className={styles.textSmall}>{record.users?.full_name || 'Tizim'}</td>
                         {(userRole === 'sysadmin' || userRole === 'admin' || userRole === 'academic') && (
                           <td>
-                            {editingId === record.id ? (
+                            {editingId === record.id && (
                               <div style={{ display: 'flex', gap: '5px' }}>
                                 <button className="btn btn-primary" style={{ padding: '4px 8px' }} onClick={() => handleUpdateRecord(record.id)}>OK</button>
                                 <button className="btn btn-secondary" style={{ padding: '4px 8px' }} onClick={() => setEditingId(null)}>X</button>
                               </div>
-                            ) : (
-                              <button className={styles.actionBtn} onClick={() => { 
-                                setEditingId(record.id); 
-                                setEditStatus(record.status); 
-                                setEditLateHours(record.late_hours?.toString() || '0'); 
-                              }}>
-                                <Edit2 size={16} />
-                              </button>
                             )}
                           </td>
                         )}

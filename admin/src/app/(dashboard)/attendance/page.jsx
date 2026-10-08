@@ -279,7 +279,26 @@ export default function AttendancePage() {
                         <td>{record.lessons?.title || 'Mavzusiz'}</td>
                         <td>
                           {editingId === record.id ? (
-                            <select className="input" style={{ width: '130px', padding: '4px' }} value={editStatus} onChange={e => setEditStatus(e.target.value)}>
+                            <select 
+                              className="input" 
+                              style={{ width: '130px', padding: '4px' }} 
+                              value={editStatus} 
+                              onChange={async (e) => {
+                                const val = e.target.value;
+                                setEditStatus(val);
+                                if (val !== 'late') {
+                                  // Auto-save instantly
+                                  try {
+                                    const { error } = await supabase.from('attendance').update({ status: val, late_hours: 0 }).eq('id', record.id);
+                                    if (error) throw error;
+                                    setEditingId(null);
+                                    fetchAttendance();
+                                  } catch(err) {
+                                    alert("Xato: " + err.message);
+                                  }
+                                }
+                              }}
+                            >
                               <option value="present">Kelgan</option>
                               <option value="absent">Kelmagan (Sababsiz)</option>
                               <option value="excused">Kelmagan (Sababli)</option>
@@ -312,10 +331,15 @@ export default function AttendancePage() {
                         <td className={styles.textSmall}>{record.users?.full_name || 'Tizim'}</td>
                         {(userRole === 'sysadmin' || userRole === 'admin' || userRole === 'academic') && (
                           <td>
-                            {editingId === record.id && (
+                            {editingId === record.id && editStatus === 'late' && (
                               <div style={{ display: 'flex', gap: '5px' }}>
-                                <button className="btn btn-primary" style={{ padding: '4px 8px' }} onClick={() => handleUpdateRecord(record.id)}>OK</button>
+                                <button className="btn btn-primary" style={{ padding: '4px 8px' }} onClick={() => handleUpdateRecord(record.id)}>Saqlash</button>
                                 <button className="btn btn-secondary" style={{ padding: '4px 8px' }} onClick={() => setEditingId(null)}>X</button>
+                              </div>
+                            )}
+                            {editingId === record.id && editStatus !== 'late' && (
+                              <div style={{ display: 'flex', gap: '5px' }}>
+                                <button className="btn btn-secondary" style={{ padding: '4px 8px' }} onClick={() => setEditingId(null)}>Bekor qilish</button>
                               </div>
                             )}
                           </td>
